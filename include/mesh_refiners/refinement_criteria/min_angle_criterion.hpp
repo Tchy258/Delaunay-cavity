@@ -11,4 +11,7 @@ struct MinAngleCriterion {
     bool operator()(const Mesh& mesh, int polygonIndex) const;
     MinAngleCriterion(double deg) : degrees(deg) {}
 };
+
+#include<template_implementations/mesh_refiners/refinement_criteria/min_angle_criterion.ipp>
+
 #endif

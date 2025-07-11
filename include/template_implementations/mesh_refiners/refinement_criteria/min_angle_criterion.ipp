@@ -1,4 +1,6 @@
+#ifndef MIN_ANGLE_CRITERION_HPP
 #include<mesh_refiners/refinement_criteria/min_angle_criterion.hpp>
+#endif
 
 template <MeshData Mesh>
 bool MinAngleCriterion::operator()(const Mesh& mesh, int polygonIndex) const {
