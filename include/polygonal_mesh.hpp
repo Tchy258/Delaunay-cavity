@@ -45,181 +45,21 @@ TODO:
 #include <unordered_map>
 #include <map>
 #include <chrono>
-#include <memory>
-#include "vertex.hpp"
-#include "half_edge.hpp"
-#include "mesh_refinement_strategy.hpp"
-
+#include <concepts/mesh_data.hpp>
+#include <mesh_io/mesh_reader.hpp>
+#include <mesh_io/mesh_writer.hpp>
 /**
- * Class that defines a polygonal mesh with triangles
+ * Class that defines a polygonal mesh
  */
-class PolygonalMesh 
-{
+template <MeshData Mesh>
+class PolygonalMesh {
 
 private:
-
-    typedef std::array<int,3> _triangle; 
-    typedef std::pair<int,int> _edge;
-
-    std::unique_ptr<MeshRefinementStrategy> strategy;
-    //Statically data
-    int n_halfedges = 0; //number of halfedges
-    int n_faces = 0; //number of faces
-    int n_vertices = 0; //number of vertices
-    int n_border_edges = 0; //number of border edges
-    double t_triangulation_generation = 0; //time to generate the triangulation
-
-
-    std::vector<Vertex::Vertex> Vertices;
-    std::vector<HalfEdge::HalfEdge> HalfEdges; //list of edges
-    //std::vector<char> triangle_flags; //list of edges that generate a unique triangles, 
-    std::vector<int> triangle_list; //list of edges that generate a unique triangles, 
+    Mesh* meshData;
+    Mesh* refinedMesh;
+    MeshReader reader;
+    MeshWriter writer;
     
-    /**
-     * Read node file `name` in .node format and nodes in point vector
-     * @param name .node file filename
-     */
-    void readNodesFromFile(std::string name);
-
-    /**
-     * Read triangle file `name` in .ele format and return them in a vector
-     * @param name .ele file filename
-     * @returns A vector of indices with the faces in the file
-     */
-    std::vector<int> readTrianglesFromFile(std::string name);
-
-    /**
-     * Reads triangle neighbor data from a .node file.
-     *
-     * Parses a neighbor file where each line lists a triangle ID followed by up to
-     * three neighbor triangle indices. Stores the neighbor indices in a flat vector.
-     * 
-     * Updates the class members `n_faces` and `n_border_edges`.
-     *
-     * @param name the path to the .node neighbor file
-     * @return A flat vector of neighbor indices (three per face)
-     */
-    std::vector<int>  readNeighFromFile(std::string name);
-
-    /**
-     * Given a vector of face indices, updates the `Vertices` and `HalfEdges`
-     * vectors to mark the border and non border half edges and vertices
-     * 
-     * @param faces Vector of indices with triangle faces
-     */
-    void constructInteriorHalfEdgesFromFaces(std::vector<int> &faces);
-
-    /**
-     * Given a vector of face indices and neighbors, updates the `Vertices` and `HalfEdges`
-     * vectors to mark the border and non border half edges and vertices
-     * 
-     * Also associates each vertex with an incident halfedge
-     * 
-     * @param faces Vector of indices with triangle faces
-     * @param neighs Vector of indices with triangle neighbors
-     */
-    void constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighs);
-
-    /**
-     * Generates exterior half edges
-     * 
-     * This takes  n + k time where n is the number of vertices and k is the number of border edges 
-     */
-    void constructExteriorHalfEdges();
-
-    //Read the mesh from a file in OFF format
-    /**
-     * Read the mesh from file `name` in .off format
-     */
-    std::vector<int> readOffFile(std::string name);
-
-
-public:
-
-    //default constructor
-    PolygonalMesh() {};
-
-    //Constructor from file
-    PolygonalMesh(std::string node_file, std::string ele_file, std::string neigh_file);
-
-    PolygonalMesh(std::string OFF_file);
-
-    // Copy constructor
-    PolygonalMesh(const PolygonalMesh &t);
-
-    PolygonalMesh(int size);
-
-
-    // destructor
-    ~PolygonalMesh();
-
-    double getTriangulationGenerationTime() {
-        return t_triangulation_generation;
-    }
-
-    long long getSizeVertexStruct() {
-        return sizeof(decltype(Vertices.back())) * Vertices.capacity();
-    }
-
-    long long getSizeVertexHalfEdge() {
-        return sizeof(decltype(HalfEdges.back())) * HalfEdges.capacity();
-    }
-
-   /**
-    * Calculates the square of the length of half edge `e`
-    */
-    double edgeLength2(int e);
-
-    /**
-     * Returns triangle of the face incident to edge `e`
-     * @param e Edge whose triangle we need
-     * @return Array of size 3 containing the indices to vertices that form the triangle in `Vertices`
-     */
-    _triangle incidentFace(int e);
-    
-    /**
-     * Returns whether the triangle `tr` has its vertices in counterclockwise order
-     * by calculating the sign of its area
-     * 
-     * @param tr Array of size 3 with indices to vertices in `Vertices` that form a triangle
-     * @return Whether this triangle's vertices are in CCW order or not
-     */
-    bool isCounterclockwise(_triangle tr);
-
-    //return number of faces
-    int getNFaces(){
-        return n_faces;
-    }
-
-    //Return number of halfedges
-    int getNHalfEdges(){
-        return n_halfedges;
-    }
-
-    //Return number of vertices
-    int getNVertices(){
-        return n_vertices;
-    }
-
-    std::vector<int> getTriangles();
-
-    double getPointXOfVertexi(int i) {
-        return Vertices.at(i).x;
-    }
-
-    double getPointYOfVertexi(int i) {
-        return Vertices.at(i).y;
-    }
-
-    //Halfedge update operations
-    inline void set_next(int e, int nxt) {
-        HalfEdges.at(e).next = nxt;
-    }
-
-    inline void set_prev(int e, int prv) {
-        HalfEdges.at(e).prev = prv;
-    }
-
 };
 
 #endif
