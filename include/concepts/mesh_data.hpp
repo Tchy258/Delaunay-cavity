@@ -3,6 +3,7 @@
 
 #include<concepts>
 #include<vector>
+#include<mesh_data/structures/vertex.hpp>
 
 template<typename Mesh>
 concept MeshData = requires(
@@ -23,6 +24,7 @@ concept MeshData = requires(
     { mesh.numberOfPolygons()} -> std::same_as<size_t>;
     { mesh.getNeighbors(1)} -> std::same_as<std::vector<int>>;
     Mesh(vertexVec, edgeVec, faceVec);
-};
+} &&
+std::derived_from<typename Mesh::VertexType, Vertex>;
 
 #endif
