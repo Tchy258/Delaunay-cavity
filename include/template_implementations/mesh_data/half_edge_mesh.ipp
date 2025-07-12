@@ -8,7 +8,41 @@ HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) {
     return halfEdges.at(edge).origin;
 }
 
-std::vector<int> HalfEdgeMesh::getNeighbors(int polygon) {
+inline void HalfEdgeMesh::cavityInsertion(std::unordered_map<int, std::vector<EdgeIndex>> cavityMap) {
+    for (const auto& faceEdgesPair : cavityMap) {
+        int polygonIndex = faceEdgesPair.first;
+        EdgeIndex currentEdge = polygonIndex;
+        EdgeIndex nextEdge = next(currentEdge);
+        EdgeIndex lastEdge = next(nextEdge);
+        
+        bool has_current = false, has_next = false, has_last = false;
+        // It is still a triangle so it has 3 edges
+        std::vector<EdgeIndex> edgesToKeep = faceEdgesPair.second;
+        for (int i = 0; i < 3; ++i) {
+            if (edgesToKeep[i] == currentEdge) {
+                has_current = true;
+            } else if (edgesToKeep[i] == nextEdge) {
+                has_next = true;
+            } else if (edgesToKeep[i] == lastEdge) {
+                has_last = true;
+            }
+        }
+        auto reconnectPreviousEdgeToCWEdge = [=](EdgeIndex edgeToRemove) {
+            EdgeIndex prevEdgeIdx = prev(edgeToRemove);
+            HalfEdge prevEdge = halfEdges.at(prevEdgeIdx);
+            EdgeIndex newNext = CWEdgeToVertex(edgeToRemove);
+            prevEdge.next = newNext;
+            EdgeIndex twinToRemove = twin(edgeToRemove);
+            
+        };
+        if (!has_current) {
+
+        }
+    }
+}
+
+std::vector<int> HalfEdgeMesh::getNeighbors(int polygon)
+{
     EdgeIndex firstEdge = polygons.at(polygon);
     std::vector<int> neighbors;
     neighbors.push_back(twin(firstEdge));

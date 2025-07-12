@@ -21,6 +21,11 @@ class HalfEdgeMesh {
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
         
+        HalfEdgeMesh(const HalfEdgeMesh& other) {
+            this->vertices = other.vertices;
+            this->halfEdges = other.halfEdges;
+            this->polygons = other.polygons;
+        }
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces);
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, bool alreadyRefined);
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, std::vector<int> neighbors);
@@ -43,6 +48,12 @@ class HalfEdgeMesh {
         size_t numberOfPolygons() {
             return polygons.size();
         }
+        /**
+         * Given a map of pairs `(face, edgesToKeep)`, deletes the edges not present in the map.
+         * 
+         * This inserts the "cavity"
+         */
+        void cavityInsertion(std::unordered_map<int,std::vector<EdgeIndex>> cavityMap);
         std::vector<int> getNeighbors(int polygon);
         /**
          * Calculates the tail vertex of the edge `edge`

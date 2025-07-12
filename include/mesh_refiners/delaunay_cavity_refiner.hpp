@@ -21,9 +21,9 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         Criterion refinementCriterion;
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
-        MeshVertex findCircumcircle(MeshVertex vertex0, MeshVertex vertex1, MeshVertex vertex2);
+        MeshVertex findCircumcenter(MeshVertex vertex0, MeshVertex vertex1, MeshVertex vertex2);
     public:
-        MeshType refineMesh(MeshType inputMesh);
+        MeshType refineMesh(const MeshType& inputMesh) override;
         explicit DelaunayCavityRefiner(Criterion criterion) : refinementCriterion(std::move(criterion)) {}
 
 };

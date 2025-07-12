@@ -6,7 +6,7 @@
 template <MeshData Mesh>
 class MeshRefiner {
     public:
-        virtual Mesh refineMesh(Mesh inputMesh) = 0;    
+        virtual Mesh refineMesh(const Mesh& inputMesh) = 0;    
 };
 
 #endif
