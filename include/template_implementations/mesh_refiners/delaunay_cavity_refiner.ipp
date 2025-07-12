@@ -73,9 +73,10 @@ MeshType DelaunayCavityRefiner<MeshType, Criterion>::refineMesh(MeshType inputMe
         const std::vector<int>& cavityPolygons = it->second;
         if constexpr (IsHalfEdgeVertex<MeshVertex>) {
             // For all faces
+            using EdgeIndex = typename MeshData::EdgeIndex;
             for (int val : cavityPolygons) {
-                MeshData::EdgeIndex firstEdge = val;
-                MeshData::EdgeIndex currentEdge = inputMesh.next(firstEdge);
+                EdgeIndex firstEdge = val;
+                EdgeIndex currentEdge = inputMesh.next(firstEdge);
                 while (currentEdge != firstEdge) {
                     // See if any edge is part of the original border, if so, it's also a border of the cavity
                     if (inputMesh.isBorderFace(currentEdge)) {
@@ -83,8 +84,8 @@ MeshType DelaunayCavityRefiner<MeshType, Criterion>::refineMesh(MeshType inputMe
                     } else {
                         // If it wasn't a border of the cavity, then we need to check if its immediate neighbor (twin) is part
                         // of the cavity, and if it's not, then this edge is a border of the cavity
-                        MeshData::EdgeIndex twinEdge = inputMesh.twin(currentEdge);
-                        MeshData::EdgeIndex twinNext = inputMesh.next(twinEdge);
+                        EdgeIndex twinEdge = inputMesh.twin(currentEdge);
+                        EdgeIndex twinNext = inputMesh.next(twinEdge);
                         bool partOftheCavity = false;
                         // For all edges of this neighboring face
                         while (twinNext != twinEdge) {
