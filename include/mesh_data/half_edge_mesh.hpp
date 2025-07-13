@@ -12,6 +12,9 @@ class HalfEdgeMesh {
         std::vector<HEVertex> vertices;
         std::vector<HalfEdge> halfEdges;
         std::vector<int> polygons;
+        size_t nVertices;
+        size_t nPolygons;
+        size_t nHalfEdges;
         void constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors);
         void constructInteriorHalfEdgesFromFaces(std::vector<int> &faces);
         void constructExteriorHalfEdges();
@@ -27,9 +30,15 @@ class HalfEdgeMesh {
             this->polygons = other.polygons;
         }
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces);
-        HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, bool alreadyRefined);
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, std::vector<int> neighbors);
-
+         /**
+         * Retrieves the vertices of the triangle stored at `polygonIndex`.
+         * @param polygonIndex An index to the triangle whose vertices we need
+         * @param vertex0 A reference to a vertex we will set, this can be any vertex.
+         * @param vertex1 A reference to another vertex we will set, this vertex must be the next vertex on a CCW orientation to `vertex1`
+         * @param vertex2 A reference to the last vertex we will set, this vertex must be the last vertex on a CCW orientation such that `vertex0` -> `vertex1` -> `vertex2`
+         */
+        void getVerticesOfTriangle(int polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
         VertexType& getVertex(VertexIndex v) {
             return vertices.at(v);
         };
@@ -40,20 +49,56 @@ class HalfEdgeMesh {
             return polygons.at(polygon);
         }
         size_t numberOfVertices() {
-            return vertices.size();
+            return nVertices;
         }
         size_t numberOfEdges() {
-            return halfEdges.size();
+            return nHalfEdges;
         }
         size_t numberOfPolygons() {
-            return polygons.size();
+            return nPolygons;
+        }
+        void updateVertexCount(size_t newAmount) {
+            this->nVertices = newAmount;
+        }
+        void updateEdgeCount(size_t newAmount) {
+            this->nHalfEdges = newAmount;
+        }
+        void updatePolygonCount(size_t newAmount) {
+            this->nPolygons = newAmount;
         }
         /**
-         * Given a map of pairs `(face, edgesToKeep)`, deletes the edges not present in the map.
-         * 
-         * This inserts the "cavity"
+         * Updates the `next` edge of edge `edge` to `nextEdge`
+         * @param edge The edge that needs its next edge updated
+         * @param nextEdge The new next edge
          */
-        void cavityInsertion(std::unordered_map<int,std::vector<EdgeIndex>> cavityMap);
+        void setNext(EdgeIndex edge, EdgeIndex nextEdge) {
+            halfEdges.at(edge).next = nextEdge;
+        }
+        /**
+         * Updates the `prev` edge of edge `edge` to `previousEdge`
+         * @param edge The edge that needs its prev edge updated
+         * @param previousEdge The new previous edge
+         */
+        void setPrev(EdgeIndex edge, EdgeIndex previousEdge) {
+            halfEdges.at(edge).prev = previousEdge;
+        }
+        /**
+         * Updates the `twin` edge of edge `edge` to `newTwin`
+         * @param edge The edge that needs its twin edge updated
+         * @param newTwin The new twin edge
+         */
+        void setTwin(EdgeIndex edge, EdgeIndex newTwin) {
+            halfEdges.at(edge).twin = newTwin;
+        }
+        /**
+         * Updates the `polygons` vector so the face at `polygonIndex` now points
+         * to `identifyingEdge`
+         * @param polygonIndex The face that needs its starting edge updated
+         * @param identifyingEdge The edge that will now identify this face
+         */
+        void setFace(int polygonIndex, EdgeIndex identifyingEdge) {
+            polygons[polygonIndex] = identifyingEdge;
+        }
         std::vector<int> getNeighbors(int polygon);
         /**
          * Calculates the tail vertex of the edge `edge`

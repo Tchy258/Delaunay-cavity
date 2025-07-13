@@ -4,45 +4,10 @@
 #endif
 
 HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) {
-
     return halfEdges.at(edge).origin;
 }
 
-inline void HalfEdgeMesh::cavityInsertion(std::unordered_map<int, std::vector<EdgeIndex>> cavityMap) {
-    for (const auto& faceEdgesPair : cavityMap) {
-        int polygonIndex = faceEdgesPair.first;
-        EdgeIndex currentEdge = polygonIndex;
-        EdgeIndex nextEdge = next(currentEdge);
-        EdgeIndex lastEdge = next(nextEdge);
-        
-        bool has_current = false, has_next = false, has_last = false;
-        // It is still a triangle so it has 3 edges
-        std::vector<EdgeIndex> edgesToKeep = faceEdgesPair.second;
-        for (int i = 0; i < 3; ++i) {
-            if (edgesToKeep[i] == currentEdge) {
-                has_current = true;
-            } else if (edgesToKeep[i] == nextEdge) {
-                has_next = true;
-            } else if (edgesToKeep[i] == lastEdge) {
-                has_last = true;
-            }
-        }
-        auto reconnectPreviousEdgeToCWEdge = [=](EdgeIndex edgeToRemove) {
-            EdgeIndex prevEdgeIdx = prev(edgeToRemove);
-            HalfEdge prevEdge = halfEdges.at(prevEdgeIdx);
-            EdgeIndex newNext = CWEdgeToVertex(edgeToRemove);
-            prevEdge.next = newNext;
-            EdgeIndex twinToRemove = twin(edgeToRemove);
-            
-        };
-        if (!has_current) {
-
-        }
-    }
-}
-
-std::vector<int> HalfEdgeMesh::getNeighbors(int polygon)
-{
+std::vector<int> HalfEdgeMesh::getNeighbors(int polygon) {
     EdgeIndex firstEdge = polygons.at(polygon);
     std::vector<int> neighbors;
     neighbors.push_back(twin(firstEdge));
@@ -55,6 +20,7 @@ std::vector<int> HalfEdgeMesh::getNeighbors(int polygon)
     }
     return neighbors;
 }
+
 HalfEdgeMesh::EdgeIndex HalfEdgeMesh::next(HalfEdgeMesh::EdgeIndex edge) {
     return halfEdges.at(edge).next;
 }
@@ -115,18 +81,16 @@ double HalfEdgeMesh::edgeLength2(HalfEdgeMesh::EdgeIndex edge) {
     return vectorFromTargetToOrigin.dot(vectorFromTargetToOrigin); //Same as squared distance
 }
 
-HalfEdgeMesh::HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces) : HalfEdgeMesh::HalfEdgeMesh(vertices, edges, faces, false) {}
 
 
 HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
                            std::vector<HalfEdgeMesh::EdgeType> edges,
-                           std::vector<int> faces,
-                           bool alreadyRefined) : vertices(vertices), halfEdges(edges), polygons(faces)
-{
-    if (!alreadyRefined) {
-        constructInteriorHalfEdgesFromFaces(this->polygons);
-        constructExteriorHalfEdges();
-    }
+                           std::vector<int> faces) : vertices(vertices), halfEdges(edges), polygons(faces) {
+    constructInteriorHalfEdgesFromFaces(this->polygons);
+    constructExteriorHalfEdges();
+    this->nPolygons = faces.size();
+    this->nHalfEdges = halfEdges.size();
+    this->nVertices = vertices.size();
 }
 
 HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
@@ -136,6 +100,15 @@ HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
     vertices(vertices), halfEdges(edges), polygons(faces) {
     constructInteriorHalfEdgesFromFacesAndNeighs(this->polygons, neighbors);
     constructExteriorHalfEdges();
+    this->nPolygons = faces.size();
+    this->nHalfEdges = halfEdges.size();
+    this->nVertices = vertices.size();
+}
+
+inline void HalfEdgeMesh::getVerticesOfTriangle(int polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2) {
+    v0 = vertices.at(origin(polygonIndex));
+    v1 = vertices.at(target(polygonIndex));
+    v2 = vertices.at(target(next(polygonIndex)));
 }
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors)
