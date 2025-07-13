@@ -200,6 +200,8 @@
 #ifndef VERTEX_HPP
 #define VERTEX_HPP
 #include<cmath>
+#include<stdexcept>
+#include<format>
 #define EPSILON 1e-9
 /**
  * Basic vertex structure with x,y coordinates
@@ -221,8 +223,34 @@ struct Vertex{
         Vertex v2v0 = v2 - *this;
         return (v1v0.x * v2v0.y) - (v1v0.y * v2v0.x);
     }
+
+    static Vertex findCircumcenter(const Vertex& vertex0, const Vertex& vertex1, const Vertex& vertex2) {
+        Vertex origin;
+        origin.x = 0;
+        origin.y = 0;
+        Vertex vertex1Displaced = vertex1 - vertex0;
+        Vertex vertex2Displaced = vertex2 - vertex0;
+        double determinant = 2 * origin.cross2d(vertex1Displaced,vertex2Displaced);
+        if (std::fabs(determinant) < EPSILON) {
+            throw std::runtime_error(std::format(
+                "Degenerate triangle found\n Vertices: \n{},{}\n {},{}\n {},{}",
+                vertex0.x, vertex0.y,
+                vertex1.x, vertex1.y,
+                vertex2.x, vertex2.y
+            ));
+        }
+        // 1/D [ C_y * (B_x^2 + B_y^2) - B_y * (C_x^2 + C_y^2)]
+        double circumcenterX = (vertex2Displaced.y * vertex1Displaced.dot(vertex1Displaced) - vertex1Displaced.y * vertex2Displaced.dot(vertex2Displaced)) / determinant;
+        double circumcenterY = (vertex1Displaced.x * vertex2Displaced.dot(vertex2Displaced) - vertex2Displaced.x * vertex1Displaced.dot(vertex1Displaced)) / determinant;
+        circumcenterX += vertex0.x;
+        circumcenterY += vertex0.y;
+        Vertex circumcenter;
+        circumcenter.x = circumcenterX;
+        circumcenter.y = circumcenterY;
+        return circumcenter;
+    }
      /**
-     * Returns true if point `P` lies inside the circumcircle of triangle ABC.
+     * Returns true if point `P` lies inside the circumcircle of triangle ABC or is cocircular.
      * Assumes triangle ABC is oriented counter-clockwise (CCW).
      */
     static bool inCircle(const Vertex& A, const Vertex& B, const Vertex& C, const Vertex& P) {
@@ -238,7 +266,7 @@ struct Vertex{
                    + pbLenSq * P.cross2d(C,A)
                    + pcLenSq * P.cross2d(A,B);
 
-        return det > 0;
+        return det >= 0 || std::fabs(det) < EPSILON;
     }
 
     Vertex operator+(const Vertex& other) const {
