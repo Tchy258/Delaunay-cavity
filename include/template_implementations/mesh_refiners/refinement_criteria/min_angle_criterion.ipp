@@ -203,19 +203,12 @@
 
 template <MeshData Mesh>
 bool MinAngleCriterion<Mesh>::operator()(const Mesh& mesh, int polygonIndex) const {
-    typename Mesh::EdgeIndex firstEdge = mesh.getPolygon(polygonIndex);
-    typename Mesh::VertexIndex v1, v2, v3;
+    typename Mesh::VertexType v1, v2, v3;
 
-    if constexpr (IsHalfEdgeVertex<typename Mesh::VertexType>) {
-        v1 = mesh.origin(firstEdge);
-        v2 = mesh.target(firstEdge);
-        v3 = mesh.target(mesh.next(firstEdge));
-    } else {
-        // TODO: get vertex objects in other types of meshes with CCW orientation
-    }
-    Vertex edgeV1V2 = mesh.getVertex(v2) - mesh.getVertex(v1);
-    Vertex edgeV2V3 = mesh.getVertex(v3) - mesh.getVertex(v2);
-    Vertex edgeV3V1 = mesh.getVertex(v1) - mesh.getVertex(v3);
+    mesh.getVerticesOfTriangle(polygonIndex,v1,v2,v3);
+    Vertex edgeV1V2 = v2 - v1;
+    Vertex edgeV2V3 = v3 - v2;
+    Vertex edgeV3V1 = v1 - v3;
     double lenEdgeV1V2sq = edgeV1V2.dot(edgeV1V2);
     double lenEdgeV2V3sq = edgeV2V3.dot(edgeV2V3);
     double lenEdgeV3V1sq = edgeV3V1.dot(edgeV3V1);
