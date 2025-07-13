@@ -9,6 +9,9 @@
 template<MeshData Mesh>
 class MeshWriter {
     public:
+        /**
+         * Writes a file of the appropriate format in `filename` with the mesh `mesh`
+         */
         virtual void writeMesh(std::string& filename, Mesh& mesh) = 0;
 };
 
