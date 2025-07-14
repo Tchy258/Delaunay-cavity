@@ -28,6 +28,9 @@ class HalfEdgeMesh {
             this->vertices = other.vertices;
             this->halfEdges = other.halfEdges;
             this->polygons = other.polygons;
+            this->nVertices = other.nVertices;
+            this->nPolygons = other.nPolygons;
+            this->nHalfEdges = other.nHalfEdges;
         }
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces);
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, std::vector<int> neighbors);
@@ -45,16 +48,34 @@ class HalfEdgeMesh {
         EdgeType& getEdge(EdgeIndex e) {
             return halfEdges.at(e);
         };
-        EdgeIndex getPolygon(int polygon) {
-            return polygons.at(polygon);
+        int getFaceOfEdge(EdgeIndex e) const {
+            return halfEdges.at(e).face;
         }
-        size_t numberOfVertices() {
+        /**
+         * Every 3 indices of the polygons vector are a face, so we'll get the half edge that satisfies that
+         * the vertex at polygon + 1 and the vertex at polygon + 2 are its next and prev / prev and next
+         */
+        EdgeIndex getPolygon(int polygon) {
+            int timesThree = polygon * 3;
+            int vertexIdx = polygons.at(timesThree);
+            int vertexIdx2 = polygons.at(timesThree + 1);
+            int vertexIdx3 = polygons.at(timesThree + 2);
+            const HEVertex& aVertex = vertices.at(vertexIdx);
+            EdgeIndex incidentHE = aVertex.incidentHalfEdge;
+            while ( halfEdges.at(incidentHE).face == -1 || (!(target(incidentHE) == vertexIdx2) && !(target(next(incidentHE)) == vertexIdx3)) ) {
+                // Some edge that goes from the vertex at vertexIdx must satisfy the condition that it is part of an internal triangle
+                // and it's target and target of the next are the other vertices
+                incidentHE = CCWEdgeToVertex(incidentHE);
+            }
+            return incidentHE;
+        }
+        size_t numberOfVertices() const {
             return nVertices;
         }
-        size_t numberOfEdges() {
+        size_t numberOfEdges() const {
             return nHalfEdges;
         }
-        size_t numberOfPolygons() {
+        size_t numberOfPolygons() const {
             return nPolygons;
         }
         void updateVertexCount(size_t newAmount) {

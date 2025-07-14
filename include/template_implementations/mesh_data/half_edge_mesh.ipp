@@ -1,6 +1,5 @@
 #ifndef HALF_EDGE_MESH_HPP
 #include <mesh_data/half_edge_mesh.hpp>
-#include "half_edge_mesh.hpp"
 #endif
 
 HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) {
@@ -8,16 +7,16 @@ HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) {
 }
 
 std::vector<int> HalfEdgeMesh::getNeighbors(int polygon) {
-    EdgeIndex firstEdge = polygons.at(polygon);
+    EdgeIndex firstEdge = getPolygon(polygon);
     std::vector<int> neighbors;
-    neighbors.push_back(twin(firstEdge));
-    EdgeIndex currentEdge = next(firstEdge);
-    while (currentEdge != firstEdge) {
-        if (!isBorderFace(currentEdge)) {
-            neighbors.push_back(twin(currentEdge));
+    EdgeIndex currentEdge = firstEdge;
+    do {
+        EdgeIndex twinIdx = twin(currentEdge);
+        if (!isBorderFace(twinIdx)) {
+            neighbors.push_back(halfEdges.at(twinIdx).face);
         }
         currentEdge = next(currentEdge);
-    }
+    } while (currentEdge != firstEdge);
     return neighbors;
 }
 
@@ -86,9 +85,10 @@ double HalfEdgeMesh::edgeLength2(HalfEdgeMesh::EdgeIndex edge) {
 HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
                            std::vector<HalfEdgeMesh::EdgeType> edges,
                            std::vector<int> faces) : vertices(vertices), halfEdges(edges), polygons(faces) {
+    
+    this->nPolygons = faces.size() / 3;
     constructInteriorHalfEdgesFromFaces(this->polygons);
     constructExteriorHalfEdges();
-    this->nPolygons = faces.size();
     this->nHalfEdges = halfEdges.size();
     this->nVertices = vertices.size();
 }
@@ -98,23 +98,25 @@ HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
     std::vector<int> faces,
     std::vector<int> neighbors):
     vertices(vertices), halfEdges(edges), polygons(faces) {
+    this->nPolygons = faces.size() / 3;
     constructInteriorHalfEdgesFromFacesAndNeighs(this->polygons, neighbors);
     constructExteriorHalfEdges();
-    this->nPolygons = faces.size();
     this->nHalfEdges = halfEdges.size();
     this->nVertices = vertices.size();
 }
 
 inline void HalfEdgeMesh::getVerticesOfTriangle(int polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2) {
-    v0 = vertices.at(origin(polygonIndex));
-    v1 = vertices.at(target(polygonIndex));
-    v2 = vertices.at(target(next(polygonIndex)));
+    // We look for this edge first to guarantee CCW ordering
+    EdgeIndex firstEdge = getPolygon(polygonIndex);
+    v0 = vertices.at(origin(firstEdge));
+    v1 = vertices.at(target(firstEdge));
+    v2 = vertices.at(target(next(firstEdge)));
 }
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors)
 {
     int neigh, origin, target;
-    for(std::size_t i = 0; i < faces.size(); i++){
+    for(std::size_t i = 0; i < nPolygons; i++){
         for(std::size_t j = 0; j < 3; j++){
             HalfEdge he;
             neigh = neighbors.at(3*i + ((j+2)%3));
@@ -125,7 +127,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int>
             // he.target = target;
             he.next = 3*i + ((j+1)%3);
             he.prev = 3*i + ((j+2)%3);
-            // he.face = i;
+            he.face = i;
             he.isBorder = (neigh == -1);
             if(neigh != -1){
                 for (std::size_t j = 0; j < 3; j++){
@@ -144,7 +146,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int>
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<int> &faces) {
     using _edge = std::pair<int,int>;
-    size_t n_faces = polygons.size();
+    size_t n_faces = this->nPolygons;
     //std::cout << "0. aca "<< std::endl;	
     auto hash_for_pair = [n = 3* n_faces](const std::pair<int, int>& p) {
         return std::hash<int>{}(p.first)*n + std::hash<int>{}(p.second);
@@ -161,6 +163,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<int> &faces) 
             he.prev = i*3+(j+2)%3;
             he.isBorder = false;
             he.twin = -1;
+            he.face = i;
             vertices.at(v_origin).incidentHalfEdge = i*3+j;
             map_edges[std::make_pair(v_origin, v_target)] = i*3+j;
             halfEdges.push_back(he);

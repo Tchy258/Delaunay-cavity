@@ -3,7 +3,7 @@
 #endif
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readNodeFile(std::string &filepath, std::vector<typename Mesh::VertexType> &vertices)
+unsigned int NodeEleReader<Mesh>::readNodeFile(const std::string &filepath, std::vector<typename Mesh::VertexType> &vertices)
 {
     unsigned int n_vertices = 0;
     unsigned int discard = 0; // to skip values
@@ -43,7 +43,7 @@ unsigned int NodeEleReader<Mesh>::readNodeFile(std::string &filepath, std::vecto
 }
 
 template <MeshData Mesh>
-Mesh NodeEleReader<Mesh>::readMesh(std::string &filename) {
+Mesh NodeEleReader<Mesh>::readMesh(const std::string &filename) {
     std::filesystem::path filepath(filename);
     filepath = filepath.stem();
 
@@ -75,7 +75,7 @@ Mesh NodeEleReader<Mesh>::readMesh(std::string &filename) {
 
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readNeighFile(std::string &filepath, std::vector<int> &neighbors) {
+unsigned int NodeEleReader<Mesh>::readNeighFile(const std::string &filepath, std::vector<int> &neighbors) {
     
         std::string line;
         std::ifstream neighfile(filepath);
@@ -117,7 +117,7 @@ unsigned int NodeEleReader<Mesh>::readNeighFile(std::string &filepath, std::vect
 }
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readEleFile(std::string &filepath, std::vector<int> &faces) {
+unsigned int NodeEleReader<Mesh>::readEleFile(const std::string &filepath, std::vector<int> &faces) {
     std::string line;
     std::ifstream elefile(filepath);
     unsigned int n_elements;

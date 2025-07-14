@@ -1,6 +1,7 @@
 #ifndef DELAUNAY_CAVITY_REFINER_HPP
 #define DELAUNAY_CAVITY_REFINER_HPP
 #include<unordered_map>
+#include<unordered_set>
 #include<misc/mesh_stat.hpp>
 #include<misc/time_stat.hpp>
 #include<concepts/mesh_data.hpp>
@@ -16,13 +17,13 @@
 template <MeshData MeshType, RefinementCriterion<MeshType> Criterion>
 class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
     public:
-        using MeshVertex = typename Mesh::VertexType;
-        using MeshEdge = typename Mesh::EdgeType;
+        using MeshVertex = typename MeshType::VertexType;
+        using MeshEdge = typename MeshType::EdgeType;
     private:
         Criterion refinementCriterion;
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
-        std::unordered_map<int, std::vector<HalfEdgeMesh::EdgeIndex>> selectCavityEdges(HalfEdgeMesh& outMesh, std::unordered_map<int, std::vector<int>>& cavities) requires std::same_as<MeshType, HalfEdgeMesh>;
+        std::unordered_map<int, std::unordered_set<HalfEdgeMesh::EdgeIndex>> selectCavityEdges(HalfEdgeMesh& outMesh, std::unordered_map<int, std::vector<int>>& cavities) requires std::same_as<MeshType, HalfEdgeMesh>;
         /**
          * Calls the mesh specific methods to edit it and form the cavity inside of it.
          * This method is specific for half edge based meshes
@@ -33,7 +34,7 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
          * This erasure should be done by changing where other edges point to, and NOT by editing the edges vector
          * @returns A half edge based mesh that has cavities according to the `Criterion` used
          */
-        void insertCavity(HalfEdgeMesh& outputMesh, std::unordered_map<int, std::vector<HalfEdgeMesh::EdgeIndex>> cavityMap) requires std::same_as<MeshType, HalfEdgeMesh>;
+        void insertCavity(HalfEdgeMesh& outputMesh, std::unordered_map<int, std::unordered_set<HalfEdgeMesh::EdgeIndex>>& cavityMap) requires std::same_as<MeshType, HalfEdgeMesh>;
     public:
         MeshType refineMesh(const MeshType& inputMesh) override;
         explicit DelaunayCavityRefiner(Criterion criterion) : refinementCriterion(std::move(criterion)) {}

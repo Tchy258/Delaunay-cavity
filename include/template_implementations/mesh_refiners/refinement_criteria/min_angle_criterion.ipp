@@ -202,7 +202,7 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAngleCriterion<Mesh>::operator()(const Mesh& mesh, int polygonIndex) const {
+bool MinAngleCriterion<Mesh>::operator()(Mesh& mesh, int polygonIndex) const {
     typename Mesh::VertexType v1, v2, v3;
 
     mesh.getVerticesOfTriangle(polygonIndex,v1,v2,v3);
@@ -215,25 +215,25 @@ bool MinAngleCriterion<Mesh>::operator()(const Mesh& mesh, int polygonIndex) con
     // If the edge V1V2 is the shortest, the angle opposite to V1V2 is the smallest
     // The smallest angle is determined by the square of its cosine assuming the angle
     // is acute
-    Vertex* side1, side2;
-    double* lenSide1, lenSide2;
+    Vertex* side1, *side2;
+    double* lenSide1, *lenSide2;
     if ((lenEdgeV1V2sq < lenEdgeV2V3sq) && (lenEdgeV1V2sq < lenEdgeV3V1sq)) {
-        *side1 = edgeV2V3;
-        *side2 = edgeV3V1;
-        *lenSide1 = lenEdgeV2V3sq;
-        *lenSide2 = lenEdgeV3V1sq;
+        side1 = &edgeV2V3;
+        side2 = &edgeV3V1;
+        lenSide1 = &lenEdgeV2V3sq;
+        lenSide2 = &lenEdgeV3V1sq;
     } else if ( lenEdgeV2V3sq < lenEdgeV3V1sq) {
-        *side1 = edgeV1V2;
-        *side2 = edgeV3V1;
-        *lenSide1 = lenEdgeV1V2sq;
-        *lenSide2 = lenEdgeV3V1sq;
+        side1 = &edgeV1V2;
+        side2 = &edgeV3V1;
+        lenSide1 = &lenEdgeV1V2sq;
+        lenSide2 = &lenEdgeV3V1sq;
     } else {
-        *side1 = edgeV1V2;
-        *side2 = edgeV2V3;
-        *lenSide1 = lenEdgeV1V2sq;
-        *lenSide2 = lenEdgeV2V3sq;
+        side1 = &edgeV1V2;
+        side2 = &edgeV2V3;
+        lenSide1 = &lenEdgeV1V2sq;
+        lenSide2 = &lenEdgeV2V3sq;
     }
     double angle = side1->dot(*side2);
     angle = angle * angle / ((*lenSide1) * (*lenSide2)); 
-    return angle <= angleThreshold;
+    return angle > angleThreshold;
 }

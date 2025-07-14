@@ -12,7 +12,7 @@ class MeshWriter {
         /**
          * Writes a file of the appropriate format in `filename` with the mesh `mesh`
          */
-        virtual void writeMesh(std::string& filename, Mesh& mesh) = 0;
+        virtual void writeMesh(const std::string& filename, Mesh& mesh) = 0;
 };
 
 #endif

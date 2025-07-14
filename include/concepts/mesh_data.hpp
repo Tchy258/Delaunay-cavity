@@ -21,6 +21,7 @@
 template<typename Mesh>
 concept MeshData = requires(
     Mesh& mesh,
+    const Mesh& cmesh,
     std::vector<typename Mesh::VertexType> vertexVec,
     std::vector<typename Mesh::EdgeType> edgeVec,
     std::vector<int> faceVec,
@@ -29,12 +30,17 @@ concept MeshData = requires(
     typename Mesh::VertexIndex,
     typename Mesh::EdgeIndex
 ) {
+    typename Mesh::VertexType;
+    typename Mesh::EdgeType;
+    typename Mesh::VertexIndex;
+    typename Mesh::EdgeIndex;
+    { std::declval<const typename Mesh::VertexType&>() } -> std::same_as<const typename Mesh::VertexType&>;
     { mesh.getVertex(1) } -> std::same_as<typename Mesh::VertexType&>;
     { mesh.getEdge(1) } -> std::same_as<typename Mesh::EdgeType&>;
     { mesh.getPolygon(1) } -> std::same_as<int>;
-    { mesh.numberOfVertices()} -> std::same_as<size_t>;
-    { mesh.numberOfEdges()} -> std::same_as<size_t>;
-    { mesh.numberOfPolygons()} -> std::same_as<size_t>;
+    { cmesh.numberOfVertices()} -> std::same_as<size_t>;
+    { cmesh.numberOfEdges()} -> std::same_as<size_t>;
+    { cmesh.numberOfPolygons()} -> std::same_as<size_t>;
     { mesh.updatePolygonCount(1)} -> std::same_as<void>;
     { mesh.updateVertexCount(1)} -> std::same_as<void>;
     { mesh.updateEdgeCount(1)} -> std::same_as<void>;

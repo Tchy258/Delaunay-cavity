@@ -12,7 +12,7 @@
 template<MeshData Mesh>
 class MeshReader {
     public:
-        virtual Mesh readMesh(std::string& filename) = 0;
+        virtual Mesh readMesh(const std::string& filename) = 0;
 };
 
 #endif

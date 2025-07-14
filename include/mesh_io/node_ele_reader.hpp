@@ -7,11 +7,11 @@
 template <MeshData Mesh>
 class NodeEleReader : public MeshReader<Mesh> {
     private:
-        unsigned int readNeighFile(std::string& filepath, std::vector<int>& neighbors);
-        unsigned int readEleFile(std::string& filepath, std::vector<int>& elements);
-        unsigned int readNodeFile(std::string& filepath, std::vector<typename Mesh::VertexType>& vertices);
+        unsigned int readNeighFile(const std::string& filepath, std::vector<int>& neighbors);
+        unsigned int readEleFile(const std::string& filepath, std::vector<int>& elements);
+        unsigned int readNodeFile(const std::string& filepath, std::vector<typename Mesh::VertexType>& vertices);
     public:
-        Mesh readMesh(std::string& filename) override;
+        Mesh readMesh(const std::string& filename) override;
 };
 
 #include <template_implementations/mesh_io/node_ele_reader.ipp>
