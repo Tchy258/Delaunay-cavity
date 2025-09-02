@@ -1,16 +1,18 @@
-#ifndef OR_CRITERION_HPP
-#define OR_CRITERION_HPP
+#ifndef OR_CRITERIA_HPP
+#define OR_CRITERIA_HPP
 #include <vector>
 #include <concepts/mesh_data.hpp>
-
-template <MeshData Mesh, typename Criterion1, typename Criterion2>
+#include <concepts/refinement_criterion.hpp>
+template <MeshData Mesh, RefinementCriterion<Mesh> Criterion1, RefinementCriterion<Mesh> Criterion2>
 struct OrCriteria {
     Criterion1 criterion1;
     Criterion2 criterion2;
 
-    bool operator()(const Mesh& mesh, int polygonIndex) const {
+    bool operator()(Mesh& mesh, int polygonIndex) const {
         return criterion1(mesh, polygonIndex) || criterion2(mesh, polygonIndex);
     }
+
+    OrCriteria(Criterion1 c1, Criterion2 c2) : criterion1(c1), criterion2(c2) {}
 };
 
 #endif
