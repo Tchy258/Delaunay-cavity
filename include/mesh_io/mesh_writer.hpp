@@ -5,14 +5,15 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 template<MeshData Mesh>
 class MeshWriter {
     public:
         /**
-         * Writes a file of the appropriate format in `filename` with the mesh `mesh`
+         * Writes files with the appropriate format specified on `files` with the mesh `mesh`
          */
-        virtual void writeMesh(const std::string& filename, Mesh& mesh) = 0;
+        virtual void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh) = 0;
 };
 
 #endif

@@ -6,7 +6,7 @@
 template <MeshData Mesh>
 class OffReader : public MeshReader<Mesh> {
     public:
-        Mesh readMesh(const std::string& filename) override;
+        Mesh* readMesh(const std::vector<std::filesystem::path>& files) override;
 };
 
 #include <template_implementations/mesh_io/off_reader.ipp>

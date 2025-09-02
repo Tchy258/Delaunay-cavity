@@ -16,7 +16,7 @@ class OffWriter : public MeshWriter<Mesh> {
          */
         void writeFaces(std::ofstream& file, HalfEdgeMesh& mesh) requires std::same_as<Mesh, HalfEdgeMesh>;
     public:
-        void writeMesh(const std::string& filename, Mesh& mesh) override;
+        void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh) override;
 };
 
 #include<template_implementations/mesh_io/off_writer.ipp>

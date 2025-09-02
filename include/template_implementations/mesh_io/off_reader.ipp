@@ -3,55 +3,47 @@
 #endif
 
 template <MeshData Mesh>
-Mesh OffReader<Mesh>::readMesh(const std::string& filename) {
+Mesh* OffReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& filepaths) {
     //Read the OFF file
     std::vector<typename Mesh::VertexType> vertices;
     std::vector<typename Mesh::EdgeType> edges;
     std::vector<int> faces;
     size_t nVertices, nFaces, nEdges;
     std::string line;
-    std::ifstream offfile(filename);
+    std::ifstream offFile(filepaths[0]);
     double a1, a2, a3;
     std::string tmp;
-    if (offfile.is_open())
-    {
+    if (offFile.is_open()) {
         //Check first line is a OFF file
-        while (std::getline(offfile, line)){ //add check boundary vertices flag
+        while (std::getline(offFile, line)) { //add check boundary vertices flag
             std::istringstream(line) >> tmp;
             //std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line))
-            {
-                if(tmp[0] == 'O' && tmp[1] == 'F' && tmp[2] == 'F') //Check if the format is OFF
+            if (tmp[0] != '#' && !isWhitespace(line)) {
+                if(tmp[0] == 'O' && tmp[1] == 'F' && tmp[2] == 'F') { //Check if the format is OFF
                     break;
-                else{
-                    std::cout<<"The file is not an OFF file"<<std::endl;
-                    exit(0);
+                } else {
+                    throw std::runtime_error("File provided to OffReader is not in OFF format");
                 }
             }
         }
 
         //Read the number of vertices and faces
-        while (std::getline(offfile, line)){ //add check boundary vertices flag
+        while (std::getline(offFile, line)) { //add check boundary vertices flag
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line))
-            { 
-                        std::istringstream(line) >> nVertices >> nFaces;
-                        vertices.reserve(nVertices);
-                        faces.reserve(3*nFaces);
-                        break;
-                        
+            if (tmp[0] != '#' && !isWhitespace(line)) { 
+                std::istringstream(line) >> nVertices >> nFaces;
+                vertices.reserve(nVertices);
+                faces.reserve(3*nFaces);
+                break;  
             }
         }
-
         //Read vertices
         int index = 0;
-        while (index < nVertices && std::getline(offfile, line) )
-        {
+        while (index < nVertices && std::getline(offFile, line)) {
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line))
-            {
+            if (tmp[0] != '#' && !isWhitespace(line)) {
                 std::istringstream(line) >> a1 >> a2 >> a3;
                 typename Mesh::VertexType ve;
                 ve.x =  a1;
@@ -61,15 +53,12 @@ Mesh OffReader<Mesh>::readMesh(const std::string& filename) {
             }
         }
         //Read faces
-        
         int length, t1, t2, t3;
         index = 0;
-        while (index < nFaces && std::getline(offfile, line) )
-        {
+        while (index < nFaces && std::getline(offFile, line)) {
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line))
-            {
+            if (tmp[0] != '#' && !isWhitespace(line)) {
                 std::istringstream(line) >> length >> t1 >> t2 >> t3;
                 // CHECK ORIENTATION!!
                 if (vertices[t1].cross2d(vertices[t2],vertices[t3]) > 0) {
@@ -85,11 +74,11 @@ Mesh OffReader<Mesh>::readMesh(const std::string& filename) {
                 index++;
             }
         }
-
+    } else {
+        std::cout << "Unable to open node file"; 
     }
-    else 
-            std::cout << "Unable to open node file"; 
-    offfile.close();
+    offFile.close();
     edges.reserve(3* nVertices);
-    return Mesh(vertices,edges,faces);
+    Mesh* resultMesh = new Mesh(vertices, edges, faces);
+    return resultMesh;
 }

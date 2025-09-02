@@ -3,7 +3,26 @@
 #endif
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readNodeFile(const std::string &filepath, std::vector<typename Mesh::VertexType> &vertices)
+std::vector<std::filesystem::path> NodeEleReader<Mesh>::parsePaths(const std::vector<std::filesystem::path>& filepaths) {
+    size_t amountOfPaths = filepaths.size();
+    if (amountOfPaths == 3) {
+        return filepaths;    
+    }
+    std::vector<std::filesystem::path> parsedPaths;
+    parsedPaths.reserve(3);
+    parsedPaths.emplace_back(filepaths[0]);
+    if (amountOfPaths == 1) {
+        parsedPaths.emplace_back(NodeEleReader::changeExtension(filepaths[0], ".ele"));
+        parsedPaths.emplace_back(NodeEleReader::changeExtension(filepaths[0], ".neigh"));
+    } else if (amountOfPaths == 2) {
+        parsedPaths.emplace_back(filepaths[1]);
+        parsedPaths.emplace_back(NodeEleReader::changeExtension(filepaths[0],".neigh"));
+    }
+    return parsedPaths;
+}
+
+template <MeshData Mesh>
+unsigned int NodeEleReader<Mesh>::readNodeFile(const std::filesystem::path& filepath, std::vector<typename Mesh::VertexType> &vertices)
 {
     unsigned int n_vertices = 0;
     unsigned int discard = 0; // to skip values
@@ -36,46 +55,46 @@ unsigned int NodeEleReader<Mesh>::readNodeFile(const std::string &filepath, std:
             vertices.push_back(ve);
         }
     } else {
-        throw std::runtime_error("File: " + filepath + " cannot be opened (does it exist?)");
+        throw std::runtime_error("File: " + filepath.string() + " cannot be opened (does it exist?)");
     }
     nodefile.close();
     return n_vertices;
 }
 
 template <MeshData Mesh>
-Mesh NodeEleReader<Mesh>::readMesh(const std::string &filename) {
-    std::filesystem::path filepath(filename);
-    filepath = filepath.stem();
+Mesh* NodeEleReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& files) {
+    std::vector<std::filesystem::path> parsedPaths = parsePaths(files);
 
     // Read vertices
     std::vector<typename Mesh::VertexType> vertices;
-    unsigned int n_vertices = readNodeFile(filepath.string() + ".node", vertices);
+    unsigned int n_vertices = readNodeFile(parsedPaths[0], vertices);
 
     // Read faces
     std::vector<int> faces;
-    unsigned int n_elements = readEleFile(filepath.string() + ".ele", faces);
+    unsigned int n_elements = readEleFile(parsedPaths[1], faces);
 
     // Prepare empty edge container
     std::vector<typename Mesh::EdgeType> edges;
 
+    Mesh* resultMesh;
     // Handle adjacency construction if supported
     if constexpr (HasAdjacencyConstructor<Mesh>) {
         std::vector<int> neighbors;
-        std::string neighFile = filepath.string() + ".neigh";
-        if (std::filesystem::exists(neighFile)) {
-            unsigned int n_border_edges = readNeighFile(neighFile, neighbors);
+        if (std::filesystem::exists(parsedPaths[2])) {
+            unsigned int n_border_edges = readNeighFile(parsedPaths[2], neighbors);
             edges.reserve(3 * n_vertices - 3 - n_border_edges);
-            return Mesh(vertices, edges, faces, neighbors);
+            resultMesh = new Mesh(vertices, edges, faces, neighbors);
+            return resultMesh;
         }
     }
-
+    resultMesh = new Mesh(vertices, edges, faces);
     // Default mesh construction
-    return Mesh(vertices, edges, faces);
+    return resultMesh;
 }
 
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readNeighFile(const std::string &filepath, std::vector<int> &neighbors) {
+unsigned int NodeEleReader<Mesh>::readNeighFile(const std::filesystem::path &filepath, std::vector<int> &neighbors) {
     
         std::string line;
         std::ifstream neighfile(filepath);
@@ -110,14 +129,14 @@ unsigned int NodeEleReader<Mesh>::readNeighFile(const std::string &filepath, std
                 }
             }
         } else {
-            throw std::runtime_error("File: " + filepath + " cannot be opened (does it exist?)");
+            throw std::runtime_error("File: " + filepath.string() + " cannot be opened (does it exist?)");
         }
         neighfile.close();
         return n_border_edges;
 }
 
 template <MeshData Mesh>
-unsigned int NodeEleReader<Mesh>::readEleFile(const std::string &filepath, std::vector<int> &faces) {
+unsigned int NodeEleReader<Mesh>::readEleFile(const std::filesystem::path &filepath, std::vector<int> &faces) {
     std::string line;
     std::ifstream elefile(filepath);
     unsigned int n_elements;
@@ -136,7 +155,7 @@ unsigned int NodeEleReader<Mesh>::readEleFile(const std::string &filepath, std::
         }
     }
     else {
-        throw std::runtime_error("File: " + filepath + " cannot be opened (does it exist?)");
+        throw std::runtime_error("File: " + filepath.string() + " cannot be opened (does it exist?)");
     }
     elefile.close();
     return n_elements;

@@ -13,19 +13,20 @@ inline void OffWriter<Mesh>::writeFaces(std::ofstream& file, HalfEdgeMesh &mesh)
     }
     for (const auto& faceEdgesPair : edgesOfFace) {
         const std::vector<int>& edges = faceEdgesPair.second;
-        file << edges.size();
+        file << edges.size() << " ";
         int firstEdge = edges[0];
         int currentEdge = firstEdge;
         do {
-            file << mesh.origin(currentEdge);
+            file << mesh.origin(currentEdge) << " ";
             currentEdge = mesh.next(currentEdge);
         } while (currentEdge != firstEdge);
+        file << std::endl;
     }
 }
 
 template <MeshData Mesh>
-inline void OffWriter<Mesh>::writeMesh(const std::string &filename, Mesh &mesh) {
-    std::ofstream out(filename);
+inline void OffWriter<Mesh>::writeMesh(const std::vector<std::filesystem::path>& filepaths, Mesh &mesh) {
+    std::ofstream out(filepaths[0]);
     out << "OFF" << std::endl;
     out << mesh.numberOfVertices() << " " << mesh.numberOfPolygons() << " 0" << std::endl;
     for (size_t i = 0; i < mesh.numberOfVertices(); ++i) {
