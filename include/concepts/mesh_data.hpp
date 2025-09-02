@@ -46,9 +46,11 @@ concept MeshData = requires(
     { mesh.updateEdgeCount(1)} -> std::same_as<void>;
     { mesh.getNeighbors(1)} -> std::same_as<std::vector<int>>;
     { mesh.getVerticesOfTriangle(1,vertexT, vertexT, vertexT)} -> std::same_as<void>;
-    Mesh(vertexVec, edgeVec, faceVec);
-    Mesh(mesh);
+    Mesh(vertexVec, edgeVec, faceVec); // Constructible from these 3 vectors
+    Mesh(mesh); // Copy constructible
 } &&
-std::derived_from<typename Mesh::VertexType, Vertex>;
+std::derived_from<typename Mesh::VertexType, Vertex>
+&& 
+std::movable<Mesh>;
 
 #endif
