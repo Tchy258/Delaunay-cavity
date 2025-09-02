@@ -2,7 +2,7 @@
 #include <mesh_data/half_edge_mesh.hpp>
 #endif
 
-HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) {
+HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) const {
     return halfEdges.at(edge).origin;
 }
 
@@ -20,49 +20,49 @@ std::vector<int> HalfEdgeMesh::getNeighbors(int polygon) {
     return neighbors;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::next(HalfEdgeMesh::EdgeIndex edge) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::next(HalfEdgeMesh::EdgeIndex edge) const {
     return halfEdges.at(edge).next;
 }
 
-HalfEdgeMesh::VertexIndex HalfEdgeMesh::target(HalfEdgeMesh::EdgeIndex edge) {
+HalfEdgeMesh::VertexIndex HalfEdgeMesh::target(HalfEdgeMesh::EdgeIndex edge) const {
     return origin(halfEdges.at(edge).twin);
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::twin(HalfEdgeMesh::VertexIndex edge) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::twin(HalfEdgeMesh::VertexIndex edge) const {
     return halfEdges.at(edge).twin;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::prev(HalfEdgeMesh::VertexIndex edge) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::prev(HalfEdgeMesh::VertexIndex edge) const {
     return halfEdges.at(edge).prev;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::CCWEdgeToVertex(HalfEdgeMesh::EdgeIndex edge) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::CCWEdgeToVertex(HalfEdgeMesh::EdgeIndex edge) const {
     int twinIdx, prevIdx;
     prevIdx = halfEdges.at(edge).prev;
     twinIdx = halfEdges.at(prevIdx).twin;
     return twinIdx;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::CWEdgeToVertex(HalfEdgeMesh::EdgeIndex edge) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::CWEdgeToVertex(HalfEdgeMesh::EdgeIndex edge) const {
     int twinIdx, nextIdx;
     twinIdx = halfEdges.at(edge).twin;
     nextIdx = halfEdges.at(twinIdx).next;
     return nextIdx;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::edgeOfVertex(HalfEdgeMesh::VertexIndex vertex) {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::edgeOfVertex(HalfEdgeMesh::VertexIndex vertex) const {
     return vertices.at(vertex).incidentHalfEdge;
 }
 
-bool HalfEdgeMesh::isBorderFace(HalfEdgeMesh::EdgeIndex edge) {
+bool HalfEdgeMesh::isBorderFace(HalfEdgeMesh::EdgeIndex edge) const {
     return halfEdges.at(edge).isBorder;
 }
 
-bool HalfEdgeMesh::isBorderVertex(HalfEdgeMesh::VertexIndex vertex) {
+bool HalfEdgeMesh::isBorderVertex(HalfEdgeMesh::VertexIndex vertex) const {
     return vertices.at(vertex).isBorder;
 }
 
-unsigned int HalfEdgeMesh::degree(HalfEdgeMesh::VertexIndex vertex) {
+unsigned int HalfEdgeMesh::degree(HalfEdgeMesh::VertexIndex vertex) const {
     int currentEdge = edgeOfVertex(vertex);
     int nextEdge = CCWEdgeToVertex(currentEdge);
     unsigned int count = 1;
@@ -73,7 +73,7 @@ unsigned int HalfEdgeMesh::degree(HalfEdgeMesh::VertexIndex vertex) {
     return count;
 }
 
-double HalfEdgeMesh::edgeLength2(HalfEdgeMesh::EdgeIndex edge) {
+double HalfEdgeMesh::edgeLength2(HalfEdgeMesh::EdgeIndex edge) const {
     HalfEdgeMesh::VertexType originVertex = vertices.at(origin(edge));
     HalfEdgeMesh::VertexType targetVertex = vertices.at(target(edge));
     Vertex vectorFromTargetToOrigin = targetVertex - originVertex;
@@ -113,8 +113,7 @@ inline void HalfEdgeMesh::getVerticesOfTriangle(int polygonIndex, Vertex& v0, Ve
     v2 = vertices.at(target(next(firstEdge)));
 }
 
-void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors)
-{
+void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors) {
     int neigh, origin, target;
     for(std::size_t i = 0; i < nPolygons; i++){
         for(std::size_t j = 0; j < 3; j++){

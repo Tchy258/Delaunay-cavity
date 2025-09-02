@@ -24,14 +24,6 @@ class HalfEdgeMesh {
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
         
-        HalfEdgeMesh(const HalfEdgeMesh& other) {
-            this->vertices = other.vertices;
-            this->halfEdges = other.halfEdges;
-            this->polygons = other.polygons;
-            this->nVertices = other.nVertices;
-            this->nPolygons = other.nPolygons;
-            this->nHalfEdges = other.nHalfEdges;
-        }
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces);
         HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, std::vector<int> neighbors);
          /**
@@ -44,10 +36,15 @@ class HalfEdgeMesh {
         void getVerticesOfTriangle(int polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
         VertexType& getVertex(VertexIndex v) {
             return vertices.at(v);
-        };
+        }
         EdgeType& getEdge(EdgeIndex e) {
             return halfEdges.at(e);
-        };
+        }
+        /**
+         * Returns the polygon index (face) associated with this half edge
+         * @param e An index of an edge whose face we need
+         * @return The polygon index associated with edge `e`
+         */
         int getFaceOfEdge(EdgeIndex e) const {
             return halfEdges.at(e).face;
         }
@@ -55,7 +52,7 @@ class HalfEdgeMesh {
          * Every 3 indices of the polygons vector are a face, so we'll get the half edge that satisfies that
          * the vertex at polygon + 1 and the vertex at polygon + 2 are its next and prev / prev and next
          */
-        EdgeIndex getPolygon(int polygon) {
+        EdgeIndex getPolygon(int polygon) const {
             int timesThree = polygon * 3;
             int vertexIdx = polygons.at(timesThree);
             int vertexIdx2 = polygons.at(timesThree + 1);
@@ -127,7 +124,7 @@ class HalfEdgeMesh {
          * @param edge The edge whose origin we want to get
          * @return Index to the tail vertex `v` of the edge `edge`
         */
-        VertexIndex origin(EdgeIndex edge);
+        VertexIndex origin(EdgeIndex edge) const;
         /**
          * Calculates the next edge of the face incident to edge `edge`
          * 
@@ -136,20 +133,20 @@ class HalfEdgeMesh {
          * @param edge The edge we want to get the next edge from
          * @return Index to the next edge of the face incident to `edge`
          */
-        EdgeIndex next(EdgeIndex edge);
+        EdgeIndex next(EdgeIndex edge) const;
         /**
          * Calculates the head vertex of the edge `edge`
          * 
          * @param edge The edge whose target we want to get
          * @return Index to the head vertex `v` of the edge `edge` 
          */
-        VertexIndex target(EdgeIndex edge);
+        VertexIndex target(EdgeIndex edge) const;
         /**
          * Returns the twin edge of the edge `edge`
          * @param edge The edge whose twin we want to get
          * @return Index to twin edge of `edge`
          */
-        EdgeIndex twin(VertexIndex edge);
+        EdgeIndex twin(VertexIndex edge) const;
         /**
          * Returns the previous edge of the face incident to edge `edge`
          * 
@@ -158,7 +155,7 @@ class HalfEdgeMesh {
          * @param edge The edge whose previous edge we want to get
          * @return Index to the previous edge of the face incident to `edge`
          */
-        EdgeIndex prev(VertexIndex edge);
+        EdgeIndex prev(VertexIndex edge) const;
         /**
          * Returns the next counterclockwise edge of the origin vertex `v` of edge `edge`
          * 
@@ -167,7 +164,7 @@ class HalfEdgeMesh {
          * @param edge The edge with an origin `v` whose next ccw edge we need
          * @return Index to next counterclockwise edge
          */
-        EdgeIndex CCWEdgeToVertex(EdgeIndex e);
+        EdgeIndex CCWEdgeToVertex(EdgeIndex e) const;
         /**
          * Returns the next clockwise edge of the origin vertex `v` of edge `edge`
          * 
@@ -176,23 +173,23 @@ class HalfEdgeMesh {
          * @param edge The edge with an origin `v` whose next cw edge we need
          * @return Index to next clockwise edge
          */
-        EdgeIndex CWEdgeToVertex(EdgeIndex edge);
+        EdgeIndex CWEdgeToVertex(EdgeIndex edge) const;
         /**
          * Returns the index of the edge associated with the vertex `vertex`
          * @param v Vertex whose edge we want to get
          * @return An index to the mesh's vector of HalfEdges with the edge of `vertex`
          */
-        EdgeIndex edgeOfVertex(VertexIndex vertex);
+        EdgeIndex edgeOfVertex(VertexIndex vertex) const;
         /**
          * @param edge Edge we want to query from
          * @return Whether the face of `edge` is a border face
          */
-        bool isBorderFace(EdgeIndex edge);
+        bool isBorderFace(EdgeIndex edge) const;
         /**
          * @param vertex Vertex we want to query
          * @return Whether this vertex `vertex` is part of the border of the polygon
          */
-        bool isBorderVertex(VertexIndex vertex);
+        bool isBorderVertex(VertexIndex vertex) const;
         /**
          * Returns the degree of vertex `vertex`
          * 
@@ -201,7 +198,7 @@ class HalfEdgeMesh {
          * @param vertex Vertex whose degree we want to calculate
          * @returns Amount of half edges that have `v` as its origin
          */
-        unsigned int degree(VertexIndex vertex);
+        unsigned int degree(VertexIndex vertex) const;
         /**
          * Returns the squared length of the edge `edge`.
          * 
@@ -210,7 +207,7 @@ class HalfEdgeMesh {
          * @param edge The edge whose length is queried
          * @returns The squared length of the edge `edge`
          */
-        double edgeLength2(EdgeIndex edge);
+        double edgeLength2(EdgeIndex edge) const;
 };
 
 #include<template_implementations/mesh_data/half_edge_mesh.ipp>
