@@ -36,30 +36,91 @@ TODO:
 #ifndef POLYGONAL_MESH_HPP
 #define POLYGONAL_MESH_HPP
 
+#include <chrono>
 #include <array>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <sstream>
+#include <string>
+#include <memory>
 #include <unordered_map>
 #include <map>
 #include <chrono>
 #include <concepts/mesh_data.hpp>
 #include <mesh_io/mesh_reader.hpp>
 #include <mesh_io/mesh_writer.hpp>
+#include <mesh_refiners/mesh_refiner.hpp>
+#include <misc/mesh_stat.hpp>
+#include <misc/time_stat.hpp>
 /**
  * Class that defines a polygonal mesh
  */
 template <MeshData Mesh>
 class PolygonalMesh {
-
 private:
-    Mesh* meshData;
-    Mesh* refinedMesh;
-    MeshReader reader;
-    MeshWriter writer;
+    double generationTime = 0.0;
+    Mesh* meshData = nullptr;
+    Mesh* refinedMesh = nullptr;
+    std::unique_ptr<MeshReader<Mesh>> reader;
+    std::unique_ptr<MeshWriter<Mesh>> writer;
+    std::unique_ptr<MeshRefiner<Mesh>> refiner;
+public:
     
+    PolygonalMesh(std::unique_ptr<MeshReader<Mesh>> meshReader) : reader(std::move(meshReader)) {}
+    PolygonalMesh(std::unique_ptr<MeshReader<Mesh>> meshReader, std::unique_ptr<MeshWriter<Mesh>> meshWriter) : reader(std::move(meshReader)), writer(std::move(meshWriter)) {}
+    PolygonalMesh& setReader(std::unique_ptr<MeshReader<Mesh>> reader) {
+        this->reader = std::move(reader);
+        return *this;
+    }
+    PolygonalMesh& setWriter(std::unique_ptr<MeshWriter<Mesh>> writer) {
+        this->writer = std::move(writer);
+        return *this;
+    }
+    PolygonalMesh& setRefiner(std::unique_ptr<MeshRefiner<Mesh>> refiner) {
+        this->refiner = std::move(refiner);
+        return *this;
+    }
+    PolygonalMesh& readMeshFromFiles(const std::vector<std::filesystem::path>& filepaths) {
+        auto start = std::chrono::high_resolution_clock::now();
+        meshData =reader->readMesh(filepaths);
+        auto end = std::chrono::high_resolution_clock::now();
+        generationTime = std::chrono::duration<double, std::milli>(end - start).count();
+        return *this;
+    }
+    PolygonalMesh& refineMesh() {
+        if (refiner == nullptr) {
+            throw std::runtime_error("Refiner must be set before attempting to refine mesh");
+        }
+        refinedMesh = refiner->refineMesh(meshData);
+        return *this;
+    }
+    PolygonalMesh& writeOutputMesh(const std::vector<std::filesystem::path>& filepaths) {
+        writer->writeMesh(filepaths, *refinedMesh);
+        return *this;
+    }
+    void writeStatsToJson(const std::filesystem::path& filepath) {
+        //TODO: Logic for writing stats
+    }
+    const Mesh& getOriginalMeshData() const {
+        return meshData;
+    }
+    const Mesh& getRefinedMeshData() const {
+        return refinedMesh;
+    }
+    std::unordered_map<MeshStat,int> getRefinementStats() {
+        //TODO: Logic for retrieving refinement stats
+        return std::unordered_map<MeshStat,int>{};
+    }
+    std::unordered_map<TimeStat,double> getRefinementTimes() {
+        //TODO: Logic for retrieving time stats
+        return std::unordered_map<TimeStat,double>{};
+    }
+    ~PolygonalMesh() {
+        delete meshData;
+        delete refinedMesh;
+    }
 };
 
 #endif

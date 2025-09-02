@@ -12,6 +12,7 @@
 #include <mesh_refiners/delaunay_cavity_refiner.hpp>
 #include <mesh_refiners/refinement_criteria/min_angle_criterion.hpp>
 #include <mesh_io/off_reader.hpp>
+#include <polygonal_mesh.hpp>
 
 int main(int argc, char **argv) {
 
@@ -36,12 +37,14 @@ int main(int argc, char **argv) {
         }
 
         //Polylla mesh(node_file, ele_file, neigh_file);
-        NodeEleReader<HalfEdgeMesh> reader;
-        HalfEdgeMesh mesh = reader.readMesh(node_file);
-        DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>> refiner(MinAngleCriterion<HalfEdgeMesh>(70.0));
-        HalfEdgeMesh refined = refiner.refineMesh(mesh);
-        OffWriter<HalfEdgeMesh> writer;
-        writer.writeMesh(output, refined);
+        PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<NodeEleReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
+        
+        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(70.0)))
+        .readMeshFromFiles({node_file, ele_file, neigh_file})
+        .refineMesh()
+        .writeOutputMesh({output + ".off"});
+        
+        
         //mesh.print_stats(output + ".json");
         //std::cout<<"output json in "<<output<<".json"<<std::endl;
         //mesh.print_OFF(output+".off");
@@ -52,12 +55,13 @@ int main(int argc, char **argv) {
         std::string off_file = std::string(argv[1]);
         std::string output = std::string(argv[2]);
 	    //Polylla mesh(off_file);
-        OffReader<HalfEdgeMesh> reader;
-        HalfEdgeMesh mesh = reader.readMesh(off_file);
-        DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>> refiner(MinAngleCriterion<HalfEdgeMesh>(21.0));
-        HalfEdgeMesh refined = refiner.refineMesh(mesh);
-        OffWriter<HalfEdgeMesh> writer;
-        writer.writeMesh(output + ".off", refined);
+        PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<OffReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
+        
+        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(21.0)))
+        .readMeshFromFiles({off_file})
+        .refineMesh()
+        .writeOutputMesh({output + ".off"});
+        
         //mesh.print_stats(output + ".json");
         //std::cout<<"output json in "<<output<<".json"<<std::endl;
         //mesh.print_OFF(output+".off");
