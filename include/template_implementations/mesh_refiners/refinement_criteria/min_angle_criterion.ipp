@@ -202,38 +202,52 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAngleCriterion<Mesh>::operator()(Mesh& mesh, int polygonIndex) const {
-    typename Mesh::VertexType v1, v2, v3;
+bool MinAngleCriterion<Mesh>::operator()(Mesh& mesh, int polygonIndex) const
+{
+    typename Mesh::VertexType v1;
+    typename Mesh::VertexType v2;
+    typename Mesh::VertexType v3;
 
-    mesh.getVerticesOfTriangle(polygonIndex,v1,v2,v3);
+    mesh.getVerticesOfTriangle(polygonIndex, v1, v2, v3);
+
     Vertex edgeV1V2 = v2 - v1;
     Vertex edgeV2V3 = v3 - v2;
     Vertex edgeV3V1 = v1 - v3;
+
     double lenEdgeV1V2sq = edgeV1V2.dot(edgeV1V2);
     double lenEdgeV2V3sq = edgeV2V3.dot(edgeV2V3);
     double lenEdgeV3V1sq = edgeV3V1.dot(edgeV3V1);
-    // If the edge V1V2 is the shortest, the angle opposite to V1V2 is the smallest
-    // The smallest angle is determined by the square of its cosine assuming the angle
-    // is acute
-    Vertex* side1, *side2;
-    double* lenSide1, *lenSide2;
-    if ((lenEdgeV1V2sq < lenEdgeV2V3sq) && (lenEdgeV1V2sq < lenEdgeV3V1sq)) {
-        side1 = &edgeV2V3;
-        side2 = &edgeV3V1;
-        lenSide1 = &lenEdgeV2V3sq;
-        lenSide2 = &lenEdgeV3V1sq;
-    } else if ( lenEdgeV2V3sq < lenEdgeV3V1sq) {
-        side1 = &edgeV1V2;
-        side2 = &edgeV3V1;
-        lenSide1 = &lenEdgeV1V2sq;
-        lenSide2 = &lenEdgeV3V1sq;
+
+    double dot;
+    double lenSide1;
+    double lenSide2;
+
+    if (lenEdgeV1V2sq <= lenEdgeV2V3sq && lenEdgeV1V2sq <= lenEdgeV3V1sq) {
+        Vertex side1v = v1 - v3;
+        Vertex side2v = v2 - v3;
+        dot = side1v.dot(side2v);
+        lenSide1 = side1v.dot(side1v);
+        lenSide2 = side2v.dot(side2v);
+    } else if (lenEdgeV2V3sq <= lenEdgeV3V1sq) {
+        Vertex side1v = v2 - v1;
+        Vertex side2v = v3 - v1;
+        dot = side1v.dot(side2v);
+        lenSide1 = side1v.dot(side1v);
+        lenSide2 = side2v.dot(side2v);
     } else {
-        side1 = &edgeV1V2;
-        side2 = &edgeV2V3;
-        lenSide1 = &lenEdgeV1V2sq;
-        lenSide2 = &lenEdgeV2V3sq;
+        Vertex side1v = v1 - v2;
+        Vertex side2v = v3 - v2;
+        dot = side1v.dot(side2v);
+        lenSide1 = side1v.dot(side1v);
+        lenSide2 = side2v.dot(side2v);
     }
-    double angle = side1->dot(*side2);
-    angle = angle * angle / ((*lenSide1) * (*lenSide2)); 
-    return angle > angleThreshold;
+
+    double cos2Signed = (dot * dot) / (lenSide1 * lenSide2);
+
+    if (dot < 0.0) {
+        cos2Signed = -cos2Signed;
+    }
+
+    return cos2Signed > angleThreshold;
 }
+

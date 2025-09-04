@@ -27,9 +27,9 @@ struct MinAngleCriterionRobust {
      */
     MinAngleCriterionRobust(double angle, bool type = true) : angleThreshold(angle) {
         if (type) {
-            angleThreshold = std::cos(angle * PI / 180.0);
+            angleThreshold = angle * PI / 180.0;
         } else {
-            angleThreshold = std::cos(angle);
+            angleThreshold = angle;
         }
     }
 };

@@ -27,22 +27,16 @@ struct MinAngleCriterion {
      * @param angle Angle threshold the user wants to check for
      * @param type Whether the angle is given in degrees (default to true) or radians
      */
-    MinAngleCriterion(double angle, bool type = true) : angleThreshold(angle) {
-        double finalAngle = angle;
-        if (type) {
-            if (angle >= 90.0) {
-                std::cout << "Warning: Non-acute angle provided for min angle criterion, the criterion will look for the supplement instead" << std::endl;
-                finalAngle = 180.0 - angle;
-            }
-            angleThreshold = std::cos(finalAngle * PI / 180.0);
-        } else {
-            if (angle >= (PI / 2)) {
-                std::cout << "Warning: Non-acute angle provided for min angle criterion, the criterion will look for the supplement instead" << std::endl;
-                finalAngle = PI - angle;
-            }
-            angleThreshold = std::cos(finalAngle);
-        }
-        angleThreshold *= angleThreshold;
+    MinAngleCriterion(double angle, bool type = true) {
+    double radians = type ? angle * PI / 180.0 : angle;
+
+    if (radians >= PI) {
+        std::cout << "Warning: Angle >= 180° is invalid, clamping to 179.999°" << std::endl;
+        radians = PI - 1e-6; // clamp
+    }
+
+    double c = std::cos(radians);
+    angleThreshold = (c >= 0.0 ? 1.0 : -1.0) * (c * c);
     }
 };
 

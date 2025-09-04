@@ -18,5 +18,5 @@ bool MinAngleCriterionRobust<Mesh>::operator()(Mesh& mesh, int polygonIndex) con
     double angle2 = std::acos(std::clamp((-edgeV1V2.dot(edgeV2V3)) / (std::sqrt(edgeV1V2.dot(edgeV1V2)) * std::sqrt(edgeV2V3.dot(edgeV2V3))), -1.0, 1.0));
     double angle3 = std::acos(std::clamp((-edgeV2V3.dot(edgeV3V1)) / (std::sqrt(edgeV2V3.dot(edgeV2V3)) * std::sqrt(edgeV3V1.dot(edgeV3V1))), -1.0, 1.0));
 
-    return std::min({angle1, angle2, angle3}) > angleThreshold;
+    return std::min({angle1, angle2, angle3}) < angleThreshold;
 }
