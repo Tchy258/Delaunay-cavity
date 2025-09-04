@@ -8,24 +8,25 @@
 #include <mesh_refiners/mesh_refiner.hpp>
 
 class HalfEdgeMesh {
-    private:
-        std::vector<HEVertex> vertices;
-        std::vector<HalfEdge> halfEdges;
-        std::vector<int> polygons;
-        size_t nVertices;
-        size_t nPolygons;
-        size_t nHalfEdges;
-        void constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<int> &faces, std::vector<int> &neighbors);
-        void constructInteriorHalfEdgesFromFaces(std::vector<int> &faces);
-        void constructExteriorHalfEdges();
     public:
         using VertexIndex = int;
         using EdgeIndex = int;
+        using FaceIndex = int;
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
-        
-        HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces);
-        HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<int> faces, std::vector<int> neighbors);
+    private:
+        std::vector<VertexType> vertices;
+        std::vector<EdgeType> halfEdges;
+        std::vector<FaceIndex> polygons;
+        size_t nVertices;
+        size_t nPolygons;
+        size_t nHalfEdges;
+        void constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<FaceIndex> &faces, std::vector<FaceIndex> &neighbors);
+        void constructInteriorHalfEdgesFromFaces(std::vector<FaceIndex> &faces);
+        void constructExteriorHalfEdges();
+    public:
+        HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<FaceIndex> faces);
+        HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<FaceIndex> faces, std::vector<FaceIndex> neighbors);
          /**
          * Retrieves the vertices of the triangle stored at `polygonIndex`.
          * @param polygonIndex An index to the triangle whose vertices we need
@@ -33,30 +34,36 @@ class HalfEdgeMesh {
          * @param vertex1 A reference to another vertex we will set, this vertex must be the next vertex on a CCW orientation to `vertex1`
          * @param vertex2 A reference to the last vertex we will set, this vertex must be the last vertex on a CCW orientation such that `vertex0` -> `vertex1` -> `vertex2`
          */
-        void getVerticesOfTriangle(int polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
+        void getVerticesOfTriangle(FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
         VertexType& getVertex(VertexIndex v) {
             return vertices.at(v);
         }
         EdgeType& getEdge(EdgeIndex e) {
             return halfEdges.at(e);
         }
+        std::vector<HalfEdge> getEdges() const {
+            return halfEdges;
+        }
+        void setEdges(std::vector<HalfEdge>& edges) {
+            halfEdges = std::move(edges);
+        }
         /**
          * Returns the polygon index (face) associated with this half edge
          * @param e An index of an edge whose face we need
          * @return The polygon index associated with edge `e`
          */
-        int getFaceOfEdge(EdgeIndex e) const {
+        FaceIndex getFaceOfEdge(EdgeIndex e) const {
             return halfEdges.at(e).face;
         }
         /**
          * Every 3 indices of the polygons vector are a face, so we'll get the half edge that satisfies that
          * the vertex at polygon + 1 and the vertex at polygon + 2 are its next and prev / prev and next
          */
-        EdgeIndex getPolygon(int polygon) const {
+        EdgeIndex getPolygon(FaceIndex polygon) const {
             int timesThree = polygon * 3;
-            int vertexIdx = polygons.at(timesThree);
-            int vertexIdx2 = polygons.at(timesThree + 1);
-            int vertexIdx3 = polygons.at(timesThree + 2);
+            VertexIndex vertexIdx = polygons.at(timesThree);
+            VertexIndex vertexIdx2 = polygons.at(timesThree + 1);
+            VertexIndex vertexIdx3 = polygons.at(timesThree + 2);
             const HEVertex& aVertex = vertices.at(vertexIdx);
             EdgeIndex incidentHE = aVertex.incidentHalfEdge;
             while ( halfEdges.at(incidentHE).face == -1 || (!(target(incidentHE) == vertexIdx2) && !(target(next(incidentHE)) == vertexIdx3)) ) {
@@ -114,10 +121,10 @@ class HalfEdgeMesh {
          * @param polygonIndex The face that needs its starting edge updated
          * @param identifyingEdge The edge that will now identify this face
          */
-        void setFace(int polygonIndex, EdgeIndex identifyingEdge) {
+        void setFace(FaceIndex polygonIndex, EdgeIndex identifyingEdge) {
             polygons[polygonIndex] = identifyingEdge;
         }
-        std::vector<int> getNeighbors(int polygon);
+        std::vector<FaceIndex> getNeighbors(FaceIndex polygon);
         /**
          * Calculates the tail vertex of the edge `edge`
          * 
@@ -182,9 +189,9 @@ class HalfEdgeMesh {
         EdgeIndex edgeOfVertex(VertexIndex vertex) const;
         /**
          * @param edge Edge we want to query from
-         * @return Whether the face of `edge` is a border face
+         * @return Whether `edge` is a border edge
          */
-        bool isBorderFace(EdgeIndex edge) const;
+        bool isBorderEdge(EdgeIndex edge) const;
         /**
          * @param vertex Vertex we want to query
          * @return Whether this vertex `vertex` is part of the border of the polygon
