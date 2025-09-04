@@ -17,6 +17,9 @@ class NodeEleReader : public MeshReader<Mesh> {
         unsigned int readEleFile(const std::filesystem::path& filepaths, std::vector<int>& elements);
         unsigned int readNodeFile(const std::filesystem::path& filepaths, std::vector<typename Mesh::VertexType>& vertices);
     public:
+        /**
+         * Make sure triangles are 0 indexed
+         */
         Mesh* readMesh(const std::vector<std::filesystem::path>& files) override;
 };
 

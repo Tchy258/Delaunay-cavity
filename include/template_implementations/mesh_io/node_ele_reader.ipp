@@ -36,6 +36,9 @@ unsigned int NodeEleReader<Mesh>::readNodeFile(const std::filesystem::path& file
         vertices.reserve(n_vertices);
         while (std::getline(nodefile, line))
         {
+            if (line.starts_with("#")) {
+                continue;
+            }
             std::istringstream stream(line);
             int nodeNumber, boundary;
             double xCoord, yCoord;
@@ -108,7 +111,6 @@ unsigned int NodeEleReader<Mesh>::readNeighFile(const std::filesystem::path &fil
             while (std::getline(neighfile, line)) {
                 int triangleNumber, neighbor1, neighbor2, neighbor3;
                 if(line[0] == '#'){
-                    std::cout<<line<<std::endl;
                     continue;
                 }
                 std::istringstream(line) >> triangleNumber >> neighbor1 >> neighbor2 >> neighbor3;
@@ -147,6 +149,9 @@ unsigned int NodeEleReader<Mesh>::readEleFile(const std::filesystem::path &filep
         faces.reserve(3*n_elements);
         std::getline(elefile, line); //skip the first line
         while (std::getline(elefile, line)) {
+            if(line[0] == '#'){
+                continue;
+            }
             int triangleNumber, node1, node2, node3;
             std::istringstream(line) >> triangleNumber >> node1 >> node2 >> node3;
             faces.push_back(node1);
