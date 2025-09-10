@@ -16,6 +16,7 @@ add_library(concepts INTERFACE
     ${CONCEPT_DIR}/mesh_data.hpp 
     ${CONCEPT_DIR}/refinement_criterion.hpp
     ${CONCEPT_DIR}/has_adjacency_constructor.hpp
+    ${CONCEPT_DIR}/primitive_integral.hpp
 )
 
 add_library(vertex INTERFACE ${PROJECT_SOURCE_DIR}/include/mesh_data/structures/vertex.hpp)
