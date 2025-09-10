@@ -58,6 +58,19 @@ bool HalfEdgeMesh::isBorderEdge(HalfEdgeMesh::EdgeIndex edge) const {
     return halfEdges.at(edge).isBorder;
 }
 
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::getSharedEdge(HalfEdgeMesh::FaceIndex triangle1, HalfEdgeMesh::FaceIndex triangle2) const {
+    EdgeIndex firstEdge = getPolygon(triangle1);
+    EdgeIndex currentEdge = firstEdge;
+
+    do {
+        if (twin(currentEdge) != -1 && halfEdges[twin(currentEdge)].face == triangle2) {
+            return currentEdge;
+        }
+        currentEdge = next(currentEdge);
+    } while (firstEdge != currentEdge);
+    return -1;
+}
+
 bool HalfEdgeMesh::isBorderVertex(HalfEdgeMesh::VertexIndex vertex) const {
     return vertices.at(vertex).isBorder;
 }
@@ -113,6 +126,12 @@ inline void HalfEdgeMesh::getVerticesOfTriangle(HalfEdgeMesh::FaceIndex polygonI
     v2 = vertices.at(target(next(firstEdge)));
 }
 
+inline std::array<HalfEdgeMesh::EdgeIndex, 3> HalfEdgeMesh::getEdgesOfTriangle(FaceIndex triangle) {
+    EdgeIndex edge1 = getPolygon(triangle);
+    EdgeIndex edge2 = next(edge1);
+    EdgeIndex edge3 = next(edge2);
+    return {edge1, edge2, edge3};
+}
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<HalfEdgeMesh::FaceIndex> &faces, std::vector<HalfEdgeMesh::FaceIndex> &neighbors) {
     int neigh, origin, target;
     for(std::size_t i = 0; i < nPolygons; i++){

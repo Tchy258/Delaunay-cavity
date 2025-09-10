@@ -35,6 +35,11 @@ class HalfEdgeMesh {
          * @param vertex2 A reference to the last vertex we will set, this vertex must be the last vertex on a CCW orientation such that `vertex0` -> `vertex1` -> `vertex2`
          */
         void getVerticesOfTriangle(FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
+        /**
+         * @param triangle A triangle index
+         * @return An array with 3 indices that point to the CCW edges of `triangle`
+         */
+        std::array<EdgeIndex,3> getEdgesOfTriangle(FaceIndex triangle);
         VertexType& getVertex(VertexIndex v) {
             return vertices.at(v);
         }
@@ -54,6 +59,9 @@ class HalfEdgeMesh {
          */
         FaceIndex getFaceOfEdge(EdgeIndex e) const {
             return halfEdges.at(e).face;
+        }
+        std::pair<FaceIndex,FaceIndex> getFacesAssociatedWithEdge(EdgeIndex e) const {
+            return {getFaceOfEdge(e), getFaceOfEdge(twin(e))};
         }
         /**
          * Every 3 indices of the polygons vector are a face, so we'll get the half edge that satisfies that
@@ -121,8 +129,16 @@ class HalfEdgeMesh {
          * @param polygonIndex The face that needs its starting edge updated
          * @param identifyingEdge The edge that will now identify this face
          */
-        void setFace(FaceIndex polygonIndex, EdgeIndex identifyingEdge) {
+        void setFaceToEdge(FaceIndex polygonIndex, EdgeIndex identifyingEdge) {
             polygons[polygonIndex] = identifyingEdge;
+        }
+        /**
+         * Updates `edge`'s `.face` attribute to store the value of `newFace`
+         * @param edge An edge whose associated face has to change
+         * @param newFace The new face that `edge` belongs to
+         */
+        void setEdgeToFace(EdgeIndex edge, FaceIndex newFace) {
+            halfEdges.at(edge).face = newFace;
         }
         std::vector<FaceIndex> getNeighbors(FaceIndex polygon);
         /**
@@ -192,6 +208,13 @@ class HalfEdgeMesh {
          * @return Whether `edge` is a border edge
          */
         bool isBorderEdge(EdgeIndex edge) const;
+        /**
+         * @param triangle1 A triangle in the mesh
+         * @param triangle2 A possible neighbor of `triangle1`
+         * @return The shared edge between `triangle1` and `triangle2` as the index of the
+         * half edge in CCW for `triangle1`, or -1 if these triangles aren't neighbors
+         */
+        EdgeIndex getSharedEdge(FaceIndex triangle1, FaceIndex triangle2) const;
         /**
          * @param vertex Vertex we want to query
          * @return Whether this vertex `vertex` is part of the border of the polygon

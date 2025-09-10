@@ -3,6 +3,7 @@
 
 #include<concepts>
 #include<vector>
+#include<array>
 #include<unordered_map>
 #include<concepts/primitive_integral.hpp>
 #include<mesh_data/structures/vertex.hpp>
@@ -50,6 +51,10 @@ concept MeshData = requires(
     { mesh.updateEdgeCount(1)} -> std::same_as<void>;
     { mesh.getNeighbors(1)} -> std::same_as<std::vector<typename Mesh::FaceIndex>>;
     { mesh.getVerticesOfTriangle(1,vertexT, vertexT, vertexT)} -> std::same_as<void>;
+    { mesh.getEdgesOfTriangle(1) } -> std::same_as<std::array<typename Mesh::EdgeIndex,3>>;
+    { mesh.isBorderEdge(1) } -> std::same_as<bool>;
+    { mesh.getSharedEdge(1, 1) } -> std::same_as<typename Mesh::EdgeIndex>; // FaceIndex, FaceIndex
+    { mesh.getFacesAssociatedWithEdge(1)} -> std::same_as<std::pair<typename Mesh::FaceIndex, typename Mesh::FaceIndex>>;
     Mesh(vertexVec, edgeVec, faceVec); // Constructible from these 3 vectors
     Mesh(mesh); // Copy constructible
 }
