@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
         //Polylla mesh(node_file, ele_file, neigh_file);
         PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<NodeEleReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
         
-        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(70.0)))
+        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(20.0)))
         .readMeshFromFiles({node_file, ele_file, neigh_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
