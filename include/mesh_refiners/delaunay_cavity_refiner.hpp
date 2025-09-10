@@ -4,6 +4,7 @@
 #include<unordered_set>
 #include<cstdint>
 #include<queue>
+#include<array>
 #include<misc/mesh_stat.hpp>
 #include<misc/time_stat.hpp>
 #include<concepts/mesh_data.hpp>
@@ -13,7 +14,8 @@
 #include<mesh_data/half_edge_mesh.hpp>
 #include<mesh_refiners/mesh_refiner.hpp>
 #include<mesh_refiners/helpers/mesh_helper.hpp>
-#include<mesh_refiners/helpers/delaunay_cavity/bfs_cavity_walker.hpp>
+#include<mesh_refiners/helpers/delaunay_cavity/cavity.hpp>
+#include<mesh_refiners/helpers/delaunay_cavity/union_find_cavity_merger.hpp>
 #include<stdexcept>
 #include<string>
 #include<cmath>
@@ -28,14 +30,18 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         using FaceIndex = typename MeshType::FaceIndex;
     private:
         Criterion refinementCriterion;
-        using CavityNode = refiners::helpers::delaunay_cavity::BFSCavityNode<MeshType>;
         using _MeshHelper = refiners::helpers::delaunay_cavity::MeshHelper<MeshType>;
+        using MeshUnionFind = refiners::helpers::delaunay_cavity::UnionFindCavityMerger<MeshType>;
+        using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
+
+        bool isCavityBoundaryEdge(MeshType* outputMesh, EdgeIndex edge, const std::vector<FaceIndex>& cavityFaces);
+
         std::unordered_map<int, std::vector<EdgeIndex>> selectCavityEdges(MeshType* outMesh, std::unordered_map<FaceIndex, std::vector<FaceIndex>>& cavities) {
             return _MeshHelper::selectCavityEdges(outMesh,cavities);
         }
-        std::vector<MeshEdge> selectCavityEdges2(MeshType* outMesh, std::unordered_map<FaceIndex, std::vector<std::vector<FaceIndex>>>& cavities) {
+        std::vector<MeshEdge> selectCavityEdges2(MeshType* outMesh, std::vector<Cavity>& cavities) {
             return _MeshHelper::selectCavityEdges2(outMesh,cavities);
         }
         /**
@@ -52,13 +58,13 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         }
 
         std::vector<std::pair<MeshVertex,int>> findMatchingCircumcenters(MeshType* outputMesh, size_t polygonAmount);
-        std::vector<std::vector<FaceIndex>> computeCavity(MeshType* outputMesh, const std::pair<MeshVertex,FaceIndex>& circumcenterData, std::vector<uint8_t>& visited);
+        Cavity computeCavity(MeshType* outputMesh, const std::pair<MeshVertex,FaceIndex>& circumcenterData, std::vector<uint8_t>& visited);
 
-        inline void resetVisited(std::vector<uint8_t>& visited, const std::vector<std::vector<FaceIndex>>& cavity) {
-            for (auto& level : cavity) {
-                for (FaceIndex triangle: level) {
-                    visited[triangle] = 0;
-                }
+        std::vector<Cavity> mergeCavities(MeshType* outputMesh, std::vector<Cavity>& cavities);
+
+        inline void resetVisited(std::vector<uint8_t>& visited, const Cavity& cavity) {
+            for (FaceIndex triangle: cavity.allTriangles) {
+                visited[triangle] = 0;
             }
         }
     public:

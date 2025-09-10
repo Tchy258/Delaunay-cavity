@@ -5,7 +5,8 @@
 #include <mesh_refiners/helpers/mesh_helper.hpp>
 #endif
 #include <mesh_data/half_edge_mesh.hpp>
-
+#include <mesh_refiners/helpers/delaunay_cavity/cavity.hpp>
+#include<array>
 namespace refiners::helpers::delaunay_cavity {
 
     template <MeshData MeshType>
@@ -16,7 +17,7 @@ namespace refiners::helpers::delaunay_cavity {
         using EdgeIndex = HalfEdgeMesh::EdgeIndex;
         using FaceIndex = HalfEdgeMesh::FaceIndex;
         using VertexIndex = HalfEdgeMesh::VertexIndex;
-
+        using Cavity = Cavity<HalfEdgeMesh>;
         static void removeAndReconnectEdges(HalfEdgeMesh* mesh, EdgeIndex edgeToRemove, size_t& edgeCount) {
             
             // First we check if it wasn't removed already
@@ -93,91 +94,37 @@ namespace refiners::helpers::delaunay_cavity {
             return cavityEdges;
         }
 
-        static std::vector<HalfEdge> selectCavityEdges2(HalfEdgeMesh* mesh, const std::unordered_map<FaceIndex, std::vector<std::vector<FaceIndex>>>& cavities) {
-            std::vector<HalfEdge> newEdges = mesh->getEdges();
-            size_t edgeCount = mesh->numberOfEdges();
-            size_t faceCount = mesh->numberOfPolygons();
-            size_t vertexCount = mesh->numberOfVertices();
-            for (const auto& [cavitySeed, cavityPolygons] : cavities) {
-                std::vector<EdgeIndex> edgesToKeep;
-                int outerMostLevel = cavityPolygons.size() - 1;
-                edgesToKeep.reserve(outerMostLevel * 6);
-                auto inCavity = [&cavityPolygons](FaceIndex cavityFace, int level) {
-                    return std::binary_search(cavityPolygons[level].begin(), cavityPolygons[level].end(), cavityFace);
-                };
-
-                auto isCavityBorder = [&cavityPolygons, &mesh, &inCavity](EdgeIndex edge, int level) {
-                    if (mesh->isBorderEdge(edge)) return true;
-                    FaceIndex faceOfTwin = mesh->getFaceOfEdge(mesh->twin(edge));
-                    for (int i = level; i >= 0; --i) {
-                        if (inCavity(faceOfTwin,i)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                };
-
-                // Retrieve some edge of a triangle that is at the end of the cavity
-                FaceIndex last = cavityPolygons.at(outerMostLevel)[0];
-                EdgeIndex firstEdge = mesh->getPolygon(last);
-                EdgeIndex currentEdge = firstEdge;
-                do {
-                    // If this is a border edge or its twin isn't part of the cavity, then this will be the first edge
-                    // Since this edge comes from the outermost level of the cavity, this is guaranteed to happen at some point
-                    if (isCavityBorder(currentEdge,outerMostLevel)) {
-                        firstEdge = currentEdge;
-                        break;
-                    }
-                    currentEdge = mesh->next(currentEdge);
-                } while(currentEdge != firstEdge);
-                edgesToKeep.push_back(firstEdge);
-                FaceIndex newCavityFace = mesh->getFaceOfEdge(firstEdge);
-                // Building the cavity
-                do {
-                    EdgeIndex newNext = mesh->next(currentEdge);
-                    while (!isCavityBorder(newNext,outerMostLevel)) {
-                        newNext = mesh->CWEdgeToVertex(newNext);
-                    }
-                    if (newNext != newEdges[currentEdge].next) {
-                        newEdges[newEdges[currentEdge].next].origin = -1;
-                        newEdges[newEdges[currentEdge].next].face = -1;
-                        newEdges[currentEdge].next = newNext;
-                        newEdges[newNext].prev = currentEdge;
-                        newEdges[newNext].face = newCavityFace;
-                        --edgeCount;
-                    }
-                    currentEdge = newNext;
-                    edgesToKeep.push_back(newNext);
-                } while(currentEdge != firstEdge);
-                std::sort(edgesToKeep.begin(), edgesToKeep.end());
-                // At this point, newEdges should have all edges of the cavity properly connected
-                // So now we start destroying the inner levels
-                for (int i = outerMostLevel - 1; i >=0; --i) {
-                    const std::vector<FaceIndex>& innerTriangles = cavityPolygons[i];
-                    for (FaceIndex face : innerTriangles) {
-                        uint8_t edgesRemaining = 3;
-                        EdgeIndex edge1 = mesh->getPolygon(face);
-                        EdgeIndex edge2 = mesh->next(edge1);
-                        EdgeIndex edge3 = mesh->next(edge2);
-                        for (EdgeIndex e : {edge1, edge2, edge3}) {
-                            if (mesh->isBorderEdge(e)) continue;
-                            if (!std::binary_search(edgesToKeep.begin(), edgesToKeep.end(), e)) {
-                                newEdges[e].origin = -1;
-                                newEdges[e].face = -1;
-                                --edgesRemaining;
-                                --edgeCount;
-                            }
-                        }
-                        if (edgesRemaining == 0) {
-                            --faceCount;
-                        }
-                    }
-                }
+        static void formCavityLoop(HalfEdgeMesh* mesh, std::vector<EdgeIndex>& cavityEdges) {
+            std::vector<uint8_t> isCavityBoundary(mesh->numberOfEdges(),0);
+            for (EdgeIndex e : cavityEdges) {
+                isCavityBoundary[e] = 1;
             }
-            mesh->updateEdgeCount(edgeCount);
-            mesh->updatePolygonCount(faceCount);
-            mesh->setEdges(newEdges);
-            return newEdges;
+            std::vector<EdgeIndex> loopedBoundary;
+            loopedBoundary.reserve(cavityEdges.size());
+            EdgeIndex firstEdge = cavityEdges[0];
+            FaceIndex cavityFace = mesh->getFaceOfEdge(firstEdge);
+            //mesh->setFaceToEdge(cavityFace, firstEdge);
+            EdgeIndex currentEdge = firstEdge;
+            loopedBoundary.push_back(currentEdge);
+            do {
+                EdgeIndex nextEdge = mesh->next(currentEdge);
+                while (!isCavityBoundary[nextEdge]) {
+                    nextEdge = mesh->CWEdgeToVertex(nextEdge);
+                }
+                mesh->setPrev(nextEdge,currentEdge);
+                mesh->setNext(currentEdge,nextEdge);
+                mesh->setEdgeToFace(nextEdge, cavityFace);
+                loopedBoundary.push_back(nextEdge);
+                currentEdge = nextEdge;
+            } while (firstEdge != currentEdge);
+            cavityEdges = std::move(loopedBoundary);
+        }
+
+        static std::array<EdgeIndex,3> getEdges(HalfEdgeMesh* outputMesh, FaceIndex triangle) {
+            EdgeIndex edge1 = outputMesh->getPolygon(triangle);
+            EdgeIndex edge2 = outputMesh->next(edge1);
+            EdgeIndex edge3 = outputMesh->next(edge2);
+            return {edge1, edge2, edge3};
         }
 
         static void insertCavity(HalfEdgeMesh* outputMesh, std::unordered_map<int, std::vector<EdgeIndex>>& cavityMap) {
