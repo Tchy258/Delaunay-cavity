@@ -1,7 +1,7 @@
 #ifndef REFINEMENT_CRITERION_HPP
 #define REFINEMENT_CRITERION_HPP
-#include<concepts>
-#include<concepts/mesh_data.hpp>
+#include <concepts>
+#include <concepts/mesh_data.hpp>
 
 /**
  * A refinement criterion must apply to a particular mesh that conforms to the MeshData concept,
