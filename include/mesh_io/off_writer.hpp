@@ -6,7 +6,7 @@
 template <MeshData Mesh>
 class OffWriter : public MeshWriter<Mesh> {
     private:
-        void writeFacesRecursive();
+        void writeOutputSeeds(std::ofstream& file, HalfEdgeMesh& mesh, std::vector<HalfEdgeMesh::OutputIndex> outputSeeds) requires std::same_as<Mesh, HalfEdgeMesh>;
         /**
          * Method to write the faces of this half edge based `mesh` to a file
          * 
@@ -16,9 +16,9 @@ class OffWriter : public MeshWriter<Mesh> {
          */
         void writeFaces(std::ofstream& file, HalfEdgeMesh& mesh) requires std::same_as<Mesh, HalfEdgeMesh>;
     public:
-        void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh) override;
+        void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh, std::vector<typename Mesh::OutputIndex> outputSeeds = {}) override;
 };
 
-#include<template_implementations/mesh_io/off_writer.ipp>
+#include<mesh_io/off_writer.ipp>
 
 #endif

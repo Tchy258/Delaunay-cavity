@@ -13,7 +13,7 @@ class MeshWriter {
         /**
          * Writes files with the appropriate format specified on `files` with the mesh `mesh`
          */
-        virtual void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh) = 0;
+        virtual void writeMesh(const std::vector<std::filesystem::path>& files, Mesh& mesh, std::vector<typename Mesh::OutputIndex> outputSeeds = {}) = 0;
 };
 
 #endif
