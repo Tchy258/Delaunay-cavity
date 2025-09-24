@@ -7,9 +7,9 @@
 
 template <typename MergingStrategy, typename Mesh>
 concept HasPreAddMethod = requires(Mesh* mesh, 
-    const std::vector<std::pair<typename Mesh::VertexType, typename Mesh::FaceIndex>>& circumcenters,
+    const std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>>& cavities,
     typename Mesh::FaceIndex triangle) {
-        { MergingStrategy::preAdd(mesh, triangle, circumcenters)} -> std::convertible_to<bool>;
+        { MergingStrategy::preAdd(mesh, triangle, cavities)} -> std::convertible_to<bool>;
 } && MeshData<Mesh>;
 
 template <typename MergingStrategy, typename Mesh>

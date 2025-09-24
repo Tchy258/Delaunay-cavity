@@ -8,19 +8,19 @@
 #include<misc/mesh_stat.hpp>
 #include<misc/time_stat.hpp>
 #include<concepts/mesh_data.hpp>
+#include<concepts/cavity_merging_strategy.hpp>
 #include<concepts/refinement_criterion.hpp>
 #include<concepts/is_half_edge_vertex.hpp>
 #include<mesh_data/structures/vertex.hpp>
 #include<mesh_data/half_edge_mesh.hpp>
 #include<mesh_refiners/mesh_refiner.hpp>
-#include<mesh_refiners/helpers/mesh_helper.hpp>
-#include<mesh_refiners/helpers/delaunay_cavity/cavity.hpp>
-#include<mesh_refiners/helpers/delaunay_cavity/union_find_cavity_merger.hpp>
+#include<mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
+#include<mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
 #include<stdexcept>
 #include<string>
 #include<cmath>
 
-template <MeshData MeshType, RefinementCriterion<MeshType> Criterion>
+template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMergingStrategy<MeshType> MergingStrategy>
 class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
     public:
         using MeshVertex = typename MeshType::VertexType;
@@ -28,47 +28,40 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         using VertexIndex = typename MeshType::VertexIndex;
         using EdgeIndex = typename MeshType::EdgeIndex;
         using FaceIndex = typename MeshType::FaceIndex;
+        using OutputIndex = typename MeshType::OutputIndex;
     private:
         Criterion refinementCriterion;
+        std::vector<OutputIndex> outputSeeds;
         using _MeshHelper = refiners::helpers::delaunay_cavity::MeshHelper<MeshType>;
-        using MeshUnionFind = refiners::helpers::delaunay_cavity::UnionFindCavityMerger<MeshType>;
         using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
 
-        bool isCavityBoundaryEdge(MeshType* outputMesh, EdgeIndex edge, const std::vector<FaceIndex>& cavityFaces);
-
-        std::unordered_map<int, std::vector<EdgeIndex>> selectCavityEdges(MeshType* outMesh, std::unordered_map<FaceIndex, std::vector<FaceIndex>>& cavities) {
-            return _MeshHelper::selectCavityEdges(outMesh,cavities);
-        }
-        std::vector<MeshEdge> selectCavityEdges2(MeshType* outMesh, std::vector<Cavity>& cavities) {
-            return _MeshHelper::selectCavityEdges2(outMesh,cavities);
-        }
         /**
          * Calls the mesh specific methods to edit it and form the cavity inside of it.
          * 
          * A mesh helper should implement the logic for insertion on a specific mesh
          * @param outputMesh A mesh, received as a copy of the mesh received in the refineMesh method
-         * @param cavityMap A hashmap that maps polygon faces to the edges that the face should keep, so all other edges should be erased.
-         * This erasure should be done by changing where other edges point to, and NOT by editing the edges vector
-         * @returns A mesh that has cavities according to the `Criterion` used
+         * @param cavities A vector of Cavity objects
          */
-        void insertCavity(MeshType* outputMesh, std::unordered_map<int, std::vector<typename MeshType::EdgeIndex>>& cavityMap) {
-            return _MeshHelper::insertCavity(outputMesh,cavityMap);
+        void insertCavity(MeshType* outputMesh, std::vector<Cavity>& cavities) {
+            _MeshHelper::insertCavity(outputMesh,cavities);
         }
 
-        std::vector<std::pair<MeshVertex,int>> findMatchingCircumcenters(MeshType* outputMesh, size_t polygonAmount);
-        Cavity computeCavity(MeshType* outputMesh, const std::pair<MeshVertex,FaceIndex>& circumcenterData, std::vector<uint8_t>& visited);
-
-        std::vector<Cavity> mergeCavities(MeshType* outputMesh, std::vector<Cavity>& cavities);
+        std::vector<std::pair<MeshVertex,FaceIndex>> findMatchingCircumcenters(MeshType* outputMesh, size_t polygonAmount);
+        std::vector<Cavity> computeCavities(MeshType* outputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
 
         inline void resetVisited(std::vector<uint8_t>& visited, const Cavity& cavity) {
             for (FaceIndex triangle: cavity.allTriangles) {
                 visited[triangle] = 0;
             }
         }
+        
     public:
         MeshType* refineMesh(const MeshType* inputMesh) override;
+        std::vector<OutputIndex>& getOutputSeeds() override {
+            return outputSeeds;
+        }
         explicit DelaunayCavityRefiner(Criterion criterion) : refinementCriterion(std::move(criterion)) {
             meshStats[N_POLYGONS] = 0;
             meshStats[N_FRONTIER_EDGES] = 0;
@@ -90,6 +83,6 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
 
 };
 
-#include<template_implementations/mesh_refiners/delaunay_cavity_refiner.ipp>
+#include<mesh_refiners/delaunay_cavity/delaunay_cavity_refiner.ipp>
 
 #endif

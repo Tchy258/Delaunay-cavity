@@ -9,6 +9,6 @@ class OffReader : public MeshReader<Mesh> {
         Mesh* readMesh(const std::vector<std::filesystem::path>& files) override;
 };
 
-#include <template_implementations/mesh_io/off_reader.ipp>
+#include <mesh_io/off_reader.ipp>
 
 #endif

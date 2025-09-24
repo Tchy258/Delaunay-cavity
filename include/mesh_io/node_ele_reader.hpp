@@ -23,8 +23,6 @@ class NodeEleReader : public MeshReader<Mesh> {
         Mesh* readMesh(const std::vector<std::filesystem::path>& files) override;
 };
 
-#include <template_implementations/mesh_io/node_ele_reader.ipp>
-
-template class NodeEleReader<HalfEdgeMesh>;
+#include <mesh_io/node_ele_reader.ipp>
 
 #endif
