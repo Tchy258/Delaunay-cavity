@@ -97,7 +97,11 @@ public:
         return *this;
     }
     PolygonalMesh& writeOutputMesh(const std::vector<std::filesystem::path>& filepaths) {
-        writer->writeMesh(filepaths, *refinedMesh);
+        std::vector<typename Mesh::OutputIndex> output = {};
+        if (refiner != nullptr) {
+            output = refiner->getOutputSeeds();
+        }
+        writer->writeMesh(filepaths, *refinedMesh, output);
         return *this;
     }
     void writeStatsToJson(const std::filesystem::path& filepath) {
