@@ -3,7 +3,6 @@
 #include <cmath>
 #include <concepts/mesh_data.hpp>
 #include <mesh_data/structures/vertex.hpp>
-#include <concepts/is_half_edge_vertex.hpp>
 #include <iostream>
 #define PI 3.14159265358979323846
 
@@ -40,6 +39,6 @@ struct MinAngleCriterion {
     }
 };
 
-#include<template_implementations/mesh_refiners/refinement_criteria/min_angle_criterion.ipp>
+#include<mesh_refiners/refinement_criteria/min_angle_criterion.ipp>
 #undef PI
 #endif
