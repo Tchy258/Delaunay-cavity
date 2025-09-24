@@ -9,7 +9,9 @@
 #include <mesh_data/half_edge_mesh.hpp>
 #include <mesh_io/node_ele_reader.hpp>
 #include <mesh_io/off_writer.hpp>
-#include <mesh_refiners/delaunay_cavity_refiner.hpp>
+#include <mesh_refiners/delaunay_cavity/delaunay_cavity_refiner.hpp>
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/exclude_previous_cavities_strategy.hpp>
+#include <mesh_refiners/refinement_criteria/min_area_criterion.hpp>
 #include <mesh_refiners/refinement_criteria/min_angle_criterion.hpp>
 #include <mesh_io/off_reader.hpp>
 #include <polygonal_mesh.hpp>
@@ -39,7 +41,14 @@ int main(int argc, char **argv) {
         //Polylla mesh(node_file, ele_file, neigh_file);
         PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<NodeEleReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
         
-        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(20.0)))
+        polygonalMesh.setRefiner(
+        std::make_unique<
+            DelaunayCavityRefiner<
+                HalfEdgeMesh, 
+                MinAreaCriterion<HalfEdgeMesh>, 
+                ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
+            >
+        >(MinAreaCriterion<HalfEdgeMesh>(0.0387)))
         .readMeshFromFiles({node_file, ele_file, neigh_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
@@ -57,7 +66,14 @@ int main(int argc, char **argv) {
 	    //Polylla mesh(off_file);
         PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<OffReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
         
-        polygonalMesh.setRefiner(std::make_unique<DelaunayCavityRefiner<HalfEdgeMesh, MinAngleCriterion<HalfEdgeMesh>>>(MinAngleCriterion<HalfEdgeMesh>(21.0)))
+        polygonalMesh.setRefiner(
+        std::make_unique<
+            DelaunayCavityRefiner<
+                HalfEdgeMesh, 
+                MinAreaCriterion<HalfEdgeMesh>, 
+                ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
+            >
+        >(MinAreaCriterion<HalfEdgeMesh>(0.0387)))
         .readMeshFromFiles({off_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
