@@ -6,12 +6,15 @@
 #include <cmath>
 #include <unordered_map>
 #include <mesh_refiners/mesh_refiner.hpp>
+#include <concepts/mesh_data.hpp>
+#include <concepts/has_adjacency_constructor.hpp>
 
 class HalfEdgeMesh {
     public:
         using VertexIndex = int;
         using EdgeIndex = int;
         using FaceIndex = int;
+        using OutputIndex = EdgeIndex;
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
     private:
@@ -238,8 +241,18 @@ class HalfEdgeMesh {
          * @returns The squared length of the edge `edge`
          */
         double edgeLength2(EdgeIndex edge) const;
-};
 
-#include<template_implementations/mesh_data/half_edge_mesh.ipp>
+};
+/** 
+ * These lines must be here after the class is completely defined to make sure the
+ * class adheres to the concept, it gets deleted on compilation
+ * 
+ * This is analogous to Java's "implements"
+ * It is only used here due to HalfEdgeMesh not being templated itself, otherwise, it's not applicable
+ */
+static_assert(MeshData<HalfEdgeMesh>);
+static_assert(HasAdjacencyConstructor<HalfEdgeMesh>);
+
+#include<mesh_data/half_edge_mesh.ipp>
 
 #endif
