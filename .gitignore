@@ -20,5 +20,6 @@ experiments/*/*/*.off
 !data/points50_polylla.1.pdf
 !data/5points*
 !data/10points*
+!data/8points*
 .vscode
 .vscode/*
