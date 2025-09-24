@@ -6,7 +6,8 @@
 template <MeshData Mesh>
 class MeshRefiner {
     public:
-        virtual Mesh* refineMesh(const Mesh* inputMesh) = 0;    
+        virtual Mesh* refineMesh(const Mesh* inputMesh) = 0;
+        virtual std::vector<typename Mesh::OutputIndex>& getOutputSeeds() = 0;    
 };
 
 #endif
