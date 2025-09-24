@@ -1,17 +1,20 @@
 #ifndef MESH_DATA_HPP
 #define MESH_DATA_HPP
 
-#include<concepts>
-#include<vector>
-#include<array>
-#include<unordered_map>
-#include<concepts/primitive_integral.hpp>
-#include<mesh_data/structures/vertex.hpp>
+#include <concepts>
+#include <concepts/mesh_details/mesh_accesors.hpp>
+#include <concepts/mesh_details/mesh_constructible.hpp>
+#include <concepts/mesh_details/mesh_edges.hpp>
+#include <concepts/mesh_details/mesh_indices.hpp>
+#include <concepts/mesh_details/mesh_setters.hpp>
+#include <concepts/mesh_details/mesh_topology.hpp>
+#include <concepts/mesh_details/mesh_vertices.hpp>
 
 /**
  * All meshes used throughout the program as template arguments must adhere to this concept, so a mesh must:
  * - Define a type for its vertices and edges, `Mesh::VertexType` and `Mesh::EdgeType`
  * - Define a type for the indices of its vertices and edges, `Mesh::VertexIndex`, `Mesh::EdgeIndex` and `Mesh::FaceIndex`
+ * - Define an output index type that is one of the three above
  * - The indices mentioned above must be some fundamental integer type (char, short, int, long, long long and unsigned variants)
  * - Have a vector of vertices, a vector of edges and a vector of ints representing polygons
  * - Have getters for vertices, edges and polygons as well as size getters and setters
@@ -22,46 +25,13 @@
  * - Have vertices that are at least a type of `Vertex`
  */
 template<typename Mesh>
-concept MeshData = requires(
-    Mesh& mesh,
-    const Mesh& cmesh,
-    std::vector<typename Mesh::VertexType> vertexVec,
-    std::vector<typename Mesh::EdgeType> edgeVec,
-    std::vector<typename Mesh::FaceIndex> faceVec,
-    typename Mesh::VertexType vertexT,
-    typename Mesh::EdgeType edgeT,
-    typename Mesh::VertexIndex,
-    typename Mesh::EdgeIndex,
-    typename Mesh::FaceIndex
-) {
-    typename Mesh::VertexType;
-    typename Mesh::EdgeType;
-    typename Mesh::VertexIndex;
-    typename Mesh::EdgeIndex;
-    typename Mesh::FaceIndex;
-    { std::declval<const typename Mesh::VertexType&>() } -> std::same_as<const typename Mesh::VertexType&>;
-    { mesh.getVertex(1) } -> std::same_as<typename Mesh::VertexType&>;
-    { mesh.getEdge(1) } -> std::same_as<typename Mesh::EdgeType&>;
-    { mesh.getPolygon(1) } -> std::same_as<typename Mesh::FaceIndex>;
-    { cmesh.numberOfVertices()} -> std::same_as<size_t>;
-    { cmesh.numberOfEdges()} -> std::same_as<size_t>;
-    { cmesh.numberOfPolygons()} -> std::same_as<size_t>;
-    { mesh.updatePolygonCount(1)} -> std::same_as<void>;
-    { mesh.updateVertexCount(1)} -> std::same_as<void>;
-    { mesh.updateEdgeCount(1)} -> std::same_as<void>;
-    { mesh.getNeighbors(1)} -> std::same_as<std::vector<typename Mesh::FaceIndex>>;
-    { mesh.getVerticesOfTriangle(1,vertexT, vertexT, vertexT)} -> std::same_as<void>;
-    { mesh.getEdgesOfTriangle(1) } -> std::same_as<std::array<typename Mesh::EdgeIndex,3>>;
-    { mesh.isBorderEdge(1) } -> std::same_as<bool>;
-    { mesh.getSharedEdge(1, 1) } -> std::same_as<typename Mesh::EdgeIndex>; // FaceIndex, FaceIndex
-    { mesh.getFacesAssociatedWithEdge(1)} -> std::same_as<std::pair<typename Mesh::FaceIndex, typename Mesh::FaceIndex>>;
-    Mesh(vertexVec, edgeVec, faceVec); // Constructible from these 3 vectors
-    Mesh(mesh); // Copy constructible
-}
-&& std::derived_from<typename Mesh::VertexType, Vertex>
-&& std::movable<Mesh>
-&& PrimitiveIntegral<typename Mesh::VertexIndex>
-&& PrimitiveIntegral<typename Mesh::EdgeIndex>
-&& PrimitiveIntegral<typename Mesh::FaceIndex>;
+concept MeshData = 
+    MeshVertices<Mesh>
+    && MeshEdges<Mesh>
+    && MeshIndices<Mesh>
+    && MeshAccessors<Mesh>
+    && MeshSetters<Mesh>
+    && MeshTopology<Mesh>
+    && MeshConstructible<Mesh>;
 
 #endif
