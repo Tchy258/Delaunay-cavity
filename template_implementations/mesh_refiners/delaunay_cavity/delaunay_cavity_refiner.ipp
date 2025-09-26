@@ -103,7 +103,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
         dedupSort(cavity.boundaryTriangles);
         dedupSort(cavity.interior);
 
-        _MeshHelper::markInteriorEdgesFromSeeds(outputMesh, this->outputSeeds, cavity.interior);
+        _MeshHelper::markInteriorOutputsFromSeeds(outputMesh, this->outputSeeds, cavity.interior);
         resetVisited(visited, cavity);
     }
     return cavities;
@@ -125,8 +125,8 @@ MeshType* DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::refineMes
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
-    _MeshHelper::eraseInteriorEdgesFromSeeds(this->outputSeeds);
-    insertCavity(outputMesh, cavities);
+    _MeshHelper::eraseInteriorOutputsFromSeeds(this->outputSeeds);
+    _MeshHelper::insertCavity(outputMesh,cavities);
     return outputMesh;
 }
 

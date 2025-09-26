@@ -76,4 +76,6 @@ namespace refiners::helpers::delaunay_cavity {
     };
 }
 
+#include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_half_edge_delaunay_cavity.ipp>
+
 #endif

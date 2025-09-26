@@ -37,17 +37,6 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
 
-        /**
-         * Calls the mesh specific methods to edit it and form the cavity inside of it.
-         * 
-         * A mesh helper should implement the logic for insertion on a specific mesh
-         * @param outputMesh A mesh, received as a copy of the mesh received in the refineMesh method
-         * @param cavities A vector of Cavity objects
-         */
-        void insertCavity(MeshType* outputMesh, std::vector<Cavity>& cavities) {
-            _MeshHelper::insertCavity(outputMesh,cavities);
-        }
-
         std::vector<std::pair<MeshVertex,FaceIndex>> findMatchingCircumcenters(MeshType* outputMesh, size_t polygonAmount);
         std::vector<Cavity> computeCavities(MeshType* outputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
 
@@ -80,7 +69,12 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
             timeStats[T_TRAVERSAL] = 0.0;
             timeStats[T_REPAIR] = 0.0;
         }
-
+        std::unordered_map<MeshStat,int>& getRefinementStats() override {
+            return meshStats;
+        }
+        std::unordered_map<TimeStat,double>& getRefinementTimes() override {
+            return timeStats;
+        }
 };
 
 #include<mesh_refiners/delaunay_cavity/delaunay_cavity_refiner.ipp>
