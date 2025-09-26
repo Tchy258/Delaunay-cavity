@@ -61,6 +61,9 @@ add_executable(Polylla main.cpp)
 
 add_executable(Cavity main2.cpp)
 
+add_executable(Polylla2 main3.cpp)
+
 target_link_libraries(Polylla PUBLIC meshfiles)
 target_link_libraries(Cavity PUBLIC meshfiles hemesh mesh_io criteria refiners)
+target_link_libraries(Polylla2 PUBLIC meshfiles hemesh mesh_io refiners)
 set_target_properties(meshfiles PROPERTIES LINKER_LANGUAGE CXX)
