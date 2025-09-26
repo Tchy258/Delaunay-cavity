@@ -114,12 +114,21 @@ public:
         return refinedMesh;
     }
     std::unordered_map<MeshStat,int> getRefinementStats() {
-        //TODO: Logic for retrieving refinement stats
-        return std::unordered_map<MeshStat,int>{};
+        if (refiner != nullptr) {
+            std::unordered_map<MeshStat,int>& stats = refiner->getRefinementStats();
+            return stats;
+        } else {
+            return std::unordered_map<MeshStat,int>{};
+        }
     }
     std::unordered_map<TimeStat,double> getRefinementTimes() {
-        //TODO: Logic for retrieving time stats
-        return std::unordered_map<TimeStat,double>{};
+        if (refiner != nullptr) {
+            std::unordered_map<TimeStat,double>& stats = refiner->getRefinementTimes();
+            stats[T_TRIANGULATION_GENERATION] = generationTime;
+            return stats;
+        } else {
+            return std::unordered_map<TimeStat,double>{};
+        }
     }
     ~PolygonalMesh() {
         delete meshData;
