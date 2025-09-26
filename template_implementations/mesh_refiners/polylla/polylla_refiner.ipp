@@ -5,54 +5,39 @@
 template <MeshData MeshType>
 MeshType* PolyllaRefiner<MeshType>::refineMesh(const MeshType* inputMesh) {
     MeshType* outputMesh = new MeshType(*inputMesh);
-    maxEdges = BinaryVector(outputMesh->numberOfEdges(), false);
-    frontierEdges = BinaryVector(outputMesh->numberOfEdges(), false);
+    data.maxEdges = BinaryVector(outputMesh->numberOfEdges(), false);
+    data.frontierEdges = BinaryVector(outputMesh->numberOfEdges(), false);
     //triangles = outputMesh->get_Triangles(); //Change by triangle list
-    seed_bet_mark = BinaryVector(this->outputMesh->numberOfEdges(), false);
+    data.seedBarrierEdgeTipMark = BinaryVector(outputMesh->numberOfEdges(), false);
 
     //terminal_edges = bit_vector(outputMesh->halfEdges(), false);
-    //seedOutputs = bit_vector(outputMesh->halfEdges(), false);
+    //outputSeeds = bit_vector(outputMesh->halfEdges(), false);
     
     std::cout<<"Creating Polylla..."<<std::endl;
-    _MeshHelper::labelMaxEdges(*this, outputMesh);
-    std::cout<<"Labered max edges in "<< timeStats[T_LABEL_MAX_EDGES] <<" ms"<<std::endl;
+    auto t_start = std::chrono::high_resolution_clock::now();
+    _MeshHelper::labelMaxEdges(data, outputMesh);
+    auto t_end = std::chrono::high_resolution_clock::now();
+    data.timeStats[T_LABEL_MAX_EDGES] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    std::cout<<"Labeled max edges in "<< data.timeStats[T_LABEL_MAX_EDGES] <<" ms"<<std::endl;
 
-
-    std::cout<<"Labeled frontier edges in "<<t_label_frontier_edges<<" ms"<<std::endl;
+    t_start = std::chrono::high_resolution_clock::now();
+    _MeshHelper::labelFrontierEdges(data, outputMesh);
+    t_end = std::chrono::high_resolution_clock::now();
+    data.timeStats[T_LABEL_FRONTIER_EDGES] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    std::cout<<"Labeled frontier edges in "<<data.timeStats[T_LABEL_FRONTIER_EDGES]<<" ms"<<std::endl;
     
     t_start = std::chrono::high_resolution_clock::now();
-    //label seeds edges,
-    for (std::size_t e = 0; e < outputMesh->halfEdges(); e++)
-        if(outputMesh->is_interior_face(e) && is_seed_edge(e))
-            seedOutputs.push_back(e);
-
-        
+    data.seedCandidates = _MeshHelper::generateSeedCandidates(data, outputMesh);
     t_end = std::chrono::high_resolution_clock::now();
-    t_label_seed_edges = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    std::cout<<"Labeled seed edges in "<<t_label_seed_edges<<" ms"<<std::endl;
+    data.timeStats[T_LABEL_SEED_EDGES] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    std::cout<<"Labeled seed edges in "<< data.timeStats[T_LABEL_SEED_EDGES] <<" ms"<<std::endl;
 
-    //Travel phase: Generate polygon mesh
-    int polygon_seed;
-    //Foreach seed edge generate polygon
-    t_start = std::chrono::high_resolution_clock::now();
-    for(auto &e : seedOutputs){
-        polygon_seed = travel_triangles(e);
-        //output_seeds.push_back(polygon_seed);
-        if(!has_BarrierEdgeTip(polygon_seed)){ //If the polygon is a simple polygon then is part of the mesh
-            output_seeds.push_back(polygon_seed);
-        }else{ //Else, the polygon is send to reparation phase
-            auto t_start_repair = std::chrono::high_resolution_clock::now();
-            barrieredge_tip_reparation(polygon_seed);
-            auto t_end_repair = std::chrono::high_resolution_clock::now();
-            t_repair += std::chrono::duration<double, std::milli>(t_end_repair-t_start_repair).count();
-        }         
-    }    
-    t_end = std::chrono::high_resolution_clock::now();
-    t_traversal_and_repair = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    t_traversal = t_traversal_and_repair - t_repair;
+    data.outputSeeds = _MeshHelper::generateOutputSeeds(data, inputMesh, outputMesh);
     
-    this->m_polygons = output_seeds.size();
+    data.meshStats[N_POLYGONS] = data.outputSeeds.size();
 
-    std::cout<<"Mesh with "<<m_polygons<<" polygons "<<n_frontier_edges/2<<" edges and "<<n_barrier_edge_tips<<" barrier-edge tips."<<std::endl;
-    //outputMesh->print_pg(std::to_string(outputMesh->vertices()) + ".pg");             
+    std::cout<<"Mesh with "<< data.meshStats[N_POLYGONS] <<" polygons "<< data.meshStats[N_FRONTIER_EDGES] <<" edges and "<< data.meshStats[N_BARRIER_EDGE_TIPS] <<" barrier-edge tips."<<std::endl;
+    //outputMesh->print_pg(std::to_string(outputMesh->vertices()) + ".pg");
+    
+    return outputMesh;
 }

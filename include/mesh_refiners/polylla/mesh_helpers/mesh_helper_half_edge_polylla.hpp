@@ -16,14 +16,37 @@ namespace refiners::helpers::polylla {
         using EdgeIndex = HalfEdgeMesh::EdgeIndex;
         using FaceIndex = HalfEdgeMesh::FaceIndex;
         using OutputIndex = HalfEdgeMesh::OutputIndex;
-        // TODO: add methods required for a generic polylla
-        static void labelMaxEdges(PolyllaRefiner<HalfEdgeMesh>& refiner, HalfEdgeMesh* mesh);
+        using BinaryVector = std::vector<uint8_t>;
+        using RefinementData = PolyllaData<HalfEdgeMesh>;
+        // TODO: add docs
+        static void labelMaxEdges(RefinementData& data, HalfEdgeMesh* mesh);
 
-        static EdgeIndex findMaxEdge(PolyllaRefiner<HalfEdgeMesh>& refiner, HalfEdgeMesh* mesh, FaceIndex face);
+        static EdgeIndex findMaxEdge(HalfEdgeMesh* mesh, FaceIndex face);
 
-        static void labelFrontierEdges(PolyllaRefiner<HalfEdgeMesh>& refiner, HalfEdgeMesh* mesh);
+        static void labelFrontierEdges(RefinementData& data, HalfEdgeMesh* mesh);
 
-        static bool isFrontierEdge(PolyllaRefiner<HalfEdgeMesh>& refiner, HalfEdgeMesh* mesh, EdgeIndex edge);
+        static bool isFrontierEdge(RefinementData& data, HalfEdgeMesh* mesh, EdgeIndex edge);
+
+        static std::vector<OutputIndex> generateSeedCandidates(RefinementData& data, HalfEdgeMesh* mesh);
+
+        static bool isSeedCandidateIndex(RefinementData& data, HalfEdgeMesh* mesh, OutputIndex seedCandidate);
+
+        static std::vector<OutputIndex> generateOutputSeeds(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh);
+
+        static OutputIndex generatePolygonFromSeed(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex seed);
+
+        static EdgeIndex getNextFrontierEdge(RefinementData& data, const HalfEdgeMesh* mesh, EdgeIndex edge);
+
+        static bool isSimplePolygon(HalfEdgeMesh* mesh, OutputIndex seed);
+
+        static void barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed);
+
+        static EdgeIndex calculateMiddleEdge(RefinementData& data, const HalfEdgeMesh* inputMesh, VertexIndex barrierEdgeTipVertex);
+
+        static OutputIndex generateRepairedPolygon(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex seedToRepair);
     };
 }
+
+#include <mesh_refiners/polylla/mesh_helpers/mesh_helper_half_edge_polylla.ipp>
+
 #endif // MESH_HELPER_HALF_EDGE_POLYLLA_HPP

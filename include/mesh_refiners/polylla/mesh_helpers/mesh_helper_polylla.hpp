@@ -1,7 +1,7 @@
 #ifndef MESH_HELPER_POLYLLA_HPP
 #define MESH_HELPER_POLYLLA_HPP
 #include <concepts/mesh_data.hpp>
-#include <mesh_refiners/polylla/polylla_refiner.hpp>
+#include <mesh_refiners/polylla/helper_structs/polylla_data.hpp>
 #include <chrono>
 
 namespace refiners::helpers::polylla {
@@ -14,15 +14,34 @@ namespace refiners::helpers::polylla {
         using EdgeIndex = typename MeshType::EdgeIndex;
         using FaceIndex = typename MeshType::FaceIndex;
         using OutputIndex = typename MeshType::OutputIndex;
-        // TODO: add methods required for a generic polylla and remember to = delete; them
+        using BinaryVector = std::vector<uint8_t>;
+        using RefinementData = PolyllaData<MeshType>;
+        // TODO: add docs
+        static void labelMaxEdges(RefinementData& data, MeshType* mesh) = delete;
 
-        static void labelMaxEdges(PolyllaRefiner<MeshType>& refiner, MeshType* mesh) = delete;
+        static EdgeIndex findMaxEdge(MeshType* mesh, FaceIndex face) = delete;
 
-        static EdgeIndex findMaxEdge(PolyllaRefiner<MeshType>& refiner, MeshType* mesh, FaceIndex face) = delete;
+        static void labelFrontierEdges(RefinementData& data, MeshType* mesh) = delete;
 
-        static void labelFrontierEdges(PolyllaRefiner<MeshType>& refiner, MeshType* mesh) = delete;
+        static bool isFrontierEdge(RefinementData& data, MeshType* mesh, EdgeIndex edge) = delete;
 
-        static bool isFrontierEdge(PolyllaRefiner<MeshType>& refiner, MeshType* mesh, EdgeIndex edge) = delete;
+        static std::vector<OutputIndex> generateSeedCandidates(RefinementData& data, MeshType* mesh) = delete;
+
+        static bool isSeedCandidateIndex(RefinementData& data, MeshType* mesh, OutputIndex seedCandidate) = delete;
+
+        static std::vector<OutputIndex> generateOutputSeeds(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh) = delete;
+
+        static OutputIndex generatePolygonFromSeed(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex seed) = delete;
+
+        static EdgeIndex getNextFrontierEdge(const BinaryVector& frontierEdges, const MeshType* mesh, EdgeIndex edge) = delete;
+
+        static bool isSimplePolygon(MeshType* mesh, OutputIndex seed) = delete;
+
+        static void barrierEdgeTipReparation(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex nonSimpleSeed) = delete;
+
+        static EdgeIndex calculateMiddleEdge(RefinementData& data, const MeshType* inputMesh, VertexIndex barrierEdgeTipVertex) = delete;
+
+        static OutputIndex generateRepairedPolygon(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex seedToRepair) = delete;
     };
 }
 
