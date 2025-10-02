@@ -18,7 +18,7 @@ Mesh* OffReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& filepa
         while (std::getline(offFile, line)) { //add check boundary vertices flag
             std::istringstream(line) >> tmp;
             //std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line)) {
+            if (tmp[0] != '#' && !MeshReader<Mesh>::isWhitespace(line)) {
                 if(tmp[0] == 'O' && tmp[1] == 'F' && tmp[2] == 'F') { //Check if the format is OFF
                     break;
                 } else {
@@ -31,7 +31,7 @@ Mesh* OffReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& filepa
         while (std::getline(offFile, line)) { //add check boundary vertices flag
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line)) { 
+            if (tmp[0] != '#' && !MeshReader<Mesh>::isWhitespace(line)) { 
                 std::istringstream(line) >> nVertices >> nFaces;
                 vertices.reserve(nVertices);
                 faces.reserve(3*nFaces);
@@ -43,7 +43,7 @@ Mesh* OffReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& filepa
         while (index < nVertices && std::getline(offFile, line)) {
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line)) {
+            if (tmp[0] != '#' && !MeshReader<Mesh>::isWhitespace(line)) {
                 std::istringstream(line) >> a1 >> a2 >> a3;
                 typename Mesh::VertexType ve;
                 ve.x =  a1;
@@ -58,7 +58,7 @@ Mesh* OffReader<Mesh>::readMesh(const std::vector<std::filesystem::path>& filepa
         while (index < nFaces && std::getline(offFile, line)) {
             std::istringstream(line) >> tmp;
             // std::cout<<"tmp: "<<tmp<<std::endl;
-            if (tmp[0] != '#' && !isWhitespace(line)) {
+            if (tmp[0] != '#' && !MeshReader<Mesh>::isWhitespace(line)) {
                 std::istringstream(line) >> length >> t1 >> t2 >> t3;
                 // CHECK ORIENTATION!!
                 if (vertices[t1].cross2d(vertices[t2],vertices[t3]) > 0) {

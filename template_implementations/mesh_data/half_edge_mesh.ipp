@@ -164,19 +164,19 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
 }
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh::FaceIndex> &faces) {
-    using _edge = std::pair<int,int>;
+    using _edge = std::pair<VertexIndex,VertexIndex>;
     size_t n_faces = this->nPolygons;
     //std::cout << "0. aca "<< std::endl;	
-    auto hash_for_pair = [n = 3* n_faces](const std::pair<int, int>& p) {
-        return std::hash<int>{}(p.first)*n + std::hash<int>{}(p.second);
+    auto hash_for_pair = [n = 3* n_faces](const std::pair<VertexIndex, VertexIndex>& p) {
+        return std::hash<VertexIndex>{}(p.first)*n + std::hash<VertexIndex>{}(p.second);
     };
-    std::unordered_map<_edge, int, decltype(hash_for_pair)> map_edges(3* n_faces, hash_for_pair); //set of edges to calculate the boundary and twin edges
+    std::unordered_map<_edge, EdgeIndex, decltype(hash_for_pair)> map_edges(3* n_faces, hash_for_pair); //set of edges to calculate the boundary and twin edges
     //std::cout << "1. aca "<< std::endl;
     for(std::size_t i = 0; i < n_faces; i++){
         for(std::size_t j = 0; j < 3; j++){
             HalfEdge he;
-            int v_origin = faces.at(3*i+j);
-            int v_target = faces.at(3*i+(j+1)%3);
+            VertexIndex v_origin = faces.at(3*i+j);
+            VertexIndex v_target = faces.at(3*i+(j+1)%3);
             he.origin = v_origin;
             he.next = i*3+(j+1)%3;
             he.prev = i*3+(j+2)%3;
@@ -192,17 +192,17 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
     //std::cout << "2. aca "<< std::endl;	
     
     //Calculate twin halfedge and boundary halfedges from set_edges
-    std::unordered_map<_edge,int, decltype(hash_for_pair)>::iterator it;
+    std::unordered_map<_edge,EdgeIndex, decltype(hash_for_pair)>::iterator it;
     for(std::size_t i = 0; i < halfEdges.size(); i++){
         //if halfedge has no twin
         if(halfEdges.at(i).twin == -1){
-            int edgeTarget = origin(next(i));
-            int edgeOrigin = origin(i);
+            VertexIndex edgeTarget = origin(next(i));
+            VertexIndex edgeOrigin = origin(i);
             _edge twin = std::make_pair(edgeTarget, edgeOrigin);
             it=map_edges.find(twin);
             //if twin is found
             if(it!=map_edges.end()){
-                int index_twin = it->second;
+                EdgeIndex index_twin = it->second;
                 halfEdges.at(i).twin = index_twin;
                 halfEdges.at(index_twin).twin = i;
             }else{ //if twin is not found and halfedge is on the boundary
@@ -235,18 +235,20 @@ void HalfEdgeMesh::constructExteriorHalfEdges() {
             }    
         }
         //traverse the exterior edges and search their next prev halfedge
-        int nxtCCW, prvCCW;
+        EdgeIndex nextCCW, prevCCW;
         for(std::size_t i = n_halfedges; i < halfEdges.size(); i++){
             if(halfEdges.at(i).isBorder){
-                nxtCCW = CCWEdgeToVertex(halfEdges.at(i).twin);
-                while (halfEdges.at(nxtCCW).isBorder != true)
-                    nxtCCW = this->CCWEdgeToVertex(nxtCCW);
-                halfEdges.at(i).next = nxtCCW;
+                nextCCW = CCWEdgeToVertex(halfEdges.at(i).twin);
+                while (halfEdges.at(nextCCW).isBorder != true) {
+                    nextCCW = this->CCWEdgeToVertex(nextCCW);
+                }
+                halfEdges.at(i).next = nextCCW;
 
-                prvCCW = this->next(twin(i));
-                while (halfEdges.at(halfEdges.at(prvCCW).twin).isBorder != true)
-                    prvCCW = this->CWEdgeToVertex(prvCCW);
-                halfEdges.at(i).prev = halfEdges.at(prvCCW).twin;
+                prevCCW = this->next(twin(i));
+                while (halfEdges.at(halfEdges.at(prevCCW).twin).isBorder != true) {
+                    prevCCW = this->CWEdgeToVertex(prevCCW);
+                }
+                halfEdges.at(i).prev = halfEdges.at(prevCCW).twin;
             }
         }
 }
