@@ -18,7 +18,7 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
         using OutputIndex = typename MeshType::OutputIndex;
     private:
         using _MeshHelper = refiners::helpers::polylla::MeshHelper<MeshType>;
-
+        using BinaryVector = std::vector<uint8_t>;
         PolyllaData<MeshType> data;
 
     public:

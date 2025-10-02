@@ -37,7 +37,7 @@ namespace refiners::helpers::polylla {
 
         static bool isSimplePolygon(MeshType* mesh, OutputIndex seed) = delete;
 
-        static void barrierEdgeTipReparation(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex nonSimpleSeed) = delete;
+        static void barrierEdgeTipReparation(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs) = delete;
 
         static EdgeIndex calculateMiddleEdge(RefinementData& data, const MeshType* inputMesh, VertexIndex barrierEdgeTipVertex) = delete;
 

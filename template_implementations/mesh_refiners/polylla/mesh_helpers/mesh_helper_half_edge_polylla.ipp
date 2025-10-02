@@ -1,7 +1,6 @@
 #ifndef MESH_HELPER_HALF_EDGE_POLYLLA_HPP
 #include <mesh_refiners/polylla/mesh_helpers/mesh_helper_half_edge_polylla.hpp>
-#include "mesh_helper_half_edge_polylla.hpp"
-#endif 
+#endif
 
 namespace refiners::helpers::polylla {
     void MeshHelper<HalfEdgeMesh>::labelMaxEdges(RefinementData& data, HalfEdgeMesh* mesh) {
@@ -76,7 +75,7 @@ namespace refiners::helpers::polylla {
                 outputSeeds.push_back(polygonSeed);
             }else{ //Else, the polygon is send to reparation phase
                 auto t_start_repair = std::chrono::high_resolution_clock::now();
-                barrierEdgeTipReparation(data, inputMesh, outputMesh, polygonSeed);
+                barrierEdgeTipReparation(data, inputMesh, outputMesh, polygonSeed, outputSeeds);
                 auto t_end_repair = std::chrono::high_resolution_clock::now();
                 data.timeStats[T_REPAIR] += std::chrono::duration<double, std::milli>(t_end_repair-t_start_repair).count();
             }         
@@ -91,14 +90,14 @@ namespace refiners::helpers::polylla {
     HalfEdgeMesh::OutputIndex MeshHelper<HalfEdgeMesh>::generatePolygonFromSeed(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex seed) {
         //search next frontier-edge
         EdgeIndex firstEdge = getNextFrontierEdge(data, inputMesh,seed);
-        EdgeIndex currentEdge = inputMesh->next(firstEdge);        
-        EdgeIndex currentFrontierEdge = firstEdge; 
+        EdgeIndex currentEdge = inputMesh->next(firstEdge);
+        EdgeIndex currentFrontierEdge = firstEdge;
 
         //travel inside frontier-edges of polygon
-        do {   
+        do {
             currentEdge = getNextFrontierEdge(data,inputMesh,currentEdge);
             //update next of previous frontier-edge
-            outputMesh->setNext(currentFrontierEdge, currentEdge);  
+            outputMesh->setNext(currentFrontierEdge, currentEdge);
             //update prev of current frontier-edge
             outputMesh->setPrev(currentEdge, currentFrontierEdge);
 
@@ -128,7 +127,7 @@ namespace refiners::helpers::polylla {
         }
         return true;
     }
-    void MeshHelper<HalfEdgeMesh>::barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed) {
+    void MeshHelper<HalfEdgeMesh>::barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs) {
         ++data.meshStats[N_POLYGONS_TO_REPAIR];
         
         std::vector<EdgeIndex> triangleList;
@@ -184,7 +183,7 @@ namespace refiners::helpers::polylla {
                 data.seedBarrierEdgeTipMark[t_curr] = false;
                 newPolygonSeed = generateRepairedPolygon(data, inputMesh, outputMesh, t_curr);
                 //Store the polygon in the as part of the mesh
-                data.outputSeeds.push_back(newPolygonSeed);
+                currentOutputs.push_back(newPolygonSeed);
             }
         }
 

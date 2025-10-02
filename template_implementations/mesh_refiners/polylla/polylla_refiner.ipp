@@ -36,7 +36,7 @@ MeshType* PolyllaRefiner<MeshType>::refineMesh(const MeshType* inputMesh) {
     
     data.meshStats[N_POLYGONS] = data.outputSeeds.size();
 
-    std::cout<<"Mesh with "<< data.meshStats[N_POLYGONS] <<" polygons "<< data.meshStats[N_FRONTIER_EDGES] <<" edges and "<< data.meshStats[N_BARRIER_EDGE_TIPS] <<" barrier-edge tips."<<std::endl;
+    std::cout<<"Mesh with "<< data.meshStats[N_POLYGONS] <<" polygons "<< data.meshStats[N_FRONTIER_EDGES] / 2 <<" edges and "<< data.meshStats[N_BARRIER_EDGE_TIPS] <<" barrier-edge tips."<<std::endl;
     //outputMesh->print_pg(std::to_string(outputMesh->vertices()) + ".pg");
     
     return outputMesh;
