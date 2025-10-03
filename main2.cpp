@@ -70,10 +70,10 @@ int main(int argc, char **argv) {
         std::make_unique<
             DelaunayCavityRefiner<
                 HalfEdgeMesh, 
-                MinAreaCriterion<HalfEdgeMesh>, 
+                MinAngleCriterion<HalfEdgeMesh>, 
                 ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
             >
-        >(MinAreaCriterion<HalfEdgeMesh>(0.0387)))
+        >(MinAngleCriterion<HalfEdgeMesh>(26)))
         .readMeshFromFiles({off_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         //std::cout<<"output off in "<<output<<".off"<<std::endl;
         //mesh.print_ALE(output+".ale");
         //std::cout<<"output ale in "<<output<<".ale"<<std::endl;
-    }else if (argc == 2){
+    }/*else if (argc == 2){
         int size = atoi(argv[1]);
         std::string output = "uniform_" + std::string(argv[1]) + "_CPU";
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
         mesh.print_OFF(output +".off");
         std::cout<<"output off in "<<output<<".off"<<std::endl;
-    }else{
+    }*/else{
         std::cout<<"Usage: "<<argv[0]<<" <off file .off> <output name>"<<std::endl;
         std::cout<<"Usage: "<<argv[0]<<" <node_file .node> <ele_file .ele> <neigh_file .neigh> <output name>"<<std::endl;
         return 0;

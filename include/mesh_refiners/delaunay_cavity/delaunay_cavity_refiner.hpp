@@ -32,6 +32,7 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
     private:
         Criterion refinementCriterion;
         std::vector<OutputIndex> outputSeeds;
+        std::vector<uint8_t> inCavity;
         using _MeshHelper = refiners::helpers::delaunay_cavity::MeshHelper<MeshType>;
         using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
         std::unordered_map<MeshStat, int> meshStats;

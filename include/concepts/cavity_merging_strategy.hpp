@@ -6,10 +6,17 @@
 #include<mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
 
 template <typename MergingStrategy, typename Mesh>
-concept HasPreAddMethod = requires(Mesh* mesh, 
+concept HasPreAddMethodPerCavity = requires(Mesh* mesh, 
     const std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>>& cavities,
     typename Mesh::FaceIndex triangle) {
         { MergingStrategy::preAdd(mesh, triangle, cavities)} -> std::convertible_to<bool>;
+} && MeshData<Mesh>;
+
+template <typename MergingStrategy, typename Mesh>
+concept HasPreAddMethodByPresence = requires(Mesh* mesh, 
+    const std::vector<uint8_t>& inCavity,
+    typename Mesh::FaceIndex triangle) {
+        { MergingStrategy::preAdd(triangle, inCavity)} -> std::convertible_to<bool>;
 } && MeshData<Mesh>;
 
 template <typename MergingStrategy, typename Mesh>
@@ -23,6 +30,6 @@ concept HasPostComputeMethod = requires(Mesh* mesh,
  * and it must have either a preAdd method or postCompute method
  */
 template <typename MergingStrategy, typename Mesh>
-concept CavityMergingStrategy = HasPreAddMethod<MergingStrategy,Mesh> || HasPostComputeMethod<MergingStrategy,Mesh>;
+concept CavityMergingStrategy = HasPreAddMethodPerCavity<MergingStrategy,Mesh> || HasPostComputeMethod<MergingStrategy,Mesh> || HasPreAddMethodByPresence<MergingStrategy,Mesh>;
 
 #endif

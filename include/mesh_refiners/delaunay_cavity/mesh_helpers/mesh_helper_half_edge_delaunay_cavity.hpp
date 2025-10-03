@@ -26,20 +26,6 @@ namespace refiners::helpers::delaunay_cavity {
         static std::vector<OutputIndex> generateInitialOutputSeeds(HalfEdgeMesh* mesh);
 
         /**
-         * Changes the EdgeIndices of `outputSeeds` to -1 if they belong to a triangle inside `interiorFaces`
-         * @param mesh A HalfEdgeMesh
-         * @param outputSeeds A vector of edge indices where each one uniquely identifies a polygon
-         * @param interiorFaces A vector of face indices with triangles to be "destroyed", as they are part of the inside
-         * of a cavity
-         */
-        static void markInteriorOutputsFromSeeds(HalfEdgeMesh* mesh, std::vector<OutputIndex>& outputSeeds, const std::vector<FaceIndex>& interiorFaces);
-        /**
-         * Finds and deletes all instances of -1 inside `outputSeeds`, effectively getting rid of invalid output indices that belong to interior triangles
-         * @param outputSeeds A vector of edge indices where each one uniquely identifies a polygon that contains invalid indices marked with a -1
-         */
-        static void eraseInteriorOutputsFromSeeds(std::vector<OutputIndex>& outputSeeds);
-
-        /**
          * @param mesh A HalfEdgeMesh
          * @param e An EdgeIndex of `mesh`
          * @return Whether `e` or its twin is a border edge to make sure the half edges at the boundary aren't deleted
@@ -69,10 +55,11 @@ namespace refiners::helpers::delaunay_cavity {
          * results in making the closed loop of each cavity instead of the triangles that conformed it.
          * 
          * The face and edge count of the mesh are also updated to reflect this change
-         * @param mesh A HalfEdgeMesh to insert the cavities into
+         * @param inputMesh A HalfEdgeMesh to traverse the triangles
+         * @param outputMesh A HalfEdgeMesh to insert the cavities into
          * @param cavities A vector of Cavity objects with information to do the cavity insertion
          */
-        static void insertCavity(HalfEdgeMesh* mesh, std::vector<Cavity>& cavities);
+        static std::vector<OutputIndex> insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity);
     };
 }
 

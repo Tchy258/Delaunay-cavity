@@ -26,22 +26,6 @@ namespace refiners::helpers::delaunay_cavity {
         static std::vector<OutputIndex> generateInitialOutputSeeds(MeshType* mesh) = delete;
 
         /**
-         * Takes a vector of output indices and labels them as not part of the final output,
-         * the specific way this is done depends on the specific `mesh` type
-         * @param mesh A particular MeshData implementation
-         * @param outputSeeds A vector of output indices to label indices that won't be part of the final output
-         * @param interiorFaces A vector of face indices that should not be in the final output, i.e., these triangles
-         * are meant to be labeled as "deleted" in some way so the output does not contain them
-         */
-        static void markInteriorOutputsFromSeeds(MeshType* mesh, std::vector<OutputIndex>& outputSeeds, const std::vector<FaceIndex>& interiorFaces) = delete;
-        /**
-         * Takes a vector of output indices and executes the actual erasure of those indices labeled as no longer valid,
-         * the specific way this is done depends on the specific `mesh` type
-         * @param outputSeeds A vector of output indices that contains indices labeled as invalid that should be deleted
-         */
-        static void eraseInteriorOutputsFromSeeds(std::vector<EdgeIndex>& outputSeeds) = delete;
-
-        /**
          * @param mesh A particular MeshData implementation
          * @param e An edge index that identifies an edge of `mesh`
          * @return Whether edge `e` is part of the border of the mesh `mesh`. A "border" is implied to be an edge that
@@ -68,10 +52,12 @@ namespace refiners::helpers::delaunay_cavity {
         /**
          * Given the information of `cavities`, updates the necessary indices in `mesh` to reflect
          * the changes in the final output
-         * @param mesh A particular MeshData implementation whose contents will be modified
+         * @param inputMesh A particular MeshData implementation to traverse the original triangles
+         * @param outputMesh A particular MeshData implementation whose contents will be modified
          * @param cavities A vector of Cavity objects with the necessary information to insert the cavities
+         * @return A vector of outputs to write
          */
-        static void insertCavity(MeshType* mesh, std::vector<Cavity>& cavities) = delete;
+        static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
     };
 
 }

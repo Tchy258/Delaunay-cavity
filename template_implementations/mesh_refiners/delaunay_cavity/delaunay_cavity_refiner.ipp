@@ -27,7 +27,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
     for (const auto& circumcenterData : circumcenters) {
         const MeshVertex& circumcenter = circumcenterData.first;
         FaceIndex triangleOfCircumcenter = circumcenterData.second;
-
+        if (inCavity[triangleOfCircumcenter]) continue;
         std::queue<FaceIndex> bfsNeighborVisitQueue;
         cavities.emplace_back();
 
@@ -40,6 +40,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
         cavity.allTriangles.push_back(triangleOfCircumcenter);
         while(!bfsNeighborVisitQueue.empty()) {
             FaceIndex currentTriangle = bfsNeighborVisitQueue.front();
+            inCavity[currentTriangle] = true;
             bfsNeighborVisitQueue.pop();
             const std::vector<FaceIndex>& neighbors = outputMesh->getNeighbors(currentTriangle);
             std::array<EdgeIndex, 3> triangleEdges = outputMesh->getEdgesOfTriangle(currentTriangle);
@@ -56,8 +57,11 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
             for (FaceIndex neighbor : neighbors) {
                 if (visited[neighbor]) continue;
                 bool validNeighbor = true;
-                if constexpr (HasPreAddMethod<MergingStrategy,MeshType>) {
+                if constexpr (HasPreAddMethodPerCavity<MergingStrategy,MeshType>) {
                     validNeighbor = MergingStrategy::preAdd(outputMesh,neighbor,cavities);
+                }
+                if constexpr (HasPreAddMethodByPresence<MergingStrategy,MeshType>) {
+                    validNeighbor = MergingStrategy::preAdd(neighbor,inCavity);
                 }
                 Vertex v0, v1, v2;
                 outputMesh->getVerticesOfTriangle(neighbor, v0, v1, v2);
@@ -67,9 +71,8 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
                     bfsNeighborVisitQueue.push(neighbor);
                     cavity.allTriangles.push_back(neighbor);
                 } else if (currentTriangle == triangleOfCircumcenter) {
-                    std::array<EdgeIndex, 3> neighborEdges = outputMesh->getEdgesOfTriangle(neighbor);
-                    for (EdgeIndex e : neighborEdges) {
-                        if (!_MeshHelper::isSharedEdge(outputMesh,e,currentTriangle,neighbor)) {
+                    for (EdgeIndex e : triangleEdges) {
+                        if (_MeshHelper::isSharedEdge(outputMesh,e,currentTriangle,neighbor)) {
                             cavity.boundaryEdges.push_back(e);
                         }
                     }
@@ -103,7 +106,6 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
         dedupSort(cavity.boundaryTriangles);
         dedupSort(cavity.interior);
 
-        _MeshHelper::markInteriorOutputsFromSeeds(outputMesh, this->outputSeeds, cavity.interior);
         resetVisited(visited, cavity);
     }
     return cavities;
@@ -113,9 +115,9 @@ template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMerg
 MeshType* DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::refineMesh(const MeshType* inputMesh) {
     MeshType* outputMesh = new MeshType(*inputMesh);
     size_t polygonAmount = outputMesh->numberOfPolygons();
-    outputSeeds = _MeshHelper::generateInitialOutputSeeds(outputMesh);
+    inCavity = std::vector<uint8_t>(polygonAmount, 0);
     std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = findMatchingCircumcenters(outputMesh, polygonAmount);
-
+    
     
     // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
     std::vector<uint8_t> visited(polygonAmount, 0);
@@ -125,8 +127,8 @@ MeshType* DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::refineMes
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
-    _MeshHelper::eraseInteriorOutputsFromSeeds(this->outputSeeds);
-    _MeshHelper::insertCavity(outputMesh,cavities);
+    
+    outputSeeds = _MeshHelper::insertCavity(inputMesh, outputMesh, cavities, inCavity);
     return outputMesh;
 }
 
