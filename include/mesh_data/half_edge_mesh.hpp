@@ -37,12 +37,12 @@ class HalfEdgeMesh {
          * @param vertex1 A reference to another vertex we will set, this vertex must be the next vertex on a CCW orientation to `vertex1`
          * @param vertex2 A reference to the last vertex we will set, this vertex must be the last vertex on a CCW orientation such that `vertex0` -> `vertex1` -> `vertex2`
          */
-        void getVerticesOfTriangle(FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2);
+        void getVerticesOfTriangle(FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2) const;
         /**
          * @param triangle A triangle index
          * @return An array with 3 indices that point to the CCW edges of `triangle`
          */
-        std::array<EdgeIndex,3> getEdgesOfTriangle(FaceIndex triangle);
+        std::array<EdgeIndex,3> getEdgesOfTriangle(FaceIndex triangle) const;
         VertexType& getVertex(VertexIndex v) {
             return vertices.at(v);
         }
@@ -143,7 +143,7 @@ class HalfEdgeMesh {
         void setEdgeToFace(EdgeIndex edge, FaceIndex newFace) {
             halfEdges.at(edge).face = newFace;
         }
-        std::vector<FaceIndex> getNeighbors(FaceIndex polygon);
+        std::vector<FaceIndex> getNeighbors(FaceIndex polygon) const;
         /**
          * Calculates the tail vertex of the edge `edge`
          * 
@@ -243,6 +243,8 @@ class HalfEdgeMesh {
         double edgeLength2(EdgeIndex edge) const;
 
 };
+
+template<> inline constexpr bool isMeshData<HalfEdgeMesh> = true;
 /** 
  * These lines must be here after the class is completely defined to make sure the
  * class adheres to the concept, it gets deleted on compilation

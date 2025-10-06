@@ -6,7 +6,7 @@ HalfEdgeMesh::VertexIndex HalfEdgeMesh::origin(HalfEdgeMesh::EdgeIndex edge) con
     return halfEdges.at(edge).origin;
 }
 
-std::vector<HalfEdgeMesh::FaceIndex> HalfEdgeMesh::getNeighbors(HalfEdgeMesh::FaceIndex polygon) {
+std::vector<HalfEdgeMesh::FaceIndex> HalfEdgeMesh::getNeighbors(HalfEdgeMesh::FaceIndex polygon) const {
     EdgeIndex firstEdge = getPolygon(polygon);
     std::vector<FaceIndex> neighbors;
     EdgeIndex currentEdge = firstEdge;
@@ -118,7 +118,7 @@ HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
     this->nVertices = vertices.size();
 }
 
-inline void HalfEdgeMesh::getVerticesOfTriangle(HalfEdgeMesh::FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2) {
+inline void HalfEdgeMesh::getVerticesOfTriangle(HalfEdgeMesh::FaceIndex polygonIndex, Vertex& v0, Vertex& v1, Vertex& v2) const {
     // We look for this edge first to guarantee CCW ordering
     EdgeIndex firstEdge = getPolygon(polygonIndex);
     v0 = vertices.at(origin(firstEdge));
@@ -126,7 +126,7 @@ inline void HalfEdgeMesh::getVerticesOfTriangle(HalfEdgeMesh::FaceIndex polygonI
     v2 = vertices.at(target(next(firstEdge)));
 }
 
-inline std::array<HalfEdgeMesh::EdgeIndex, 3> HalfEdgeMesh::getEdgesOfTriangle(FaceIndex triangle) {
+inline std::array<HalfEdgeMesh::EdgeIndex, 3> HalfEdgeMesh::getEdgesOfTriangle(FaceIndex triangle) const {
     EdgeIndex edge1 = getPolygon(triangle);
     EdgeIndex edge2 = next(edge1);
     EdgeIndex edge3 = next(edge2);
