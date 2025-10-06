@@ -10,8 +10,11 @@
 #include <concepts/mesh_details/mesh_topology.hpp>
 #include <concepts/mesh_details/mesh_vertices.hpp>
 
+template <typename Mesh>
+inline constexpr bool isMeshData = false;
 /**
  * All meshes used throughout the program as template arguments must adhere to this concept, so a mesh must:
+ * - Be explicitly declared as MeshData
  * - Define a type for its vertices and edges, `Mesh::VertexType` and `Mesh::EdgeType`
  * - Define a type for the indices of its vertices and edges, `Mesh::VertexIndex`, `Mesh::EdgeIndex` and `Mesh::FaceIndex`
  * - Define an output index type that is one of the three above
@@ -25,13 +28,14 @@
  * - Have vertices that are at least a type of `Vertex`
  */
 template<typename Mesh>
-concept MeshData = 
-    MeshVertices<Mesh>
+concept MeshData = isMeshData<Mesh>
+    && MeshVertices<Mesh>
     && MeshEdges<Mesh>
     && MeshIndices<Mesh>
     && MeshAccessors<Mesh>
     && MeshSetters<Mesh>
     && MeshTopology<Mesh>
     && MeshConstructible<Mesh>;
+
 
 #endif
