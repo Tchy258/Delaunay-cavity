@@ -13,6 +13,11 @@
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/exclude_previous_cavities_strategy.hpp>
 #include <mesh_refiners/refinement_criteria/min_area_criterion.hpp>
 #include <mesh_refiners/refinement_criteria/min_angle_criterion.hpp>
+#include <mesh_refiners/refinement_criteria/null_refinement_criterion.hpp>
+#include <mesh_refiners/delaunay_cavity/triangle_comparators/null_comparator.hpp>
+#include <mesh_refiners/delaunay_cavity/triangle_comparators/random_comparator.hpp>
+#include <mesh_refiners/delaunay_cavity/triangle_comparators/area_comparator.hpp>
+#include <mesh_refiners/delaunay_cavity/triangle_comparators/edge_length_comparator.hpp>
 #include <mesh_io/off_reader.hpp>
 #include <polygonal_mesh.hpp>
 
@@ -40,15 +45,16 @@ int main(int argc, char **argv) {
 
         //Polylla mesh(node_file, ele_file, neigh_file);
         PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<NodeEleReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
-        
+        RandomComparator<HalfEdgeMesh>::setSeed(1);
         polygonalMesh.setRefiner(
         std::make_unique<
             DelaunayCavityRefiner<
                 HalfEdgeMesh, 
-                MinAreaCriterion<HalfEdgeMesh>, 
+                NullRefinementCriterion<HalfEdgeMesh>,
+                RandomComparator<HalfEdgeMesh>, 
                 ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
             >
-        >(MinAreaCriterion<HalfEdgeMesh>(0.0387)))
+        >())
         .readMeshFromFiles({node_file, ele_file, neigh_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
@@ -65,15 +71,16 @@ int main(int argc, char **argv) {
         std::string output = std::string(argv[2]);
 	    //Polylla mesh(off_file);
         PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<OffReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
-        
+        //RandomComparator<HalfEdgeMesh>::setSeed(42);
         polygonalMesh.setRefiner(
         std::make_unique<
             DelaunayCavityRefiner<
                 HalfEdgeMesh, 
-                MinAngleCriterion<HalfEdgeMesh>, 
+                NullRefinementCriterion<HalfEdgeMesh>,
+                DescendingMinEdgeLengthComparator<HalfEdgeMesh>, 
                 ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
             >
-        >(MinAngleCriterion<HalfEdgeMesh>(26)))
+        >())
         .readMeshFromFiles({off_file})
         .refineMesh()
         .writeOutputMesh({output + ".off"});
@@ -84,22 +91,9 @@ int main(int argc, char **argv) {
         //std::cout<<"output off in "<<output<<".off"<<std::endl;
         //mesh.print_ALE(output+".ale");
         //std::cout<<"output ale in "<<output<<".ale"<<std::endl;
-    }/*else if (argc == 2){
-        int size = atoi(argv[1]);
-        std::string output = "uniform_" + std::string(argv[1]) + "_CPU";
-
-        Polylla mesh(size);
-        std::cout<<"Done!"<<std::endl;
-
-        mesh.print_stats(output + ".json");
-        std::cout<<"output json in "<<output<<".json"<<std::endl;
-
-        mesh.print_OFF(output +".off");
-        std::cout<<"output off in "<<output<<".off"<<std::endl;
-    }*/else{
+    } else{
         std::cout<<"Usage: "<<argv[0]<<" <off file .off> <output name>"<<std::endl;
         std::cout<<"Usage: "<<argv[0]<<" <node_file .node> <ele_file .ele> <neigh_file .neigh> <output name>"<<std::endl;
-        return 0;
     }
     
 
