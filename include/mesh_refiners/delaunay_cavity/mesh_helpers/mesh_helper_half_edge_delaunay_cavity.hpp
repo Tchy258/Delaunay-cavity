@@ -30,7 +30,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @param e An EdgeIndex of `mesh`
          * @return Whether `e` or its twin is a border edge to make sure the half edges at the boundary aren't deleted
          */
-        static bool isBorderEdge(HalfEdgeMesh* mesh, EdgeIndex e);
+        static bool isBorderEdge(const HalfEdgeMesh* mesh, EdgeIndex e);
 
         /**
          * @param mesh A HalfEdgeMesh
@@ -41,7 +41,7 @@ namespace refiners::helpers::delaunay_cavity {
          * 
          * Both are checked because in the generic logic two triangles only share a single edge, so they are considered "equal"
          */
-        static bool isSharedEdge(HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2);
+        static bool isSharedEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2);
 
         /**
          * @param mesh A HalfEdgeMesh

@@ -8,7 +8,7 @@ struct MinArea2Criterion {
     
     MinArea2Criterion(double minArea2) : minArea2(minArea2) {}
 
-    bool operator()(Mesh& mesh, typename Mesh::FaceIndex polygonIndex) const;
+    bool operator()(const Mesh* mesh, typename Mesh::FaceIndex polygonIndex) const;
 };
 
 #include <mesh_refiners/refinement_criteria/min_area2_criterion.ipp>

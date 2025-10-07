@@ -3,10 +3,8 @@
 #endif
 
 template <MeshData Mesh>
-bool MinArea2Criterion<Mesh>::operator()(Mesh& mesh, typename Mesh::FaceIndex polygonIndex) const {
-    typename Mesh::VertexType v1;
-    typename Mesh::VertexType v2;
-    typename Mesh::VertexType v3;
+bool MinArea2Criterion<Mesh>::operator()(const Mesh* mesh, typename Mesh::FaceIndex polygonIndex) const {
+    typename Mesh::VertexType v1,v2,v3;
 
     mesh.getVerticesOfTriangle(polygonIndex, v1, v2, v3);
 

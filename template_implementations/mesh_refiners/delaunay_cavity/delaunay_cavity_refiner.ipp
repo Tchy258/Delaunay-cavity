@@ -4,24 +4,49 @@
 #include <mesh_refiners/delaunay_cavity/delaunay_cavity_refiner.hpp>
 #endif
 
-template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMergingStrategy<MeshType> MergingStrategy>
-std::vector<std::pair<typename MeshType::VertexType, typename MeshType::FaceIndex>> DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::findMatchingCircumcenters(MeshType *outputMesh, size_t polygonAmount)
-{
+#define DELAUNAY_CAVITY_CLASS DelaunayCavityRefiner<MeshType,Criterion,Comparator,MergingStrategy>
+
+DELAUNAY_CAVITY_REFINER_TEMPLATE
+std::vector<typename MeshType::FaceIndex> DELAUNAY_CAVITY_CLASS::sortTriangles(MeshType *outputMesh) {
+    
+    std::vector<FaceIndex> triangles(outputMesh->numberOfPolygons());
+    std::iota(triangles.begin(), triangles.end(), 0);
+
+    if constexpr (isNullRefinementCriterion<Criterion,MeshType> && !isNullComparator<Comparator,MeshType>) {
+        std::sort(triangles.begin(), triangles.end(), [outputMesh](const FaceIndex& t1, const FaceIndex& t2) { return Comparator::compare(outputMesh,t1,t2); });
+    } else if constexpr (isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
+        std::stable_partition(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& polygonIndex) { refinementCriterion(outputMesh,polygonIndex);});
+    } else if constexpr (!isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
+        std::sort(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& t1, const FaceIndex& t2) {
+            bool criterionOnT1 = refinementCriterion(outputMesh,t1);
+            bool criterionOnT2 = refinementCriterion(outputMesh,t2);
+
+            if (criterionOnT1 != criterionOnT2) {
+                return criterionOnT1; // T1 goes first
+            }
+            return Comparator::compare(outputMesh,t1,t2);
+        });
+    }
+    
+    return triangles;
+}
+
+DELAUNAY_CAVITY_REFINER_TEMPLATE
+std::vector<std::pair<typename MeshType::VertexType, typename MeshType::FaceIndex>> DELAUNAY_CAVITY_CLASS::computeCircumcenters(MeshType *outputMesh, std::vector<FaceIndex> sortedTriangles) {
     std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters;
-    circumcenters.reserve(polygonAmount);
-    // Marking phase, first the circumcenters of each matching triangle is found
-    for (int i = 0; i < polygonAmount; ++i) {
-        if (refinementCriterion(*outputMesh, i)) {
-            Vertex v0,v1,v2;
-            outputMesh->getVerticesOfTriangle(i, v0, v1, v2);
-            circumcenters.push_back(std::pair<MeshVertex,int>(Vertex::findCircumcenter(v0,v1,v2),i));
-        }
+    circumcenters.reserve(sortedTriangles.size());
+
+    for (FaceIndex triangle : sortedTriangles) {
+        Vertex v0,v1,v2;
+        outputMesh->getVerticesOfTriangle(triangle, v0, v1, v2);
+        circumcenters.push_back(std::pair<MeshVertex,int>(Vertex::findCircumcenter(v0,v1,v2),triangle));
+        
     }
     return circumcenters;
 }
 
-template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMergingStrategy<MeshType> MergingStrategy>
-std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::computeCavities(MeshType* outputMesh, const std::vector<std::pair<MeshVertex, FaceIndex>>& circumcenters, std::vector<uint8_t>& visited) {   
+DELAUNAY_CAVITY_REFINER_TEMPLATE
+std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVITY_CLASS::computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex, FaceIndex>>& circumcenters, std::vector<uint8_t>& visited) {   
     std::vector<Cavity> cavities;
     cavities.reserve(circumcenters.size());
     for (const auto& circumcenterData : circumcenters) {
@@ -42,13 +67,13 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
             FaceIndex currentTriangle = bfsNeighborVisitQueue.front();
             inCavity[currentTriangle] = true;
             bfsNeighborVisitQueue.pop();
-            const std::vector<FaceIndex>& neighbors = outputMesh->getNeighbors(currentTriangle);
-            std::array<EdgeIndex, 3> triangleEdges = outputMesh->getEdgesOfTriangle(currentTriangle);
+            const std::vector<FaceIndex>& neighbors = inputMesh->getNeighbors(currentTriangle);
+            std::array<EdgeIndex, 3> triangleEdges = inputMesh->getEdgesOfTriangle(currentTriangle);
             bool isBoundary = false;
 
             if (neighbors.size() < 3) {
                 for (EdgeIndex e : triangleEdges) {
-                    if (_MeshHelper::isBorderEdge(outputMesh,e)) {
+                    if (_MeshHelper::isBorderEdge(inputMesh,e)) {
                         isBoundary = currentTriangle != triangleOfCircumcenter;
                         cavity.boundaryEdges.push_back(e);
                     }
@@ -58,13 +83,13 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
                 if (visited[neighbor]) continue;
                 bool validNeighbor = true;
                 if constexpr (HasPreAddMethodPerCavity<MergingStrategy,MeshType>) {
-                    validNeighbor = MergingStrategy::preAdd(outputMesh,neighbor,cavities);
+                    validNeighbor = MergingStrategy::preAdd(inputMesh,neighbor,cavities);
                 }
                 if constexpr (HasPreAddMethodByPresence<MergingStrategy,MeshType>) {
                     validNeighbor = MergingStrategy::preAdd(neighbor,inCavity);
                 }
                 Vertex v0, v1, v2;
-                outputMesh->getVerticesOfTriangle(neighbor, v0, v1, v2);
+                inputMesh->getVerticesOfTriangle(neighbor, v0, v1, v2);
                 
                 if (validNeighbor && Vertex::inCircle(v0, v1, v2, circumcenter)) {
                     visited[neighbor] = 1;
@@ -72,14 +97,14 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
                     cavity.allTriangles.push_back(neighbor);
                 } else if (currentTriangle == triangleOfCircumcenter) {
                     for (EdgeIndex e : triangleEdges) {
-                        if (_MeshHelper::isSharedEdge(outputMesh,e,currentTriangle,neighbor)) {
+                        if (_MeshHelper::isSharedEdge(inputMesh,e,currentTriangle,neighbor)) {
                             cavity.boundaryEdges.push_back(e);
                         }
                     }
                 } else {
                     isBoundary = true;
 
-                    EdgeIndex boundaryEdge = outputMesh->getSharedEdge(currentTriangle,neighbor);
+                    EdgeIndex boundaryEdge = inputMesh->getSharedEdge(currentTriangle,neighbor);
                     cavity.boundaryEdges.push_back(boundaryEdge);
                 }
             }
@@ -111,12 +136,13 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DelaunayCavity
     return cavities;
 }
 
-template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMergingStrategy<MeshType> MergingStrategy>
-MeshType* DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::refineMesh(const MeshType* inputMesh) {
+DELAUNAY_CAVITY_REFINER_TEMPLATE
+MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     MeshType* outputMesh = new MeshType(*inputMesh);
     size_t polygonAmount = outputMesh->numberOfPolygons();
     inCavity = std::vector<uint8_t>(polygonAmount, 0);
-    std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = findMatchingCircumcenters(outputMesh, polygonAmount);
+    std::vector<FaceIndex> sortedTriangles = sortTriangles(outputMesh);
+    std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = computeCircumcenters(outputMesh, sortedTriangles);
     
     
     // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
@@ -132,5 +158,6 @@ MeshType* DelaunayCavityRefiner<MeshType, Criterion, MergingStrategy>::refineMes
     return outputMesh;
 }
 
+#undef DELAUNAY_CAVITY_CLASS
 
 #endif

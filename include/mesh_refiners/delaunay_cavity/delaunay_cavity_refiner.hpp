@@ -1,26 +1,38 @@
 #ifndef DELAUNAY_CAVITY_REFINER_HPP
 #define DELAUNAY_CAVITY_REFINER_HPP
-#include<unordered_map>
-#include<unordered_set>
-#include<cstdint>
-#include<queue>
-#include<array>
-#include<misc/mesh_stat.hpp>
-#include<misc/time_stat.hpp>
-#include<concepts/mesh_data.hpp>
-#include<concepts/cavity_merging_strategy.hpp>
-#include<concepts/refinement_criterion.hpp>
-#include<concepts/is_half_edge_vertex.hpp>
-#include<mesh_data/structures/vertex.hpp>
-#include<mesh_data/half_edge_mesh.hpp>
-#include<mesh_refiners/mesh_refiner.hpp>
-#include<mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
-#include<mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
-#include<stdexcept>
-#include<string>
-#include<cmath>
+#include <unordered_map>
+#include <unordered_set>
+#include <cstdint>
+#include <queue>
+#include <array>
+#include <misc/mesh_stat.hpp>
+#include <misc/time_stat.hpp>
+#include <concepts/mesh_data.hpp>
+#include <concepts/cavity_merging_strategy.hpp>
+#include <concepts/refinement_criterion.hpp>
+#include <concepts/triangle_comparator.hpp>
+#include <concepts/is_half_edge_vertex.hpp>
+#include <mesh_data/structures/vertex.hpp>
+#include <mesh_data/half_edge_mesh.hpp>
+#include <mesh_refiners/mesh_refiner.hpp>
+#include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
+#include <mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
+#include <mesh_refiners/refinement_criteria/null_refinement_criterion.hpp>
+#include <numeric>
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <cmath>
 
-template <MeshData MeshType, RefinementCriterion<MeshType> Criterion, CavityMergingStrategy<MeshType> MergingStrategy>
+#define DELAUNAY_CAVITY_REFINER_TEMPLATE \
+template < \
+    MeshData MeshType, \
+    RefinementCriterion<MeshType> Criterion, \
+    TriangleComparator<MeshType> Comparator, \
+    CavityMergingStrategy<MeshType> MergingStrategy \
+>
+
+DELAUNAY_CAVITY_REFINER_TEMPLATE
 class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
     public:
         using MeshVertex = typename MeshType::VertexType;
@@ -38,8 +50,9 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
 
-        std::vector<std::pair<MeshVertex,FaceIndex>> findMatchingCircumcenters(MeshType* outputMesh, size_t polygonAmount);
-        std::vector<Cavity> computeCavities(MeshType* outputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
+        std::vector<FaceIndex> sortTriangles(MeshType* outputMesh);
+        std::vector<std::pair<MeshVertex,FaceIndex>> computeCircumcenters(MeshType* outputMesh, std::vector<FaceIndex> sortedTriangles);
+        std::vector<Cavity> computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
 
         inline void resetVisited(std::vector<uint8_t>& visited, const Cavity& cavity) {
             for (FaceIndex triangle: cavity.allTriangles) {
@@ -70,6 +83,11 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
             timeStats[T_TRAVERSAL] = 0.0;
             timeStats[T_REPAIR] = 0.0;
         }
+
+        explicit DelaunayCavityRefiner() requires std::same_as<Criterion, NullRefinementCriterion<MeshType>>
+        : DelaunayCavityRefiner(NullRefinementCriterion<MeshType>()) {}
+
+
         std::unordered_map<MeshStat,int>& getRefinementStats() override {
             return meshStats;
         }
@@ -80,4 +98,6 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
 
 #include<mesh_refiners/delaunay_cavity/delaunay_cavity_refiner.ipp>
 
+
+#undef DELAUNAY_CAVITY_REFINER_TEMPLATE
 #endif

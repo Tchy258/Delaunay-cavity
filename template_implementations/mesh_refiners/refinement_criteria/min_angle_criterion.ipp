@@ -202,13 +202,13 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAngleCriterion<Mesh>::operator()(Mesh& mesh, int polygonIndex) const
+bool MinAngleCriterion<Mesh>::operator()(const Mesh* mesh, int polygonIndex) const
 {
     typename Mesh::VertexType v1;
     typename Mesh::VertexType v2;
     typename Mesh::VertexType v3;
 
-    mesh.getVerticesOfTriangle(polygonIndex, v1, v2, v3);
+    mesh->getVerticesOfTriangle(polygonIndex, v1, v2, v3);
 
     Vertex edgeV1V2 = v2 - v1;
     Vertex edgeV2V3 = v3 - v2;

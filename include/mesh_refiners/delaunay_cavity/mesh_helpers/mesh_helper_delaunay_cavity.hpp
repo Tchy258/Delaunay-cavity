@@ -31,7 +31,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @return Whether edge `e` is part of the border of the mesh `mesh`. A "border" is implied to be an edge that
          * is only part of a single triangle
          */
-        static bool isBorderEdge(MeshType* mesh, EdgeIndex e) = delete;
+        static bool isBorderEdge(const MeshType* mesh, EdgeIndex e) = delete;
 
         /**
          * @param mesh A particular MeshData implementation
@@ -40,7 +40,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @param triangle2 A face index that identifies another triangle of `mesh` different from `triangle1`
          * @return Whether the edge `edge` is the shared edge between `triangle1` and `triangle2`
          */
-        static bool isSharedEdge(MeshType* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = delete;
+        static bool isSharedEdge(const MeshType* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = delete;
 
         /**
          * @param mesh A particular MeshData implementation

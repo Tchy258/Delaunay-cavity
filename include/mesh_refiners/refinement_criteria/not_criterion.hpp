@@ -10,7 +10,7 @@ template<MeshData Mesh, RefinementCriterion<Mesh> Criterion>
 struct NotCriterion {
     Criterion negatedCriteria;
     NotCriterion(Criterion criterion) : negatedCriteria(criterion) {}
-    bool operator()(const Mesh& mesh, int polygonIndex) {
+    bool operator()(const Mesh* mesh, int polygonIndex) {
         return !negatedCriteria(mesh,polygonIndex);
     }
 };

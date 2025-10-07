@@ -6,7 +6,7 @@ template <MeshData Mesh>
 struct MinAreaCriterion {
     double minArea;
 
-    bool operator()(Mesh& mesh, typename Mesh::FaceIndex polygonIndex) const;
+    bool operator()(const Mesh* mesh, typename Mesh::FaceIndex polygonIndex) const;
 
     MinAreaCriterion(double minArea) : minArea(minArea) {}
 };

@@ -14,11 +14,11 @@ namespace refiners::helpers::delaunay_cavity {
         return incidentHalfEdges;
     }
 
-    bool MeshHelper<HalfEdgeMesh>::isBorderEdge(HalfEdgeMesh* mesh, EdgeIndex e) {
+    bool MeshHelper<HalfEdgeMesh>::isBorderEdge(const HalfEdgeMesh* mesh, EdgeIndex e) {
         return mesh->isBorderEdge(e) || mesh->isBorderEdge(mesh->twin(e));
     }
 
-    bool MeshHelper<HalfEdgeMesh>::isSharedEdge(HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) {
+    bool MeshHelper<HalfEdgeMesh>::isSharedEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) {
         EdgeIndex candidate1 = mesh->getSharedEdge(triangle1,triangle2);
         EdgeIndex candidate2 = mesh->twin(candidate1);
         return edge == candidate1 || edge == candidate2;
