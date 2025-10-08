@@ -12,20 +12,24 @@ std::vector<typename MeshType::FaceIndex> DELAUNAY_CAVITY_CLASS::sortTriangles(M
     std::vector<FaceIndex> triangles(outputMesh->numberOfPolygons());
     std::iota(triangles.begin(), triangles.end(), 0);
 
-    if constexpr (isNullRefinementCriterion<Criterion,MeshType> && !isNullComparator<Comparator,MeshType>) {
-        std::sort(triangles.begin(), triangles.end(), [outputMesh](const FaceIndex& t1, const FaceIndex& t2) { return Comparator::compare(outputMesh,t1,t2); });
-    } else if constexpr (isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
-        std::stable_partition(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& polygonIndex) { refinementCriterion(outputMesh,polygonIndex);});
-    } else if constexpr (!isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
-        std::sort(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& t1, const FaceIndex& t2) {
-            bool criterionOnT1 = refinementCriterion(outputMesh,t1);
-            bool criterionOnT2 = refinementCriterion(outputMesh,t2);
-
-            if (criterionOnT1 != criterionOnT2) {
-                return criterionOnT1; // T1 goes first
+    auto sortOrShuffle = [&](auto beginIt) {
+        if constexpr (!isNullComparator<Comparator,MeshType>) {
+            if constexpr (isRandomComparator<Comparator,MeshType>) {
+                std::shuffle(beginIt,triangles.end(), Comparator::generator);
+            } else {
+                std::stable_sort(beginIt, triangles.end(), [outputMesh](const FaceIndex& t1, const FaceIndex& t2) { 
+                    return Comparator::compare(outputMesh,t1,t2); 
+                });
             }
-            return Comparator::compare(outputMesh,t1,t2);
-        });
+        }
+    };
+    if constexpr (isNullRefinementCriterion<Criterion,MeshType> && !isNullComparator<Comparator,MeshType>) {
+        sortOrShuffle(triangles.begin());
+    } else if constexpr (isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
+        std::stable_partition(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& polygonIndex) { return refinementCriterion(outputMesh,polygonIndex);});
+    } else if constexpr (!isNullComparator<Comparator,MeshType> && !isNullRefinementCriterion<Criterion,MeshType>) {
+        auto iteratorToFirstNonMatching = std::stable_partition(triangles.begin(), triangles.end(), [outputMesh, this](const FaceIndex& polygonIndex) { return refinementCriterion(outputMesh,polygonIndex);});
+        sortOrShuffle(iteratorToFirstNonMatching);
     }
     
     return triangles;
@@ -141,20 +145,31 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     MeshType* outputMesh = new MeshType(*inputMesh);
     size_t polygonAmount = outputMesh->numberOfPolygons();
     inCavity = std::vector<uint8_t>(polygonAmount, 0);
+    auto t_start = std::chrono::high_resolution_clock::now();
     std::vector<FaceIndex> sortedTriangles = sortTriangles(outputMesh);
+    auto t_end = std::chrono::high_resolution_clock::now();
+    timeStats[T_TRIANGLE_SORTING] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    t_start = std::chrono::high_resolution_clock::now();
     std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = computeCircumcenters(outputMesh, sortedTriangles);
-    
+    t_end = std::chrono::high_resolution_clock::now();
+    timeStats[T_CIRCUMCENTER_COMPUTATION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
     
     // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
     std::vector<uint8_t> visited(polygonAmount, 0);
-    
+    t_start = std::chrono::high_resolution_clock::now();
     std::vector<Cavity> cavities = computeCavities(outputMesh, circumcenters, visited);
-    
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
-    
+    t_end = std::chrono::high_resolution_clock::now();
+    timeStats[T_CAVITY_COMPUTATION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    t_start = std::chrono::high_resolution_clock::now();
     outputSeeds = _MeshHelper::insertCavity(inputMesh, outputMesh, cavities, inCavity);
+    t_end = std::chrono::high_resolution_clock::now();
+    timeStats[T_CAVITY_INSERTION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    meshStats[N_POLYGONS] = outputSeeds.size();
+    meshStats[N_VERTICES] = polygonAmount;
+    meshStats[N_EDGES] = outputMesh->numberOfEdges();
     return outputMesh;
 }
 

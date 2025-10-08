@@ -67,21 +67,14 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         }
         explicit DelaunayCavityRefiner(Criterion criterion) : refinementCriterion(std::move(criterion)) {
             meshStats[N_POLYGONS] = 0;
-            meshStats[N_FRONTIER_EDGES] = 0;
-            meshStats[N_BARRIER_EDGE_TIPS] = 0;
-            meshStats[N_POLYGONS_TO_REPAIR] = 0;
-            meshStats[N_POLYGONS_ADDED_AFTER_REPAIR] = 0;
             meshStats[N_VERTICES] = 0;
             meshStats[N_EDGES] = 0;
-            meshStats[N_BORDER_EDGES] = 0;
             
             timeStats[T_TRIANGULATION_GENERATION] = 0.0;
-            timeStats[T_LABEL_MAX_EDGES] = 0.0;
-            timeStats[T_LABEL_FRONTIER_EDGES] = 0.0;
-            timeStats[T_LABEL_SEED_EDGES] = 0.0;
-            timeStats[T_TRAVERSAL_AND_REPAIR] = 0.0;
-            timeStats[T_TRAVERSAL] = 0.0;
-            timeStats[T_REPAIR] = 0.0;
+            timeStats[T_TRIANGLE_SORTING] = 0.0;
+            timeStats[T_CIRCUMCENTER_COMPUTATION] = 0.0;
+            timeStats[T_CAVITY_COMPUTATION] = 0.0;
+            timeStats[T_CAVITY_INSERTION] = 0.0;
         }
 
         explicit DelaunayCavityRefiner() requires std::same_as<Criterion, NullRefinementCriterion<MeshType>>

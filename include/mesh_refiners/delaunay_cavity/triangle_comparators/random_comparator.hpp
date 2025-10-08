@@ -8,14 +8,12 @@ struct RandomComparator {
     using FaceIndex = typename Mesh::FaceIndex;
     inline static std::random_device rd;
     inline static std::mt19937 generator{rd()};
-    inline static std::uniform_int_distribution<> dist{0,1};
     static void setSeed(unsigned int seed) {
         generator = std::mt19937{seed};
     }
-
-    static bool compare(const Mesh* meshptr, const FaceIndex& t1, const FaceIndex& t2) {
-        return dist(generator) == 1;
-    }
 };
+
+template<MeshData Mesh>
+inline constexpr bool isRandomComparator<RandomComparator<Mesh>,Mesh> = true;
 
 #endif // RANDOM_COMPARATOR_HPP
