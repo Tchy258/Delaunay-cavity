@@ -51,7 +51,7 @@ namespace refiners::helpers::delaunay_cavity {
                 presentInBoundary[boundaryEdge] = 1;
             }
             faceCount -= (cavity.allTriangles.size() - 1);
-            edgeCount -= (cavity.allTriangles.size() * 3) + boundaryEdges.size();
+            edgeCount -= (cavity.allTriangles.size() * 3) - boundaryEdges.size();
             EdgeIndex firstEdge = boundaryEdges.front();
             outputSeeds.push_back(firstEdge);
             EdgeIndex currentEdge = firstEdge;
