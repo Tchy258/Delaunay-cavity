@@ -105,7 +105,32 @@ public:
         return *this;
     }
     void writeStatsToJson(const std::filesystem::path& filepath) {
-        //TODO: Logic for writing stats
+        std::unordered_map<MeshStat,int> meshStats = getRefinementStats();
+        std::unordered_map<TimeStat,double> timeStats = getRefinementTimes();
+        std::ofstream json(filepath);
+
+        auto writeBlock = [&]<typename StatType, typename StatValue>(std::unordered_map<StatType,StatValue> map, const unsigned int& totalValues, const char* const* names, bool appendFinalComma) {
+            int maxKey = 0;
+            for (const auto& [key, _] : map) {
+                if (static_cast<int>(key) > static_cast<int>(maxKey)) {
+                    maxKey = key;
+                }
+            }
+            for (unsigned int i = 0; i < totalValues; ++i) {
+                if (auto it = map.find(static_cast<StatType>(i)); it != map.end()) {
+                    const auto& [key, value] = *it;
+                    json << "  \"" << names[key] << "\": " << value;
+                    if ((static_cast<int>(key) != maxKey) || (static_cast<int>(key) == maxKey && appendFinalComma)) {
+                        json << ",";
+                    }
+                    json << std::endl;
+                }
+            }
+        };
+        json << "{" << std::endl;
+        writeBlock(meshStats, meshStatAmount, MeshStatNames, true);
+        writeBlock(timeStats, timeStatAmount, TimeStatNames, false);
+        json << "}" << std::endl;
     }
     const Mesh& getOriginalMeshData() const {
         return meshData;
@@ -113,17 +138,17 @@ public:
     const Mesh& getRefinedMeshData() const {
         return refinedMesh;
     }
-    std::unordered_map<MeshStat,int> getRefinementStats() {
+    std::unordered_map<MeshStat,int> getRefinementStats() const {
         if (refiner != nullptr) {
-            std::unordered_map<MeshStat,int>& stats = refiner->getRefinementStats();
+            std::unordered_map<MeshStat,int> stats = refiner->getRefinementStats();
             return stats;
         } else {
             return std::unordered_map<MeshStat,int>{};
         }
     }
-    std::unordered_map<TimeStat,double> getRefinementTimes() {
+    std::unordered_map<TimeStat,double> getRefinementTimes() const {
         if (refiner != nullptr) {
-            std::unordered_map<TimeStat,double>& stats = refiner->getRefinementTimes();
+            std::unordered_map<TimeStat,double> stats = refiner->getRefinementTimes();
             stats[T_TRIANGULATION_GENERATION] = generationTime;
             return stats;
         } else {

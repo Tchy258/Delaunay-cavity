@@ -57,7 +57,8 @@ int main(int argc, char **argv) {
         >())
         .readMeshFromFiles({node_file, ele_file, neigh_file})
         .refineMesh()
-        .writeOutputMesh({output + ".off"});
+        .writeOutputMesh({output + ".off"})
+        .writeStatsToJson({output + ".json"});
         
         
         //mesh.print_stats(output + ".json");
@@ -83,7 +84,8 @@ int main(int argc, char **argv) {
         >())
         .readMeshFromFiles({off_file})
         .refineMesh()
-        .writeOutputMesh({output + ".off"});
+        .writeOutputMesh({output + ".off"})
+        .writeStatsToJson({output + ".json"});
         
         //mesh.print_stats(output + ".json");
         //std::cout<<"output json in "<<output<<".json"<<std::endl;
