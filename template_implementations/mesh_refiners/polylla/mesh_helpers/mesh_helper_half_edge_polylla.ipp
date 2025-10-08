@@ -68,6 +68,7 @@ namespace refiners::helpers::polylla {
         EdgeIndex polygonSeed;
         //Foreach seed edge generate polygon
         auto t_start = std::chrono::high_resolution_clock::now();
+        double t_repair_total = 0.0;
         for(EdgeIndex seedCandidate : data.seedCandidates){
             polygonSeed = generatePolygonFromSeed(data,inputMesh, outputMesh,seedCandidate);
             //output_seeds.push_back(polygonSeed);
@@ -77,12 +78,13 @@ namespace refiners::helpers::polylla {
                 auto t_start_repair = std::chrono::high_resolution_clock::now();
                 barrierEdgeTipReparation(data, inputMesh, outputMesh, polygonSeed, outputSeeds);
                 auto t_end_repair = std::chrono::high_resolution_clock::now();
-                data.timeStats[T_REPAIR] += std::chrono::duration<double, std::milli>(t_end_repair-t_start_repair).count();
+                t_repair_total += std::chrono::duration<double, std::milli>(t_end_repair-t_start_repair).count();
             }         
         }    
         auto t_end = std::chrono::high_resolution_clock::now();
+        data.timeStats[T_REPAIR] = t_repair_total;
         data.timeStats[T_TRAVERSAL_AND_REPAIR] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-        data.timeStats[T_TRAVERSAL] = data.timeStats[T_TRAVERSAL_AND_REPAIR] - data.timeStats[T_REPAIR];
+        data.timeStats[T_TRAVERSAL] = data.timeStats[T_TRAVERSAL_AND_REPAIR] - t_repair_total;
 
         return outputSeeds;
     }
