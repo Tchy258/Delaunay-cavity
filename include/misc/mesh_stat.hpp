@@ -12,4 +12,17 @@ enum MeshStat {
     N_BORDER_EDGES
 };
 
+inline constexpr unsigned int meshStatAmount = 8;
+
+inline constexpr const char* MeshStatNames[meshStatAmount] = {
+    "n_polygons",
+    "n_frontier_edges",
+    "n_barrier_edge_tips",
+    "n_polygons_to_repair",
+    "n_polygons_added_after_repair",
+    "n_vertices",
+    "n_edges",
+    "n_border_edges"
+};
+
 #endif
