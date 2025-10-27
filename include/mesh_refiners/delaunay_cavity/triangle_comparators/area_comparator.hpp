@@ -4,7 +4,7 @@
 #include <concepts/mesh_data.hpp>
 #include <cmath>
 
-template <MeshData Mesh, bool ByAscendingOrder, bool Precise>
+template <MeshData Mesh, bool ByAscendingOrder, bool Precise = false>
 struct AreaComparator {
     using MeshVertex = typename Mesh::VertexType;
     using FaceIndex = typename Mesh::FaceIndex;

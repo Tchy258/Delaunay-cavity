@@ -34,6 +34,6 @@ struct MinAngleCriterionRobust {
     }
 };
 
-#include <template_implementations/mesh_refiners/refinement_criteria/min_angle_criterion_robust.ipp>
+#include <mesh_refiners/refinement_criteria/min_angle_criterion_robust.ipp>
 #undef PI
 #endif

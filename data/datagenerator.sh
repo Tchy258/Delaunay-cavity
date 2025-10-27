@@ -12,12 +12,12 @@ neigh_file="points${num_vertices}.1.neigh"
 
 
 #Generating random points
-echo -n "Generating data\n"
+echo "Generating data"
 python3 10000x10000RandomPoints.py $1 > $random_pts
-echo -n "Done.\n"
+echo "Done."
 
-echo -n "Generating triangulation\n"
+echo "Generating triangulation"
 ./triangle -n $random_pts
-echo -n "Done.\n"
+echo "Done."
 
 rm ${random_pts}

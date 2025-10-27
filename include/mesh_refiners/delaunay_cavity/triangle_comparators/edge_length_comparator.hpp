@@ -4,7 +4,7 @@
 #include <array>
 #include <algorithm>
 
-template <MeshData Mesh, bool ByAscendingOrder, bool ByMinEdge>
+template <MeshData Mesh, bool ByAscendingOrder, bool ByMinEdge = true>
 struct EdgeLengthComparator {
     using FaceIndex = typename Mesh::FaceIndex;
     using EdgeIndex = typename Mesh::EdgeIndex;
