@@ -132,6 +132,30 @@ inline std::array<HalfEdgeMesh::EdgeIndex, 3> HalfEdgeMesh::getEdgesOfTriangle(F
     EdgeIndex edge3 = next(edge2);
     return {edge1, edge2, edge3};
 }
+
+inline bool HalfEdgeMesh::isPolygonConvex(EdgeIndex firstEdgeOfPolygon) const {
+    VertexType v1 = vertices.at(origin(firstEdgeOfPolygon));
+    VertexType v2 = vertices.at(target(firstEdgeOfPolygon));
+    VertexType v3 = vertices.at(target(next(firstEdgeOfPolygon)));
+
+    bool positive = v1.cross2d(v2, v3) > 0;
+
+    EdgeIndex currentEdge = next(firstEdgeOfPolygon);
+    do {
+        v1 = v2;
+        v2 = v3;
+        currentEdge = next(currentEdge);
+        v3 = vertices.at(target(currentEdge));
+
+        double cross = v1.cross2d(v2, v3);
+        if (positive && cross <= 0) return false;
+        if (!positive && cross > 0) return false;
+
+    } while (currentEdge != firstEdgeOfPolygon);
+
+    return true;
+}
+
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<HalfEdgeMesh::FaceIndex> &faces, std::vector<HalfEdgeMesh::FaceIndex> &neighbors) {
     int neigh, origin, target;
     for(std::size_t i = 0; i < nPolygons; i++){

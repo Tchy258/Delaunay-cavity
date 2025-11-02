@@ -9,15 +9,7 @@
 namespace refiners::helpers::polylla {
 
     template <>
-    struct MeshHelper<HalfEdgeMesh> {
-        using MeshVertex = HalfEdgeMesh::VertexType;
-        using MeshEdge = HalfEdgeMesh::EdgeType;
-        using VertexIndex = HalfEdgeMesh::VertexIndex;
-        using EdgeIndex = HalfEdgeMesh::EdgeIndex;
-        using FaceIndex = HalfEdgeMesh::FaceIndex;
-        using OutputIndex = HalfEdgeMesh::OutputIndex;
-        using BinaryVector = std::vector<uint8_t>;
-        using RefinementData = PolyllaData<HalfEdgeMesh>;
+    struct MeshHelper<HalfEdgeMesh> : MeshHelperBase<HalfEdgeMesh> {
         // TODO: add docs
         static void labelMaxEdges(RefinementData& data, HalfEdgeMesh* mesh);
 

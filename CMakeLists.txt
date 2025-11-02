@@ -54,7 +54,7 @@ set(MESH_REFINER_OPTIONS DelaunayCavityRefiner PolyllaRefiner)
 set(TRIANGLE_COMPARATOR_BASE_T_OPTIONS NullComparator EdgeLengthComparator AngleComparator AreaComparator RandomComparator)
 set(TRIANGLE_COMPARATOR_SORT_ASCENDING_OPTIONS true false)
 set(TRIANGLE_COMPARATOR_SORT_KEY_OPTIONS true false)
-set(MERGING_STRATEGY_T_OPTIONS ExcludePreviousCavitiesStrategy)
+set(MERGING_STRATEGY_T_OPTIONS ExcludePreviousCavitiesStrategy MergeTrianglesWithBestConvexityStrategy)
 set(REFINEMENT_CRITERION_T_OPTIONS NullRefinementCriterion MinAngleCriterionRobust MinAngleCriterion MinAreaCriterion MinArea2Criterion)
 # ---------------------------
 # Map MESH_TYPE to header
@@ -146,6 +146,7 @@ endfunction()
 # ---------------------------
 # Optionally build all combinations
 # ---------------------------
+#[[
 if(BUILD_MACRO_COMBO)
     foreach(refiner IN LISTS MESH_REFINER_OPTIONS)
         foreach(mesh IN LISTS MESH_TYPE_OPTIONS)
@@ -172,5 +173,7 @@ if(BUILD_MACRO_COMBO)
 endif()
 
 add_executable(Polylla main.cpp)
+]]
 
-
+add_configured_executable("main2.cpp" "DelaunayCavityRefiner" "HalfEdgeMesh" "EdgeLengthComparator" "MergeTrianglesWithBestConvexityStrategy" true false "NullRefinementCriterion")
+add_configured_executable("main2.cpp" "DelaunayCavityRefiner" "HalfEdgeMesh" "EdgeLengthComparator" "ExcludePreviousCavitiesStrategy" true false "NullRefinementCriterion")

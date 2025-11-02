@@ -1,0 +1,7 @@
+#ifndef POLYGON_MERGING_POLICIES_HPP
+#define POLYGON_MERGING_POLICIES_HPP
+
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/null_polygon_merging_policy.hpp>
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/maximize_convexity_merging_policy.hpp>
+
+#endif

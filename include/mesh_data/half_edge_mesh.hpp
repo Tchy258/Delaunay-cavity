@@ -241,7 +241,10 @@ class HalfEdgeMesh {
          * @returns The squared length of the edge `edge`
          */
         double edgeLength2(EdgeIndex edge) const;
-
+        /**
+         * @returns Whether the polygon is convex or not
+         */
+        bool isPolygonConvex(FaceIndex firstEdgeOfPolygon) const;
 };
 
 template<> inline constexpr bool isMeshData<HalfEdgeMesh> = true;

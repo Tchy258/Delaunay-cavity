@@ -16,7 +16,7 @@ COMPARATOR_SORT_KEYS = {
     "AreaComparator": ["Area2","Precise"],
 }
 SORT_ORDER_OPTIONS = ["Ascending", "Descending"]
-MERGING_STRATEGY_T_OPTIONS = ["ExcludePreviousCavitiesStrategy"]
+MERGING_STRATEGY_T_OPTIONS = ["ExcludePreviousCavitiesStrategy", "MergeTrianglesWithBestConvexityStrategy"]
 REFINEMENT_CRITERION_T_OPTIONS = ["NullRefinementCriterion", "MinAngleCriterionRobust", "MinAngleCriterion", "MinAreaCriterion", "MinArea2Criterion"]
 
 MAIN_FILE = "main2.cpp"  # Can be changed per executable
@@ -36,7 +36,7 @@ def choose_option(name, options):
     return options[int(val)]
 
 def choose_sort_key(name):
-    print(f"\nChoose {name} (or type 'all' to build all combinations):")
+    print(f"\nChoose {name}'s sort key (or type 'all' to build all combinations):")
     for i, opt in enumerate(COMPARATOR_SORT_KEYS[name]):
         print(f"{i}: {opt}")
     val = input("Enter index or 'all': ").strip()
@@ -52,6 +52,8 @@ def to_snake_case(name: str) -> str:
 def build_target(refiner, mesh, tri_base, sort_order_ascending, sort_key_val, merge, refinement_criterion):
     # Use hyphens between options and snake_case
     parts = [refiner,mesh, tri_base, merge, refinement_criterion]
+    if tri_base != "NullComparator" and tri_base != "RandomComparator":
+        parts = [refiner,mesh, (("Ascending") if sort_order_ascending else ("Descending")) + (COMPARATOR_SORT_KEYS[tri_base][1] if sort_key_val else COMPARATOR_SORT_KEYS[tri_base][0]) + tri_base , merge, refinement_criterion]
     parts_snake = [to_snake_case(p) for p in parts]
     target_name = "-".join(parts_snake)
     print(f"\nBuilding target: {target_name}")
@@ -93,7 +95,7 @@ if tri_base != "NullComparator" and tri_base != "RandomComparator":
         ascending_val = True
     else:
         ascending_val = False
-    sort_key = choose_sort_key("SORT_KEY")
+    sort_key = choose_sort_key(tri_base)
     if sort_key == COMPARATOR_SORT_KEYS[tri_base][0]:
         sort_key_val = False
     else:

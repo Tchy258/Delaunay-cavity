@@ -7,7 +7,7 @@
 namespace refiners::helpers::polylla {
 
     template <MeshData MeshType>
-    struct MeshHelper {
+    struct MeshHelperBase {
         using MeshVertex = typename MeshType::VertexType;
         using MeshEdge = typename MeshType::EdgeType;
         using VertexIndex = typename MeshType::VertexIndex;
@@ -16,6 +16,18 @@ namespace refiners::helpers::polylla {
         using OutputIndex = typename MeshType::OutputIndex;
         using BinaryVector = std::vector<uint8_t>;
         using RefinementData = PolyllaData<MeshType>;
+    };
+    template <MeshData MeshType>
+    struct MeshHelper : MeshHelperBase<MeshType> {
+        using Base = MeshHelperBase<MeshType>;
+        using typename Base::MeshVertex;
+        using typename Base::MeshEdge;
+        using typename Base::VertexIndex;
+        using typename Base::EdgeIndex;
+        using typename Base::FaceIndex;
+        using typename Base::OutputIndex;
+        using typename Base::BinaryVector;
+        using typename Base::RefinementData;
         // TODO: add docs
         static void labelMaxEdges(RefinementData& data, MeshType* mesh) = delete;
 

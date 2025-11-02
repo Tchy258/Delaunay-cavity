@@ -75,6 +75,7 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
             timeStats[T_CIRCUMCENTER_COMPUTATION] = 0.0;
             timeStats[T_CAVITY_COMPUTATION] = 0.0;
             timeStats[T_CAVITY_INSERTION] = 0.0;
+            timeStats[T_CAVITY_MERGING] = 0.0;
         }
 
         explicit DelaunayCavityRefiner() requires std::same_as<Criterion, NullRefinementCriterion<MeshType>>

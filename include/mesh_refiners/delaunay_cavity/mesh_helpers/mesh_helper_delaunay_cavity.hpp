@@ -1,9 +1,17 @@
 #ifndef MESH_HELPER_DELAUNAY_CAVITY_HPP
 #define MESH_HELPER_DELAUNAY_CAVITY_HPP
 #include <concepts/mesh_data.hpp>
-
+#include <concepts/polygon_merging_policy_concept.hpp>
 namespace refiners::helpers::delaunay_cavity {
 
+    template <MeshData MeshType>
+    struct MeshHelperBase {
+        using EdgeIndex = typename MeshType::EdgeIndex;
+        using FaceIndex = typename MeshType::FaceIndex;
+        using VertexIndex = typename MeshType::VertexIndex;
+        using OutputIndex = typename MeshType::OutputIndex;
+        using Cavity = Cavity<MeshType>;
+    };
     /**
      * Helper class to do mesh specific operations on generic refiner methods.
      * 
@@ -11,13 +19,13 @@ namespace refiners::helpers::delaunay_cavity {
      * written for each specific type of MeshData
      */
     template <MeshData MeshType>
-    struct MeshHelper {
-        using EdgeIndex = typename MeshType::EdgeIndex;
-        using FaceIndex = typename MeshType::FaceIndex;
-        using VertexIndex = typename MeshType::VertexIndex;
-        using OutputIndex = typename MeshType::OutputIndex;
-        using Cavity = Cavity<MeshType>;
-
+    struct MeshHelper : MeshHelperBase<MeshType> {
+        using Base = MeshHelperBase<MeshType>;
+        using typename Base::EdgeIndex;
+        using typename Base::FaceIndex;
+        using typename Base::VertexIndex;
+        using typename Base::OutputIndex;
+        using typename Base::Cavity;
         /**
          * @param mesh A particular MeshData implementation
          * @returns A vector of output indices that represent what uniquely identifies a particular polygon in
@@ -47,8 +55,14 @@ namespace refiners::helpers::delaunay_cavity {
          * @param triangle A face index that identifies a triangle of `mesh`
          * @return An array that contains the 3 edge indices of `triangle`
          */
-        static std::array<EdgeIndex,3> getEdges(MeshType* mesh, FaceIndex triangle) = delete;
+        static std::array<EdgeIndex,3> getTriangleEdges(MeshType* mesh, FaceIndex triangle) = delete;
 
+        /**
+         * @param mesh A particular MeshData implementation
+         * @param seedIndex An index that identifies a polygon on this particular MeshData implementation
+         * @return The amount of edges this seed polygon has
+         */
+        static unsigned int seedPolygonEdgeCount(MeshType* mesh, OutputIndex seedIndex) = delete;
         /**
          * Given the information of `cavities`, updates the necessary indices in `mesh` to reflect
          * the changes in the final output
@@ -58,6 +72,12 @@ namespace refiners::helpers::delaunay_cavity {
          * @return A vector of outputs to write
          */
         static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
+
+        /**
+         * Merges the given triangle into one of its neighbors according to some merging policy
+         */
+        template <PolygonMergingPolicy MergingPolicy>
+        static void mergeIntoNeighbor(const MeshType* inputMesh, MeshType* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge) = delete;
     };
 
 }

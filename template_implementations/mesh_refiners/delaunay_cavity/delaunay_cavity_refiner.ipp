@@ -167,6 +167,12 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     outputSeeds = _MeshHelper::insertCavity(inputMesh, outputMesh, cavities, inCavity);
     t_end = std::chrono::high_resolution_clock::now();
     timeStats[T_CAVITY_INSERTION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    if constexpr (HasPostInsertionMethod<MergingStrategy, MeshType>) {
+        t_start = std::chrono::high_resolution_clock::now();
+        MergingStrategy::postInsertion(inputMesh, outputMesh, outputSeeds, inCavity);
+        t_end = std::chrono::high_resolution_clock::now();
+        timeStats[T_CAVITY_MERGING] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    }
     meshStats[N_POLYGONS] = outputSeeds.size();
     meshStats[N_VERTICES] = polygonAmount;
     meshStats[N_EDGES] = outputMesh->numberOfEdges();

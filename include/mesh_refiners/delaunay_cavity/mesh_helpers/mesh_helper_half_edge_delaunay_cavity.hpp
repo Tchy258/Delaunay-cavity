@@ -5,6 +5,7 @@
 #include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
 #endif
 
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/polygon_merging_policies.hpp>
 #include <mesh_data/half_edge_mesh.hpp>
 #include <mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
 #include <unordered_set>
@@ -12,12 +13,7 @@
 namespace refiners::helpers::delaunay_cavity {
 
     template <>
-    struct MeshHelper<HalfEdgeMesh> {
-        using EdgeIndex = HalfEdgeMesh::EdgeIndex;
-        using FaceIndex = HalfEdgeMesh::FaceIndex;
-        using VertexIndex = HalfEdgeMesh::VertexIndex;
-        using OutputIndex = HalfEdgeMesh::OutputIndex;
-        using Cavity = Cavity<HalfEdgeMesh>;
+    struct MeshHelper<HalfEdgeMesh> : MeshHelperBase<HalfEdgeMesh> {
 
         /**
          * @param mesh A HalfEdgeMesh
@@ -48,8 +44,14 @@ namespace refiners::helpers::delaunay_cavity {
          * @param triangle A FaceIndex of `mesh` that identifies a triangle
          * @return An array of size 3 that contains the CCW interior half edge indices of `triangle`
          */
-        static std::array<EdgeIndex,3> getEdges(HalfEdgeMesh* mesh, FaceIndex triangle);
+        static std::array<EdgeIndex,3> getTriangleEdges(HalfEdgeMesh* mesh, FaceIndex triangle);
 
+        /**
+         * @param mesh A HalfEdgeMesh
+         * @param seedIndex An index that identifies a polygon (one of its half edges)
+         * @return The amount of edges this seed polygon has
+         */
+        static unsigned int seedPolygonEdgeCount(HalfEdgeMesh* mesh, OutputIndex seedIndex);
         /**
          * Updates the values of `next` and `prev` of the edges present at the cavity's boundary so walking through them
          * results in making the closed loop of each cavity instead of the triangles that conformed it.
@@ -60,6 +62,15 @@ namespace refiners::helpers::delaunay_cavity {
          * @param cavities A vector of Cavity objects with information to do the cavity insertion
          */
         static std::vector<OutputIndex> insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity);
+
+        /**
+         * Merges the given triangle into one of its neighbors according to some merging policy
+         */
+        template <PolygonMergingPolicy MergingPolicy>
+        static void mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge);
+
+        private:
+            static bool mergeIntoNeighborImpl(MaximizeConvexityMergingPolicy, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::array<EdgeIndex,3> triangleEdges, std::array<EdgeIndex,3> neighboringSeeds);
     };
 }
 

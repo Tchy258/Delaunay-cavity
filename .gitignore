@@ -13,6 +13,7 @@ experiments/plots_*
 experiments/plots/*
 experiments/cavity_*
 experiments/delaunay_cavity_refiner/*
+experiments/summaries/*
 !data/datagenerator.sh
 !data/datagenerator_withplotting.sh
 !data/plot_triangulation.py
