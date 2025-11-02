@@ -292,7 +292,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
     # CSV columns: mesh, convex_total, concave_total, total_polygons, then eN, convex_eN, concave_eN, convex_pct_eN, concave_pct_eN for each edge
     summary_dir = Path("./summaries") / refiner / mesh_type
     if refiner == "delaunay_cavity_refiner":
-        summary_dir = summary_dir / comparator
+        summary_dir = summary_dir / comparator / merging_strategy
         if comparator != "null_comparator":
             summary_dir = summary_dir / ascending_or_seed
             if comparator != "random_comparator":
