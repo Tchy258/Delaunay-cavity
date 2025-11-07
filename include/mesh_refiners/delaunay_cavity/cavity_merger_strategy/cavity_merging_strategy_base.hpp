@@ -6,7 +6,7 @@
 #include <vector>
 #include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
 
-template <MeshData Mesh, PolygonMergingPolicy MergingPolicy>
+template <MeshData Mesh, PolygonMergingPolicy<Mesh> MergingPolicy>
 struct CavityMergingStrategyBase {
     using Cavity = refiners::helpers::delaunay_cavity::Cavity<Mesh>;
     using FaceIndex = typename Mesh::FaceIndex;

@@ -3,10 +3,18 @@
 #include <concepts>
 #include <concepts/mesh_data.hpp>
 
-template <typename MergingPolicy>
-inline constexpr bool isKnownMergingPolicy = false;
+template <typename MergingPolicy, MeshData Mesh>
+inline constexpr bool isNullMergingPolicy = false;
 
-template <typename MergingPolicy>
-concept PolygonMergingPolicy = isKnownMergingPolicy<MergingPolicy>;
+template <typename MergingPolicy, typename Mesh>
+concept PolygonMergingPolicy = isNullMergingPolicy<MergingPolicy,Mesh> ||
+    requires(
+        Mesh* mesh,
+        typename Mesh::OutputIndex seedToMerge,
+        std::vector<typename Mesh::OutputIndex>& seedNeighbors,
+        std::vector<std::vector<typename Mesh::EdgeIndex>>& sharedEdges
+    ) {
+        { MergingPolicy::mergeBestCandidate(mesh, seedToMerge, seedNeighbors, sharedEdges)} -> std::convertible_to<typename Mesh::OutputIndex>;
+    };
 
 #endif // POLYGON_MERGING_POLICY_CONCEPT_HPP

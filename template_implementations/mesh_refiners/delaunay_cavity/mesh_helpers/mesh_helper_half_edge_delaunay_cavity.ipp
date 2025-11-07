@@ -1,5 +1,6 @@
 #ifndef MESH_HELPER_HALF_EDGE_DELAUNAY_CAVITY_HPP
 #include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_half_edge_delaunay_cavity.hpp>
+#include "mesh_helper_half_edge_delaunay_cavity.hpp"
 #endif 
 
 namespace refiners::helpers::delaunay_cavity {
@@ -18,8 +19,8 @@ namespace refiners::helpers::delaunay_cavity {
         return mesh->isBorderEdge(e) || mesh->isBorderEdge(mesh->twin(e));
     }
 
-    bool MeshHelper<HalfEdgeMesh>::isSharedEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) {
-        EdgeIndex candidate1 = mesh->getSharedEdge(triangle1,triangle2);
+    bool MeshHelper<HalfEdgeMesh>::isSharedTriangleEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) {
+        EdgeIndex candidate1 = mesh->getTriangleSharedEdge(triangle1,triangle2);
         EdgeIndex candidate2 = mesh->twin(candidate1);
         return edge == candidate1 || edge == candidate2;
     }
@@ -31,15 +32,6 @@ namespace refiners::helpers::delaunay_cavity {
         return {edge1, edge2, edge3};
     }
 
-    unsigned int MeshHelper<HalfEdgeMesh>::seedPolygonEdgeCount(HalfEdgeMesh* mesh, OutputIndex seedIndex) {
-        EdgeIndex currentEdge = seedIndex;
-        unsigned int edgeCount = 0;
-        do {
-            ++edgeCount;
-            currentEdge = mesh->next(currentEdge);
-        } while (currentEdge != seedIndex);
-        return edgeCount;
-    }
     std::vector<HalfEdgeMesh::OutputIndex> MeshHelper<HalfEdgeMesh>::insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) {
         size_t faceCount = outputMesh->numberOfPolygons();
         size_t edgeCount = outputMesh->numberOfEdges();
@@ -78,66 +70,80 @@ namespace refiners::helpers::delaunay_cavity {
         outputMesh->updatePolygonCount(faceCount);
         return outputSeeds;
     }
-    template <PolygonMergingPolicy MergingPolicy>
-    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge) {
-        std::array<HalfEdgeMesh::EdgeIndex,3> triangleEdges = {seedToMerge, outputMesh->next(seedToMerge), outputMesh->prev(seedToMerge)};
-        std::array<HalfEdgeMesh::EdgeIndex,3> neighborSeeds = {-1,-1,-1};
-        for (unsigned int i = 0; i < 3; ++i) {
-            EdgeIndex twinEdge = outputMesh->twin(triangleEdges[i]);
-            if (outputMesh->isBorderEdge(twinEdge)) continue;
-            EdgeIndex initial = twinEdge;
-            auto seedIterator = std::find(outputSeeds.begin(), outputSeeds.end(), twinEdge);
-            if (seedIterator == outputSeeds.end()) {
-                do {
-                    twinEdge = outputMesh->next(twinEdge);
-                    seedIterator = std::find(outputSeeds.begin(), outputSeeds.end(), twinEdge);
-                    if (seedIterator != outputSeeds.end()) break;
-                } while (initial != twinEdge);
-            }
-            while (*seedIterator == outputMesh->twin(triangleEdges[0]) || *seedIterator == outputMesh->twin(triangleEdges[1]) || *seedIterator == outputMesh->twin(triangleEdges[2])) {
-                *seedIterator = outputMesh->next(*seedIterator);
-            }
-            neighborSeeds[i] = *seedIterator;
+    inline std::unordered_map<HalfEdgeMesh::EdgeIndex, HalfEdgeMesh::OutputIndex> MeshHelper<HalfEdgeMesh>::buildEdgeToOutputMap(HalfEdgeMesh *outputMesh, const std::vector<OutputIndex> &outputSeeds) {
+        std::unordered_map<EdgeIndex, OutputIndex> edgeMap;
+        edgeMap.reserve(outputMesh->numberOfEdges());
+        for (OutputIndex seed : outputSeeds) {
+            EdgeIndex currentEdge = seed;
+            do {
+                edgeMap.insert_or_assign(currentEdge,seed);
+                currentEdge = outputMesh->next(currentEdge);
+            } while (currentEdge != seed);
         }
-        // Very particular edge case 
-        if (neighborSeeds[0] == -1 && neighborSeeds[1] == -1 && neighborSeeds[2] == -1) return;
-        bool wasMerged = mergeIntoNeighborImpl(MergingPolicy{}, inputMesh, outputMesh, triangleEdges, neighborSeeds);
-        if (wasMerged) {
-            outputSeeds.erase(std::remove(outputSeeds.begin(), outputSeeds.end(), seedToMerge), outputSeeds.end());
+        return edgeMap;
+    }
+    inline HalfEdgeMesh::OutputIndex MeshHelper<HalfEdgeMesh>::changeToValidRepresentative(HalfEdgeMesh *outputMesh, std::unordered_map<EdgeIndex, OutputIndex> &edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentaive) {
+        EdgeIndex newRepresentative = currentRepresentaive;
+        std::vector<EdgeIndex> twins(invalidEdges.begin(), invalidEdges.end());
+        for (int i = 0; i < twins.size(); ++i) {
+            twins[i] = outputMesh->twin(twins[i]);
         }
+        bool representativeIsValid = false;
+        while (!representativeIsValid) {
+            representativeIsValid = true;
+            for (EdgeIndex edge : twins) {
+                if ( edge == newRepresentative) {
+                    representativeIsValid = false;
+                    newRepresentative = outputMesh->next(newRepresentative);
+                    break;
+                }
+            }
+        }
+        if (currentRepresentaive != newRepresentative) {
+            EdgeIndex firstEdge = twins[0];
+            EdgeIndex currentEdge = firstEdge;
+            do {
+                edgeToOutputMap[currentEdge] = newRepresentative;
+                currentEdge = outputMesh->next(currentEdge);
+            } while (firstEdge != currentEdge);
+        }
+        return newRepresentative;
     }
 
-    bool MeshHelper<HalfEdgeMesh>::mergeIntoNeighborImpl(MaximizeConvexityMergingPolicy, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::array<EdgeIndex,3> triangleEdges, std::array<EdgeIndex,3> neighborSeeds) {
-        for (unsigned int i = 0; i < 3; ++i) {
-            EdgeIndex twin = outputMesh->twin(triangleEdges[i]);
-            if (outputMesh->isBorderEdge(twin)) continue;
-            EdgeIndex prevToSharedEdge = outputMesh->prev(twin);
-            EdgeIndex nextToSharedEdge = outputMesh->next(twin);
-            EdgeIndex prevOfCurrent = outputMesh->prev(triangleEdges[i]);
-            EdgeIndex nextOfCurrent = outputMesh->next(triangleEdges[i]);
-
-            std::array<EdgeIndex,6> edges = { prevToSharedEdge, nextToSharedEdge, prevOfCurrent, nextOfCurrent, twin, triangleEdges[i] };
-            std::array<EdgeIndex,6> origNext, origPrev;
-            for (size_t k = 0; k < edges.size(); ++k) {
-                origNext[k] = outputMesh->next(edges[k]);
-                origPrev[k] = outputMesh->prev(edges[k]);
-            }
-
-            outputMesh->setNext(prevToSharedEdge, nextOfCurrent);
-            outputMesh->setPrev(nextOfCurrent, prevToSharedEdge);
-            outputMesh->setNext(prevOfCurrent, nextToSharedEdge);
-            outputMesh->setPrev(nextToSharedEdge, prevOfCurrent);
-            if (!outputMesh->isPolygonConvex(neighborSeeds[i])) {
-                for (size_t k = 0; k < edges.size(); ++k) {
-                    outputMesh->setNext(edges[k], origNext[k]);
-                    outputMesh->setPrev(edges[k], origPrev[k]);
+    template <PolygonMergingPolicy<HalfEdgeMesh> MergingPolicy>
+    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh *inputMesh, HalfEdgeMesh *outputMesh, std::vector<OutputIndex> &outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap)
+    {
+        std::vector<OutputIndex> seedEdges;
+        std::vector<OutputIndex> neighborSeeds;
+        std::vector<std::vector<EdgeIndex>> sharedEdges;
+        size_t edgeCount = outputMesh->getOutputSeedEdgeCount(seedToMerge);
+        seedEdges.reserve(edgeCount);
+        neighborSeeds.reserve(edgeCount);
+        sharedEdges.reserve(edgeCount);
+        EdgeIndex currentEdge = seedToMerge;
+        do {
+            if (!outputMesh->isBorderEdge(outputMesh->twin(currentEdge))) {
+                seedEdges.push_back(currentEdge);
+                std::vector<EdgeIndex> edgesSharedWithNeighbor = outputMesh->getSharedEdges(currentEdge, outputMesh->twin(currentEdge));
+                sharedEdges.push_back(edgesSharedWithNeighbor);
+                OutputIndex oldRepresentative = edgeToOutputMap[outputMesh->twin(currentEdge)];
+                OutputIndex matchingNeighborSeed = changeToValidRepresentative(outputMesh, edgeToOutputMap, edgesSharedWithNeighbor, edgeToOutputMap[outputMesh->twin(currentEdge)]);
+                if (oldRepresentative != matchingNeighborSeed) {
+                    std::replace(outputSeeds.begin(), outputSeeds.end(), oldRepresentative, matchingNeighborSeed);
                 }
-            } else {
-                outputMesh->updateEdgeCount(outputMesh->numberOfEdges() - 2);
-                outputMesh->updatePolygonCount(outputMesh->numberOfPolygons() - 1);
-                return true;
+                neighborSeeds.push_back(matchingNeighborSeed);
             }
+            currentEdge = outputMesh->next(currentEdge);
+        } while (currentEdge != seedToMerge);
+        
+        OutputIndex chosenNeighbor = MergingPolicy::mergeBestCandidate(outputMesh, seedToMerge, neighborSeeds, sharedEdges);
+        if (chosenNeighbor != -1) {
+            outputSeeds.erase(std::remove(outputSeeds.begin(), outputSeeds.end(), seedToMerge), outputSeeds.end());
+            currentEdge = chosenNeighbor;
+            do {
+                edgeToOutputMap[currentEdge] = chosenNeighbor;
+                currentEdge = outputMesh->next(currentEdge);
+            } while (currentEdge != chosenNeighbor);
         }
-        return false;
     }
 }

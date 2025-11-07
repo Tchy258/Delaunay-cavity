@@ -101,14 +101,14 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
                     cavity.allTriangles.push_back(neighbor);
                 } else if (currentTriangle == triangleOfCircumcenter) {
                     for (EdgeIndex e : triangleEdges) {
-                        if (_MeshHelper::isSharedEdge(inputMesh,e,currentTriangle,neighbor)) {
+                        if (_MeshHelper::isSharedTriangleEdge(inputMesh,e,currentTriangle,neighbor)) {
                             cavity.boundaryEdges.push_back(e);
                         }
                     }
                 } else {
                     isBoundary = true;
 
-                    EdgeIndex boundaryEdge = inputMesh->getSharedEdge(currentTriangle,neighbor);
+                    EdgeIndex boundaryEdge = inputMesh->getTriangleSharedEdge(currentTriangle,neighbor);
                     cavity.boundaryEdges.push_back(boundaryEdge);
                 }
             }

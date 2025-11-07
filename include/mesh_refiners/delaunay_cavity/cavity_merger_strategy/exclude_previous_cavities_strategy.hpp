@@ -3,7 +3,7 @@
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/cavity_merging_strategy_base.hpp>
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/null_polygon_merging_policy.hpp>
 
-template <MeshData Mesh, PolygonMergingPolicy MergingPolicy>
+template <MeshData Mesh, PolygonMergingPolicy<Mesh> MergingPolicy>
 struct ExcludePreviousCavitiesStrategyBase : CavityMergingStrategyBase<Mesh, MergingPolicy> {
     using Base = CavityMergingStrategyBase<Mesh,MergingPolicy>;
     using typename Base::Cavity;
@@ -17,7 +17,7 @@ struct ExcludePreviousCavitiesStrategyBase : CavityMergingStrategyBase<Mesh, Mer
 };
 
 template <MeshData Mesh>
-using ExcludePreviousCavitiesStrategy = ExcludePreviousCavitiesStrategyBase<Mesh, NullPolygonMergingPolicy>;
+using ExcludePreviousCavitiesStrategy = ExcludePreviousCavitiesStrategyBase<Mesh, NullPolygonMergingPolicy<Mesh>>;
 
 
 #endif

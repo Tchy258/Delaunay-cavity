@@ -4,7 +4,6 @@
 #include<concepts/mesh_data.hpp>
 #include<vector>
 #include<mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
-#include<concepts/has_merge_method.hpp>
 
 
 template <typename MergingStrategy, typename Mesh>

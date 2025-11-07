@@ -2,6 +2,7 @@
 #define MESH_HELPER_DELAUNAY_CAVITY_HPP
 #include <concepts/mesh_data.hpp>
 #include <concepts/polygon_merging_policy_concept.hpp>
+#include <map>
 namespace refiners::helpers::delaunay_cavity {
 
     template <MeshData MeshType>
@@ -48,7 +49,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @param triangle2 A face index that identifies another triangle of `mesh` different from `triangle1`
          * @return Whether the edge `edge` is the shared edge between `triangle1` and `triangle2`
          */
-        static bool isSharedEdge(const MeshType* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = delete;
+        static bool isSharedTriangleEdge(const MeshType* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = delete;
 
         /**
          * @param mesh A particular MeshData implementation
@@ -57,12 +58,6 @@ namespace refiners::helpers::delaunay_cavity {
          */
         static std::array<EdgeIndex,3> getTriangleEdges(MeshType* mesh, FaceIndex triangle) = delete;
 
-        /**
-         * @param mesh A particular MeshData implementation
-         * @param seedIndex An index that identifies a polygon on this particular MeshData implementation
-         * @return The amount of edges this seed polygon has
-         */
-        static unsigned int seedPolygonEdgeCount(MeshType* mesh, OutputIndex seedIndex) = delete;
         /**
          * Given the information of `cavities`, updates the necessary indices in `mesh` to reflect
          * the changes in the final output
@@ -74,10 +69,20 @@ namespace refiners::helpers::delaunay_cavity {
         static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
 
         /**
+         * Builds a hashmap of edges to their representatives
+         */
+        static std::map<EdgeIndex, OutputIndex> buildEdgeToOutputMap(MeshType* outputMesh, const std::vector<OutputIndex>& outputSeeds) = delete;
+
+        /**
+         * Given a vector of "invalid edges" that will be deleted as a result of merging, the edgeToOutputMap is checked to see if these edges were
+         * representatives, and if so, change the polygon's representative to a different, valid edge
+         */
+        static OutputIndex changeToValidRepresentative(MeshType* outputMesh, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) = delete;
+        /**
          * Merges the given triangle into one of its neighbors according to some merging policy
          */
-        template <PolygonMergingPolicy MergingPolicy>
-        static void mergeIntoNeighbor(const MeshType* inputMesh, MeshType* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge) = delete;
+        template <PolygonMergingPolicy<MeshType> MergingPolicy>
+        static void mergeIntoNeighbor(const MeshType* inputMesh, MeshType* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap) = delete;
     };
 
 }

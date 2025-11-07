@@ -37,7 +37,7 @@ namespace refiners::helpers::delaunay_cavity {
          * 
          * Both are checked because in the generic logic two triangles only share a single edge, so they are considered "equal"
          */
-        static bool isSharedEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2);
+        static bool isSharedTriangleEdge(const HalfEdgeMesh* mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2);
 
         /**
          * @param mesh A HalfEdgeMesh
@@ -46,12 +46,6 @@ namespace refiners::helpers::delaunay_cavity {
          */
         static std::array<EdgeIndex,3> getTriangleEdges(HalfEdgeMesh* mesh, FaceIndex triangle);
 
-        /**
-         * @param mesh A HalfEdgeMesh
-         * @param seedIndex An index that identifies a polygon (one of its half edges)
-         * @return The amount of edges this seed polygon has
-         */
-        static unsigned int seedPolygonEdgeCount(HalfEdgeMesh* mesh, OutputIndex seedIndex);
         /**
          * Updates the values of `next` and `prev` of the edges present at the cavity's boundary so walking through them
          * results in making the closed loop of each cavity instead of the triangles that conformed it.
@@ -64,13 +58,21 @@ namespace refiners::helpers::delaunay_cavity {
         static std::vector<OutputIndex> insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity);
 
         /**
+         * Builds a hashmap of edges to their representatives
+         */
+        static std::unordered_map<EdgeIndex, OutputIndex> buildEdgeToOutputMap(HalfEdgeMesh* outputMesh, const std::vector<OutputIndex>& outputSeeds);
+
+        /**
+         * Given a vector of "invalid edges" that will be deleted as a result of merging, the edgeToOutputMap is checked to see if these edges were
+         * representatives, and if so, change the polygon's representative to a different, valid edge
+         */
+        static OutputIndex changeToValidRepresentative(HalfEdgeMesh* outputMesh, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative);
+
+        /**
          * Merges the given triangle into one of its neighbors according to some merging policy
          */
-        template <PolygonMergingPolicy MergingPolicy>
-        static void mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge);
-
-        private:
-            static bool mergeIntoNeighborImpl(MaximizeConvexityMergingPolicy, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::array<EdgeIndex,3> triangleEdges, std::array<EdgeIndex,3> neighboringSeeds);
+        template <PolygonMergingPolicy<HalfEdgeMesh> MergingPolicy>
+        static void mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap);
     };
 }
 
