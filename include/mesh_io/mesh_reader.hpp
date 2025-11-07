@@ -13,6 +13,7 @@ template<MeshData Mesh>
 class MeshReader {
     public:
         virtual Mesh* readMesh(const std::vector<std::filesystem::path>& files) = 0;
+        virtual ~MeshReader() = default;
     protected:
         // Esta fue la unica función ql funciono, porque las weas nativas de c++ funcionan mal
         //https://stackoverflow.com/a/22395635
