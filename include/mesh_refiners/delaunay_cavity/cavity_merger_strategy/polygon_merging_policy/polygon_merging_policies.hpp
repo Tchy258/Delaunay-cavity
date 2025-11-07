@@ -3,5 +3,7 @@
 
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/null_polygon_merging_policy.hpp>
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/maximize_convexity_merging_policy.hpp>
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/smallest_neighbor_merging_policy.hpp>
+#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/biggest_neighbor_merging_policy.hpp>
 
 #endif
