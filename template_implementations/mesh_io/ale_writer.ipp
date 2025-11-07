@@ -29,6 +29,10 @@ inline void AleWriter<Mesh>::writeOutputSeeds(std::ofstream &file, HalfEdgeMesh 
             borderInitial = edgeIndex;
             break;
         }
+        if(mesh.isBorderEdge(mesh.twin(edgeIndex))){
+            borderInitial = mesh.twin(edgeIndex);
+            break;
+        }
     }
     file << mesh.origin(borderInitial) << " ";
     borderCurrent = mesh.prev(borderInitial);
@@ -47,6 +51,7 @@ void AleWriter<Mesh>::writeMesh(const std::vector<std::filesystem::path>& files,
     file << "Custom" << std::endl;
     file << "# nodal coordinates: number of nodes followed by the coordinates" << std::endl;
     file << numberOfVertices << std::endl;
+    file << std::setprecision(15);
     //print nodes
     double xmax = mesh.getVertex(0).x;
     double xmin = xmax;
@@ -58,10 +63,14 @@ void AleWriter<Mesh>::writeMesh(const std::vector<std::filesystem::path>& files,
         xmin = vert.x < xmin ? vert.x : xmin;
         ymax = vert.y > ymax ? vert.y : ymax;
         ymin = vert.y < ymin ? vert.y : ymin;
-        file << std::setprecision(15) << vert.x << " " << vert.y << std::endl;
+        file << vert.x << " " << vert.y << std::endl;
     }
     file << "# element connectivity: number of elements followed by the elements" << std::endl;
-    file << mesh.numberOfPolygons() << std::endl;
+    if (!outputSeeds.empty()) {
+        file << outputSeeds.size() << '\n';
+    } else {
+        file << mesh.numberOfPolygons() << '\n';
+    }
     //print polygons
     writeOutputSeeds(file, mesh, outputSeeds);
     file << "# indices of nodes located on the Neumann boundary" << std::endl;
