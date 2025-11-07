@@ -1,0 +1,14 @@
+# Comments are supported, using a #
+# The default section is [default], case-insensitive
+
+input1 = "./data/points500.1.node" # Mandatory, must be .node or .off
+input2 = "./data/points500.1.ele" # Must be .ele if off-input is false, else it should be omitted
+input3 = "./data/points500.1.neigh" # Must be .neigh if off-input is false, else it should be omitted
+
+output = "./experiments/points500_output" # Root filename of output, appropriate extensions are appended to this name
+off-output = true # true if an off output file is desired
+json-output = true # true if a json file with stats is desired
+ale-output = true # true  if an ale output file is desired
+#off-input = true # true if an off input file will be provided on input1
+#threshold = 0.1 # A double type value whose meaning depends on the refinement criterion
+#seed = 123 # A number that represents a random seed, only used for the random triangle comparator
