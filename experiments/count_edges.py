@@ -121,7 +121,7 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
         ele_file   = os.path.join(input_dir, name + ".ele")
         neigh_file = os.path.join(input_dir, name + ".neigh")
         exec_path = os.path.join(exec_dir, exec_name)
-        cmd_list = [exec_path, "--input1", node_file, "--input2", ele_file, "--input3", neigh_file, "-w", "--json", "--output", output_basename]
+        cmd_list = [exec_path, "--input1", node_file, "--input2", ele_file, "--input3", neigh_file, "--off-output", "--json-output", "--ale-output", "--output" , output_basename]
         if comparator == "random_comparator":
             cmd_list.append("--seed")
             cmd_list.append(ascending_or_seed)
