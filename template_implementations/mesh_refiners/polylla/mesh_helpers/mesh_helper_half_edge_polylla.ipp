@@ -72,7 +72,7 @@ namespace refiners::helpers::polylla {
         for(EdgeIndex seedCandidate : data.seedCandidates){
             polygonSeed = generatePolygonFromSeed(data,inputMesh, outputMesh,seedCandidate);
             //output_seeds.push_back(polygonSeed);
-            if(isSimplePolygon(outputMesh,polygonSeed)){ //If the polygon is a simple polygon then is part of the mesh
+            if(outputMesh->isPolygonSimple(polygonSeed)){ //If the polygon is a simple polygon then is part of the mesh
                 outputSeeds.push_back(polygonSeed);
             }else{ //Else, the polygon is send to reparation phase
                 auto t_start_repair = std::chrono::high_resolution_clock::now();
@@ -116,18 +116,6 @@ namespace refiners::helpers::polylla {
             nextEdge = mesh->CWEdgeToVertex(nextEdge);
         }
         return nextEdge;
-    }
-    bool MeshHelper<HalfEdgeMesh>::isSimplePolygon(HalfEdgeMesh *mesh, OutputIndex seed) {
-        EdgeIndex currentEdge = mesh->next(seed);
-        //travel inside frontier-edges of polygon
-        while(currentEdge != seed){   
-            //if the twin of the next halfedge is the current halfedge, then the polygon is not simple
-            if( mesh->twin(mesh->next(currentEdge)) == currentEdge)
-                return false;
-            //travel to next half-edge
-            currentEdge = mesh->next(currentEdge);
-        }
-        return true;
     }
     void MeshHelper<HalfEdgeMesh>::barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs) {
         ++data.meshStats[N_POLYGONS_TO_REPAIR];

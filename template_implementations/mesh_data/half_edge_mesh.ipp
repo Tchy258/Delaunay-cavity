@@ -58,7 +58,7 @@ bool HalfEdgeMesh::isBorderEdge(HalfEdgeMesh::EdgeIndex edge) const {
     return halfEdges.at(edge).isBorder;
 }
 
-HalfEdgeMesh::EdgeIndex HalfEdgeMesh::getSharedEdge(HalfEdgeMesh::FaceIndex triangle1, HalfEdgeMesh::FaceIndex triangle2) const {
+HalfEdgeMesh::EdgeIndex HalfEdgeMesh::getTriangleSharedEdge(HalfEdgeMesh::FaceIndex triangle1, HalfEdgeMesh::FaceIndex triangle2) const {
     EdgeIndex firstEdge = getPolygon(triangle1);
     EdgeIndex currentEdge = firstEdge;
 
@@ -131,6 +131,95 @@ inline std::array<HalfEdgeMesh::EdgeIndex, 3> HalfEdgeMesh::getEdgesOfTriangle(F
     EdgeIndex edge2 = next(edge1);
     EdgeIndex edge3 = next(edge2);
     return {edge1, edge2, edge3};
+}
+
+inline bool HalfEdgeMesh::isPolygonSimple(OutputIndex seed) const {
+    EdgeIndex currentEdge = next(seed);
+    //travel inside frontier-edges of polygon
+    while(currentEdge != seed){   
+        //if the twin of the next halfedge is the current halfedge, then the polygon is not simple
+        if(twin(next(currentEdge)) == currentEdge)
+            return false;
+        //travel to next half-edge
+        currentEdge = next(currentEdge);
+    }
+    return true;
+}
+
+inline size_t HalfEdgeMesh::getOutputSeedEdgeCount(OutputIndex seedIndex) const
+{
+    EdgeIndex currentEdge = seedIndex;
+    unsigned int edgeCount = 0;
+    do {
+        ++edgeCount;
+        currentEdge = next(currentEdge);
+    } while (currentEdge != seedIndex);
+    return edgeCount;
+}
+
+inline std::vector<HalfEdgeMesh::EdgeIndex> HalfEdgeMesh::getSharedEdges(OutputIndex seed1, OutputIndex seed2) const {
+    EdgeIndex currentEdge = seed2;
+    std::unordered_set<EdgeIndex> seed2Edges;
+    std::vector<EdgeIndex> sharedEdges;
+    do {
+        seed2Edges.insert(currentEdge);
+        currentEdge = next(currentEdge);
+    } while (currentEdge != seed2);
+    currentEdge = seed1;
+    do {
+        if (!isBorderEdge(twin(currentEdge)) && seed2Edges.contains(twin(currentEdge))) {
+            sharedEdges.push_back(currentEdge);
+        }
+        currentEdge = next(currentEdge);
+    } while (currentEdge != seed1);
+    return sharedEdges;
+}
+
+inline std::vector<HalfEdgeMesh::ConnectivityBackupT> HalfEdgeMesh::mergeSeeds(OutputIndex seedIndexToMergeInto, std::pair<OutputIndex,std::vector<EdgeIndex>> seedIndexToMergeFrom) {
+    std::vector<ConnectivityBackup> backupInfo;
+    for (EdgeIndex edgeToMergeFrom : seedIndexToMergeFrom.second) {
+        EdgeIndex twinEdge = twin(edgeToMergeFrom);
+
+        EdgeIndex prevToShared = prev(twinEdge);
+        EdgeIndex nextToShared = next(twinEdge);
+        EdgeIndex prevOfCurrent = prev(edgeToMergeFrom);
+        EdgeIndex nextOfCurrent = next(edgeToMergeFrom);
+
+        
+        std::array<EdgeIndex,6> edges = { prevToShared, nextToShared, prevOfCurrent, nextOfCurrent, twinEdge, edgeToMergeFrom };
+        std::array<EdgeIndex,6> origNext, origPrev;
+        for (size_t k = 0; k < edges.size(); ++k) {
+            origNext[k] = next(edges[k]);
+            origPrev[k] = prev(edges[k]);
+        }
+
+        backupInfo.emplace_back(std::move(edges), std::move(origNext), std::move(origPrev));
+    }
+    for (EdgeIndex edgeToMergeFrom : seedIndexToMergeFrom.second) {
+        EdgeIndex twinEdge = twin(edgeToMergeFrom);
+        
+        EdgeIndex prevToShared = prev(twinEdge);
+        EdgeIndex nextToShared = next(twinEdge);
+        EdgeIndex prevOfCurrent = prev(edgeToMergeFrom);
+        EdgeIndex nextOfCurrent = next(edgeToMergeFrom);
+        setNext(prevToShared, nextOfCurrent);
+        setPrev(nextOfCurrent, prevToShared);
+        setNext(prevOfCurrent, nextToShared);
+        setPrev(nextToShared, prevOfCurrent);
+
+        updateEdgeCount(numberOfEdges() - 2);
+    }
+    updatePolygonCount(numberOfPolygons() - 1);
+    return backupInfo;
+}
+
+inline void HalfEdgeMesh::rollbackMerge(const std::vector<ConnectivityBackupT>& backupInfo) {
+    for (ConnectivityBackupT edgeBackupInfo : backupInfo) {
+        for (size_t k = 0; k < edgeBackupInfo.edges.size(); ++k) {
+            setNext(edgeBackupInfo.edges[k], edgeBackupInfo.next[k]);
+            setPrev(edgeBackupInfo.edges[k], edgeBackupInfo.prev[k]);
+        }
+    }
 }
 
 inline bool HalfEdgeMesh::isPolygonConvex(EdgeIndex firstEdgeOfPolygon) const {

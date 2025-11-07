@@ -47,8 +47,6 @@ namespace refiners::helpers::polylla {
 
         static EdgeIndex getNextFrontierEdge(const BinaryVector& frontierEdges, const MeshType* mesh, EdgeIndex edge) = delete;
 
-        static bool isSimplePolygon(MeshType* mesh, OutputIndex seed) = delete;
-
         static void barrierEdgeTipReparation(RefinementData& data, const MeshType* inputMesh, MeshType* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs) = delete;
 
         static EdgeIndex calculateMiddleEdge(RefinementData& data, const MeshType* inputMesh, VertexIndex barrierEdgeTipVertex) = delete;

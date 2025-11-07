@@ -19,10 +19,12 @@ concept MeshTopology =
         { cmesh.getVerticesOfTriangle(f, v, v, v)} -> std::same_as<void>;
         { cmesh.getEdgesOfTriangle(f) } -> std::same_as<std::array<typename Mesh::EdgeIndex,3>>;
         { cmesh.isBorderEdge(e) } -> std::same_as<bool>;
-        { cmesh.getSharedEdge(f, f) } -> std::same_as<typename Mesh::EdgeIndex>;
+        { cmesh.getTriangleSharedEdge(f, f) } -> std::same_as<typename Mesh::EdgeIndex>;
+        { cmesh.getSharedEdges(out, out) } -> std::same_as<std::vector<typename Mesh::EdgeIndex>>;
         { cmesh.getFacesAssociatedWithEdge(e)} -> std::same_as<std::pair<typename Mesh::FaceIndex, typename Mesh::FaceIndex>>;
         { cmesh.edgeLength2(e) } -> std::same_as<double>;
         { cmesh.isPolygonConvex(out)} -> std::convertible_to<bool>;
+        { cmesh.isPolygonSimple(out)} -> std::convertible_to<bool>;
     };
 
 #endif // MESH_TOPOLOGY_HPP

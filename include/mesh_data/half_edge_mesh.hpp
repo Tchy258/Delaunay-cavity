@@ -5,6 +5,7 @@
 #include <mesh_data/structures/half_edge.hpp>
 #include <cmath>
 #include <unordered_map>
+#include <unordered_set>
 #include <mesh_refiners/mesh_refiner.hpp>
 #include <concepts/mesh_data.hpp>
 #include <concepts/has_adjacency_constructor.hpp>
@@ -17,6 +18,14 @@ class HalfEdgeMesh {
         using OutputIndex = EdgeIndex;
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
+        struct ConnectivityBackup {
+            std::array<EdgeIndex,6> edges;
+            std::array<EdgeIndex,6> next;
+            std::array<EdgeIndex,6> prev;
+            ConnectivityBackup(std::array<EdgeIndex,6> edges, std::array<EdgeIndex,6> next, std::array<EdgeIndex,6> prev) 
+            : edges(std::move(edges)), next(std::move(next)), prev(std::move(prev)) {}
+        };
+        using ConnectivityBackupT = ConnectivityBackup;
     private:
         std::vector<VertexType> vertices;
         std::vector<EdgeType> halfEdges;
@@ -84,6 +93,38 @@ class HalfEdgeMesh {
             }
             return incidentHE;
         }
+
+        /**
+         * @param seed An edge index that identifies a distinct polygon
+         * @return Whether the polygon is [simple](https://en.wikipedia.org/wiki/Simple_polygon) or not
+         */
+        bool isPolygonSimple(OutputIndex seed) const;
+        /**
+         * @param seedIndex An edge index that identifies a distinct polygon
+         * @return The number of edges the polygon given by `seedIndex` has
+         */
+        size_t getOutputSeedEdgeCount(OutputIndex seedIndex) const;
+
+        /**
+         * @param seed1 An edge index that identifies a distinct arbitrary polygon
+         * @param seed2 An edge index that identifies a distinct arbitrary polygon different from `seed1`
+         * @return The edges shared between 2 arbitrary polygons `seed1` and `seed2` that are interior to seed1
+         */
+        std::vector<EdgeIndex> getSharedEdges(OutputIndex seed1, OutputIndex seed2) const;
+        /**
+         * Merges two polygons via the edges specified on `edgesToMergeFrom`
+         * @param seedIndexToMergeInto The 'target' polygon that will grow by absorbing the other one
+         * @param seedIndexToMergeFrom The 'source' polygon that will be erased and made part of `seedIndexToMergeInto` along with the edges it shares with the 'target'
+         * @return A vector of `ConnectivityBackup` structs with the necessary information to undo the merge per edge if necessary
+         */
+        std::vector<ConnectivityBackupT> mergeSeeds(OutputIndex seedIndexToMergeInto, std::pair<OutputIndex,std::vector<EdgeIndex>> seedIndexToMergeFrom);
+
+        /**
+         * Undoes a merge and restores connectivity according to `backupInfo`
+         * @param backupInfo original edge connectivity information to restore
+         */
+        void rollbackMerge(const std::vector<ConnectivityBackupT>& backupInfo);
+
         size_t numberOfVertices() const {
             return nVertices;
         }
@@ -217,7 +258,7 @@ class HalfEdgeMesh {
          * @return The shared edge between `triangle1` and `triangle2` as the index of the
          * half edge in CCW for `triangle1`, or -1 if these triangles aren't neighbors
          */
-        EdgeIndex getSharedEdge(FaceIndex triangle1, FaceIndex triangle2) const;
+        EdgeIndex getTriangleSharedEdge(FaceIndex triangle1, FaceIndex triangle2) const;
         /**
          * @param vertex Vertex we want to query
          * @return Whether this vertex `vertex` is part of the border of the polygon

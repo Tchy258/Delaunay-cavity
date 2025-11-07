@@ -29,8 +29,6 @@ namespace refiners::helpers::polylla {
 
         static EdgeIndex getNextFrontierEdge(RefinementData& data, const HalfEdgeMesh* mesh, EdgeIndex edge);
 
-        static bool isSimplePolygon(HalfEdgeMesh* mesh, OutputIndex seed);
-
         static void barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs);
 
         static EdgeIndex calculateMiddleEdge(RefinementData& data, const HalfEdgeMesh* inputMesh, VertexIndex barrierEdgeTipVertex);
