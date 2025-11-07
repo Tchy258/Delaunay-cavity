@@ -16,7 +16,7 @@ COMPARATOR_SORT_KEYS = {
     "AreaComparator": ["Area2","Precise"],
 }
 SORT_ORDER_OPTIONS = ["Ascending", "Descending"]
-MERGING_STRATEGY_T_OPTIONS = ["ExcludePreviousCavitiesStrategy", "MergeTrianglesWithBestConvexityStrategy"]
+MERGING_STRATEGY_T_OPTIONS = ["ExcludePreviousCavitiesStrategy", "MergeTrianglesWithBestConvexityStrategy", "MergeTrianglesIntoSmallestNeighbor", "MergeTrianglesIntoBiggestNeighbor"]
 REFINEMENT_CRITERION_T_OPTIONS = ["NullRefinementCriterion", "MinAngleCriterionRobust", "MinAngleCriterion", "MinAreaCriterion", "MinArea2Criterion"]
 
 MAIN_FILE = "main2.cpp"  # Can be changed per executable
