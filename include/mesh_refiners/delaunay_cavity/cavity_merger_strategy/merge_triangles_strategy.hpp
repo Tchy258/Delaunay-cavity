@@ -32,5 +32,10 @@ using MergeTrianglesIntoSmallestNeighbor = MergeTrianglesStrategyBase<Mesh, Smal
 template <MeshData Mesh>
 using MergeTrianglesIntoBiggestNeighbor = MergeTrianglesStrategyBase<Mesh, BiggestNeighborMergingPolicy<Mesh>>;
 
+template <MeshData Mesh>
+using MergeTrianglesThroughLongestEdge = MergeTrianglesStrategyBase<Mesh, LongestEdgeMergingPolicy<Mesh>>;
+
+template <MeshData Mesh>
+using MergeTrianglesThroughShortestEdge = MergeTrianglesStrategyBase<Mesh, ShortestEdgeMergingPolicy<Mesh>>;
 
 #endif // MERGE_TRIANGLES_STRATEGY
