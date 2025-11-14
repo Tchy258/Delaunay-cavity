@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
     bool writeOff{false};
     bool writeJson{false};
     bool writeAle{false};
+    bool writeBeforePost{false};
     std::string input1, input2, input3, output;
     
     CLI::Option* offOpt = app.add_flag("--off-input",readFromOff, "Read input from an off file");
@@ -34,6 +35,9 @@ int main(int argc, char **argv) {
         }
         if constexpr (isRandomComparator<TRIANGLE_COMPARATOR , MESH_TYPE>) {
             CLI::Option* seedOpt = app.add_option("--seed", randomSeed, "Seed to use to sort triangles");
+        }
+        if constexpr (HasPostInsertionMethod<MERGING_STRATEGY , MESH_TYPE>) {
+            CLI::Option* writeBeforePostOpt = app.add_flag("--write-intermediate", writeBeforePost, "Write the mesh before any post processing is done");
         }
     #endif
     std::string configFilenameBase = std::string{TOSTRING(REFINER_T)};
@@ -86,27 +90,36 @@ int main(int argc, char **argv) {
     
     PolygonalMesh<MESH_TYPE> polygonalMesh(std::move(reader));
     #ifdef REFINEMENT_CRITERION_WITH_ARG
-        polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>(REFINEMENT_CRITERION_CONSTRUCTOR(refinementCriterionThreshold)));
+        polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>(REFINEMENT_CRITERION_CONSTRUCTOR(refinementCriterionThreshold), writeBeforePost));
     #else
-        polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>());
+        #ifdef DELAUNAY_REFINER
+            polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>(writeBeforePost));
+        #else
+            polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>());
+        #endif
     #endif
     
     polygonalMesh.readMeshFromFiles({input1, input2, input3})
         .refineMesh();
     
     if (writeOff || writeAle) {
-        std::unique_ptr<MeshWriter<MESH_TYPE>> writer;
-        if (writeOff) {
-            writer = std::make_unique<OffWriter<MESH_TYPE>>();
+        auto writeMesh = [&](auto writerCreator, const std::string& ext) {
+            std::unique_ptr<MeshWriter<MESH_TYPE>> writer = writerCreator();
             polygonalMesh.setWriter(std::move(writer));
-            polygonalMesh.writeOutputMesh({output + ".off"});
-        }
-        if (writeAle) {
-            writer = std::make_unique<AleWriter<MESH_TYPE>>();
-            polygonalMesh.setWriter(std::move(writer));
-            polygonalMesh.writeOutputMesh({output + ".ale"});
-        }
+            polygonalMesh.writeOutputMesh({output + ext});
+            if (writeBeforePost) {
+                polygonalMesh.writeMeshBeforePostProcess({output + "_intermediate" + ext});
+            }
+        };
+
+        if (writeOff)
+            writeMesh([] { return std::make_unique<OffWriter<MESH_TYPE>>(); }, ".off");
+
+        if (writeAle)
+            writeMesh([] { return std::make_unique<AleWriter<MESH_TYPE>>(); }, ".ale");
     }
+
+
     if (writeJson) {
         polygonalMesh.writeStatsToJson({output + ".json"});
     }

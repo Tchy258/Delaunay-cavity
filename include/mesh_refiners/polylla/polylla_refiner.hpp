@@ -43,6 +43,12 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
         std::vector<OutputIndex>& getOutputSeeds() override {
             return data.outputSeeds;
         }
+        std::vector<OutputIndex>& getOutputSeedsBeforePostProcess() override {
+            return data.outputSeeds;
+        }
+        MeshType* getMeshBeforePostProcess() override {
+            return nullptr;
+        }
         MeshType* refineMesh(const MeshType* inputMesh) override;
         std::unordered_map<MeshStat,int>& getRefinementStats() override {
             return data.meshStats;

@@ -168,6 +168,10 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     t_end = std::chrono::high_resolution_clock::now();
     timeStats[T_CAVITY_INSERTION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
     if constexpr (HasPostInsertionMethod<MergingStrategy, MeshType>) {
+        if (storeMeshBeforePostProcess) {
+            outputSeedsBeforePostProcess = std::vector<OutputIndex>{outputSeeds.begin(), outputSeeds.end()};
+            meshBeforePostProcess = new MeshType(*outputMesh);
+        }
         t_start = std::chrono::high_resolution_clock::now();
         MergingStrategy::postInsertion(inputMesh, outputMesh, outputSeeds, inCavity);
         t_end = std::chrono::high_resolution_clock::now();

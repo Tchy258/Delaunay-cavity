@@ -96,6 +96,14 @@ public:
         refinedMesh = refiner->refineMesh(meshData);
         return *this;
     }
+    PolygonalMesh& writeMeshBeforePostProcess(const std::vector<std::filesystem::path>& filepaths) {
+        std::vector<typename Mesh::OutputIndex> output = {};
+        if (refiner != nullptr) {
+            output = refiner->getOutputSeedsBeforePostProcess();
+        }
+        writer->writeMesh(filepaths, *(refiner->getMeshBeforePostProcess()), output);
+        return *this;
+    }
     PolygonalMesh& writeOutputMesh(const std::vector<std::filesystem::path>& filepaths) {
         std::vector<typename Mesh::OutputIndex> output = {};
         if (refiner != nullptr) {

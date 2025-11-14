@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10...3.31.6)
 
-project(Polylla C CXX)
+project(DelaunayCavity C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -146,7 +146,7 @@ endfunction()
 # ---------------------------
 # Optionally build all combinations
 # ---------------------------
-#[[
+
 if(BUILD_MACRO_COMBO)
     foreach(refiner IN LISTS MESH_REFINER_OPTIONS)
         foreach(mesh IN LISTS MESH_TYPE_OPTIONS)
@@ -173,8 +173,3 @@ if(BUILD_MACRO_COMBO)
 endif()
 
 add_executable(Polylla main.cpp)
-]]
-
-add_configured_executable("main2.cpp" "DelaunayCavityRefiner" "HalfEdgeMesh" "EdgeLengthComparator" "MergeTrianglesThroughLongestEdge" true false "NullRefinementCriterion")
-add_configured_executable("main2.cpp" "DelaunayCavityRefiner" "HalfEdgeMesh" "EdgeLengthComparator" "ExcludePreviousCavitiesStrategy" true false "NullRefinementCriterion")
-#add_configured_executable("main2.cpp" "DelaunayCavityRefiner" "HalfEdgeMesh" "EdgeLengthComparator" "ExcludePreviousCavitiesStrategy" true false "NullRefinementCriterion")

@@ -8,9 +8,31 @@
 template <MeshData Mesh>
 class MeshRefiner {
     public:
+        /**
+         * Refines the `inputMesh` according to this specific refiner's algorithm
+         * @param inputMesh A mesh to be refined
+         * @return A refined mesh
+         */
         virtual Mesh* refineMesh(const Mesh* inputMesh) = 0;
+        /**
+         * @return A vector of output polygons to write after refinement
+         */
         virtual std::vector<typename Mesh::OutputIndex>& getOutputSeeds() = 0;
+        /**
+         * @return A vector of output polygons in an intermediate step in the refinement process before post processing is made
+         */
+        virtual std::vector<typename Mesh::OutputIndex>& getOutputSeedsBeforePostProcess() = 0;
+        /**
+         * @return A refined mesh before post processing
+         */
+        virtual Mesh* getMeshBeforePostProcess() = 0;
+        /**
+         * @return A hash map of mesh stats of the resulting mesh
+         */
         virtual std::unordered_map<MeshStat,int>& getRefinementStats() = 0;
+        /**
+         * @return A hash map of elapsed time on each step of the refinement process
+         */
         virtual std::unordered_map<TimeStat,double>& getRefinementTimes() = 0;
 };
 
