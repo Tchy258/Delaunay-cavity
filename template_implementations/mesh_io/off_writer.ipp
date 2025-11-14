@@ -20,14 +20,14 @@ inline void OffWriter<Mesh>::writeFaces(std::ofstream& file, HalfEdgeMesh &mesh)
             file << mesh.origin(currentEdge) << " ";
             currentEdge = mesh.next(currentEdge);
         } while (currentEdge != firstEdge);
-        file << std::endl;
+        file << '\n';
     }
 }
 
 template <MeshData Mesh>
 inline void OffWriter<Mesh>::writeMesh(const std::vector<std::filesystem::path>& filepaths, Mesh &mesh, std::vector<typename Mesh::OutputIndex> outputSeeds) {
     std::ofstream out(filepaths[0]);
-    out << "OFF" << std::endl;
+    out << "OFF\n";
     out << std::setprecision(15);
     out << mesh.numberOfVertices() << " ";
     bool hasOutput = outputSeeds.size() != 0;
@@ -36,10 +36,10 @@ inline void OffWriter<Mesh>::writeMesh(const std::vector<std::filesystem::path>&
     } else {
         out << mesh.numberOfPolygons();
     }
-    out << " 0" << std::endl;
+    out << " 0\n";
     for (size_t i = 0; i < mesh.numberOfVertices(); ++i) {
         Vertex v = mesh.getVertex(i);
-        out << v.x << " " << v.y << " 0" << std::endl;
+        out << v.x << " " << v.y << " 0\n";
     }
     if (hasOutput) {
         writeOutputSeeds(out,mesh, outputSeeds);
@@ -66,6 +66,6 @@ inline void OffWriter<Mesh>::writeOutputSeeds(std::ofstream &file, HalfEdgeMesh 
         for (VertexIndex v : vertices) {
             file << " " << v;
         }
-        file << std::endl;
+        file << '\n';
     }
 }
