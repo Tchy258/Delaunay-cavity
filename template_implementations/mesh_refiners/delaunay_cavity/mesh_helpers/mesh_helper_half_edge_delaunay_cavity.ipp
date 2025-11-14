@@ -138,7 +138,7 @@ namespace refiners::helpers::delaunay_cavity {
         
         OutputIndex chosenNeighbor = MergingPolicy::mergeBestCandidate(outputMesh, seedToMerge, neighborSeeds, sharedEdges);
         if (chosenNeighbor != -1) {
-            outputSeeds.erase(std::remove(outputSeeds.begin(), outputSeeds.end(), seedToMerge), outputSeeds.end());
+            std::replace(outputSeeds.begin(), outputSeeds.end(), seedToMerge, -1);
             currentEdge = chosenNeighbor;
             do {
                 edgeToOutputMap[currentEdge] = chosenNeighbor;

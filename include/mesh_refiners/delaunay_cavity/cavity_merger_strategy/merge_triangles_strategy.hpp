@@ -13,13 +13,14 @@ struct MergeTrianglesStrategyBase : ExcludePreviousCavitiesStrategyBase<Mesh, Me
     using typename Base::OutputIndex;
     using typename Base::_MeshHelper;
     static void postInsertion(const Mesh* inputMesh, Mesh* outputMesh, std::vector<OutputIndex>& outputSeeds, std::vector<uint8_t>& inCavity) {
-        std::vector<OutputIndex> seedsCopy = std::vector<OutputIndex>{outputSeeds.begin(), outputSeeds.end()};
+        size_t seedAmount = outputSeeds.size();
         std::unordered_map<typename Mesh::EdgeIndex, OutputIndex> edgeToOutputMap = _MeshHelper::buildEdgeToOutputMap(outputMesh, outputSeeds);
-        for (OutputIndex seed : seedsCopy) {
-            if (std::find(outputSeeds.begin(), outputSeeds.end(), seed) != outputSeeds.end() && outputMesh->getOutputSeedEdgeCount(seed) == 3) {
-                _MeshHelper::template mergeIntoNeighbor<MergingPolicy>(inputMesh, outputMesh, outputSeeds, seed, edgeToOutputMap);
+        for (size_t i = 0; i < seedAmount; ++i) {
+            if (outputSeeds[i] != -1 && outputMesh->getOutputSeedEdgeCount(outputSeeds[i]) == 3) {
+                _MeshHelper::template mergeIntoNeighbor<MergingPolicy>(inputMesh, outputMesh, outputSeeds, outputSeeds[i], edgeToOutputMap);
             }
         }
+        outputSeeds.erase(std::remove(outputSeeds.begin(), outputSeeds.end(), -1), outputSeeds.end());
     }
 };
 
