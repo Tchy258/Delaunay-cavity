@@ -13,7 +13,7 @@ TRIANGLE_COMPARATOR_BASE_T_OPTIONS = ["NullComparator", "EdgeLengthComparator", 
 COMPARATOR_SORT_KEYS = {
     "EdgeLengthComparator": ["MinEdge","MaxEdge"],
     "AngleComparator": ["MaxAngle","MinAngle"],
-    "AreaComparator": ["Area2","Precise"],
+    "AreaComparator": ["Doubled","Precise"],
 }
 SORT_ORDER_OPTIONS = ["Ascending", "Descending"]
 MERGING_STRATEGY_T_OPTIONS = ["ExcludePreviousCavitiesStrategy", "MergeTrianglesWithBestConvexityStrategy", "MergeTrianglesIntoSmallestNeighbor", "MergeTrianglesIntoBiggestNeighbor", "MergeTrianglesThroughLongestEdge", "MergeTrianglesThroughShortestEdge"]
@@ -49,7 +49,7 @@ def to_snake_case(name: str) -> str:
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-def build_target(refiner, mesh, tri_base, sort_order_ascending, sort_key_val, merge, refinement_criterion):
+def build_target(refiner, mesh, tri_base, merge, refinement_criterion, sort_order_ascending, sort_key_val):
     # Use hyphens between options and snake_case
     parts = [refiner,mesh, tri_base, merge, refinement_criterion]
     if tri_base != "NullComparator" and tri_base != "RandomComparator":
@@ -83,13 +83,19 @@ def build_target(refiner, mesh, tri_base, sort_order_ascending, sort_key_val, me
 # Interactive selection
 # -------------------------------
 refiner = choose_option("REFINER_T", MESH_REFINER_OPTIONS)
-mesh = choose_option("MESH_TYPE", MESH_TYPE_OPTIONS)
-tri_base = choose_option("TRIANGLE_COMPARATOR_BASE_T", TRIANGLE_COMPARATOR_BASE_T_OPTIONS)
+if refiner != "all":
+    mesh = choose_option("MESH_TYPE", MESH_TYPE_OPTIONS)
+else:
+    mesh = "all"
+if not "all" in [refiner,mesh]:
+    tri_base = choose_option("TRIANGLE_COMPARATOR_BASE_T", TRIANGLE_COMPARATOR_BASE_T_OPTIONS)
+else:
+    tri_base = "all"
 ascending = None
 ascending_val = None
 sort_key = None
 sort_key_val = None
-if tri_base != "NullComparator" and tri_base != "RandomComparator":
+if tri_base != "NullComparator" and tri_base != "RandomComparator" and tri_base != "all":
     ascending = choose_option("SORT_ORDER", SORT_ORDER_OPTIONS)
     if ascending == "Ascending":
         ascending_val = True
@@ -100,8 +106,14 @@ if tri_base != "NullComparator" and tri_base != "RandomComparator":
         sort_key_val = False
     else:
         sort_key_val = True
-merge = choose_option("MERGING_STRATEGY_T", MERGING_STRATEGY_T_OPTIONS)
-refinement_criterion = choose_option("REFINEMENT_CRITERION_T", REFINEMENT_CRITERION_T_OPTIONS)
+if not "all" in [refiner, mesh, tri_base]:
+    merge = choose_option("MERGING_STRATEGY_T", MERGING_STRATEGY_T_OPTIONS)
+else:
+    merge = "all"
+if not "all" in [refiner, mesh, tri_base, merge]:
+    refinement_criterion = choose_option("REFINEMENT_CRITERION_T", REFINEMENT_CRITERION_T_OPTIONS)
+else:
+    refinement_criterion = "all"
 # -------------------------------
 # Determine build mode
 # -------------------------------
@@ -123,6 +135,6 @@ if "all" in [refiner, mesh, tri_base, ascending_val, sort_key_val, merge, refine
             build_target(*combo, sort_order_ascending=False, sort_key_val=False)
 else:
     # Build single selected combination
-    build_target(refiner, mesh, tri_base, ascending_val, sort_key_val, merge, refinement_criterion)
+    build_target(refiner, mesh, tri_base, merge, refinement_criterion, ascending_val, sort_key_val)
 
 print("\nBuild process complete!")
