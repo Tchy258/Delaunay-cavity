@@ -79,6 +79,18 @@ def build_target(refiner, mesh, tri_base, merge, refinement_criterion, sort_orde
     subprocess.run(cmake_cmd, cwd=BUILD_DIR, check=True)
     subprocess.run(["cmake", "--build", ".", "--target", target_name], cwd=BUILD_DIR, check=True)
 
+def build_polylla(refiner,mesh):
+    cmake_cmd = [
+            "cmake",
+            "-DBUILD_MACRO_COMBO=ON",
+            f"-DREFINER_T={refiner}",
+            f"-DMESH_TYPE={mesh}",
+            ".."
+        ]
+    subprocess.run(cmake_cmd, cwd=BUILD_DIR, check=True)
+    parts_snake = [to_snake_case(p) for p in [refiner, mesh]]
+    target_name = "-".join(parts_snake)
+    subprocess.run(["cmake", "--build", ".", "--target", target_name], cwd=BUILD_DIR, check=True)
 # -------------------------------
 # Interactive selection
 # -------------------------------
@@ -87,40 +99,41 @@ if refiner != "all":
     mesh = choose_option("MESH_TYPE", MESH_TYPE_OPTIONS)
 else:
     mesh = "all"
-if not "all" in [refiner,mesh]:
-    tri_base = choose_option("TRIANGLE_COMPARATOR_BASE_T", TRIANGLE_COMPARATOR_BASE_T_OPTIONS)
-else:
-    tri_base = "all"
-ascending = None
-ascending_val = None
-sort_key = None
-sort_key_val = None
-if tri_base != "NullComparator" and tri_base != "RandomComparator" and tri_base != "all":
-    ascending = choose_option("SORT_ORDER", SORT_ORDER_OPTIONS)
-    if ascending == "Ascending":
-        ascending_val = True
+if refiner != "PolyllaRefiner":
+    if not "all" in [refiner,mesh]:
+        tri_base = choose_option("TRIANGLE_COMPARATOR_BASE_T", TRIANGLE_COMPARATOR_BASE_T_OPTIONS)
     else:
-        ascending_val = False
-    sort_key = choose_sort_key(tri_base)
-    if sort_key == COMPARATOR_SORT_KEYS[tri_base][0]:
-        sort_key_val = False
+        tri_base = "all"
+    ascending = None
+    ascending_val = None
+    sort_key = None
+    sort_key_val = None
+    if tri_base != "NullComparator" and tri_base != "RandomComparator" and tri_base != "all":
+        ascending = choose_option("SORT_ORDER", SORT_ORDER_OPTIONS)
+        if ascending == "Ascending":
+            ascending_val = True
+        else:
+            ascending_val = False
+        sort_key = choose_sort_key(tri_base)
+        if sort_key == COMPARATOR_SORT_KEYS[tri_base][0]:
+            sort_key_val = False
+        else:
+            sort_key_val = True
+    if not "all" in [refiner, mesh, tri_base]:
+        merge = choose_option("MERGING_STRATEGY_T", MERGING_STRATEGY_T_OPTIONS)
     else:
-        sort_key_val = True
-if not "all" in [refiner, mesh, tri_base]:
-    merge = choose_option("MERGING_STRATEGY_T", MERGING_STRATEGY_T_OPTIONS)
-else:
-    merge = "all"
-if not "all" in [refiner, mesh, tri_base, merge]:
-    refinement_criterion = choose_option("REFINEMENT_CRITERION_T", REFINEMENT_CRITERION_T_OPTIONS)
-else:
-    refinement_criterion = "all"
+        merge = "all"
+    if not "all" in [refiner, mesh, tri_base, merge]:
+        refinement_criterion = choose_option("REFINEMENT_CRITERION_T", REFINEMENT_CRITERION_T_OPTIONS)
+    else:
+        refinement_criterion = "all"
 # -------------------------------
 # Determine build mode
 # -------------------------------
 if "all" in [refiner, mesh, tri_base, ascending_val, sort_key_val, merge, refinement_criterion]:
     # Build all combinations
     combinations = list(itertools.product(
-        MESH_REFINER_OPTIONS,
+        ["DelaunayCavityRefiner"],
         MESH_TYPE_OPTIONS,
         TRIANGLE_COMPARATOR_BASE_T_OPTIONS,
         MERGING_STRATEGY_T_OPTIONS,
@@ -133,8 +146,16 @@ if "all" in [refiner, mesh, tri_base, ascending_val, sort_key_val, merge, refine
             build_target(*combo, sort_order_ascending=False, sort_key_val=True)
             build_target(*combo, sort_order_ascending=True, sort_key_val=False)
             build_target(*combo, sort_order_ascending=False, sort_key_val=False)
+    combinations = list(itertools.product(
+        ["PolyllaRefiner"],
+        MESH_TYPE_OPTIONS
+    ))
+    for combo in combinations:
+        build_polylla(*combo)
 else:
     # Build single selected combination
-    build_target(refiner, mesh, tri_base, merge, refinement_criterion, ascending_val, sort_key_val)
-
+    if refiner != "PolyllaRefiner":
+        build_target(refiner, mesh, tri_base, merge, refinement_criterion, ascending_val, sort_key_val)
+    else:
+        build_polylla(refiner, mesh)
 print("\nBuild process complete!")
