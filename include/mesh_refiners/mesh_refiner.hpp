@@ -34,6 +34,8 @@ class MeshRefiner {
          * @return A hash map of elapsed time on each step of the refinement process
          */
         virtual std::unordered_map<TimeStat,double>& getRefinementTimes() = 0;
+        
+        virtual ~MeshRefiner() = default;
 };
 
 #endif
