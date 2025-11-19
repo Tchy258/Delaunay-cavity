@@ -39,6 +39,17 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
             data.timeStats[T_TRAVERSAL_AND_REPAIR] = 0.0;
             data.timeStats[T_TRAVERSAL] = 0.0;
             data.timeStats[T_REPAIR] = 0.0;
+
+            data.memoryStats[M_TOTAL] = 0;
+            data.memoryStats[M_MAX_EDGES] = 0;
+            data.memoryStats[M_FRONTIER_EDGES] = 0;
+            data.memoryStats[M_SEED_EDGES] = 0;
+            data.memoryStats[M_SEED_BOUNDARY_EDGE_TIP_MARK] = 0;
+            data.memoryStats[M_TRIANGLE_LIST] = 0;
+            data.memoryStats[M_EDGES_INPUT] = 0;
+            data.memoryStats[M_EDGES_OUTPUT] = 0;
+            data.memoryStats[M_VERTICES_INPUT] = 0;
+            data.memoryStats[M_VERTICES_OUTPUT] = 0;
         }
         std::vector<OutputIndex>& getOutputSeeds() override {
             return data.outputSeeds;
@@ -55,6 +66,9 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
         }
         std::unordered_map<TimeStat,double>& getRefinementTimes() override {
             return data.timeStats;
+        }
+        std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
+            return data.memoryStats;
         }
 };
 

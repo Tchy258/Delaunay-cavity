@@ -54,6 +54,7 @@ TODO:
 #include <mesh_refiners/mesh_refiner.hpp>
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
+#include <misc/memory_stat.hpp>
 /**
  * Class that defines a polygonal mesh
  */
@@ -115,6 +116,7 @@ public:
     void writeStatsToJson(const std::filesystem::path& filepath) {
         std::unordered_map<MeshStat,int> meshStats = getRefinementStats();
         std::unordered_map<TimeStat,double> timeStats = getRefinementTimes();
+        std::unordered_map<MemoryStat, unsigned long long> memoryStats = getRefinementMemory();
         std::ofstream json(filepath);
 
         auto writeBlock = [&]<typename StatType, typename StatValue>(std::unordered_map<StatType,StatValue> map, const unsigned int& totalValues, const char* const* names, bool appendFinalComma) {
@@ -131,13 +133,14 @@ public:
                     if ((static_cast<int>(key) != maxKey) || (static_cast<int>(key) == maxKey && appendFinalComma)) {
                         json << ",";
                     }
-                    json << std::endl;
+                    json << "\n";
                 }
             }
         };
-        json << "{" << std::endl;
+        json << "{" << "\n";
         writeBlock(meshStats, meshStatAmount, MeshStatNames, true);
-        writeBlock(timeStats, timeStatAmount, TimeStatNames, false);
+        writeBlock(timeStats, timeStatAmount, TimeStatNames, true);
+        writeBlock(memoryStats, memoryStatAmount, MemoryStatNames, false);
         json << "}" << std::endl;
     }
     const Mesh& getOriginalMeshData() const {
@@ -161,6 +164,15 @@ public:
             return stats;
         } else {
             return std::unordered_map<TimeStat,double>{};
+        }
+    }
+
+    std::unordered_map<MemoryStat,unsigned long long> getRefinementMemory() const {
+        if (refiner != nullptr) {
+            std::unordered_map<MemoryStat,unsigned long long> stats = refiner->getRefinementMemory();
+            return stats;
+        } else {
+            return std::unordered_map<MemoryStat,unsigned long long>{};
         }
     }
     ~PolygonalMesh() {

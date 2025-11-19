@@ -9,6 +9,7 @@
 #include <concepts/mesh_details/mesh_setters.hpp>
 #include <concepts/mesh_details/mesh_topology.hpp>
 #include <concepts/mesh_details/mesh_vertices.hpp>
+#include <concepts/mesh_details/mesh_memory.hpp>
 
 template <typename Mesh>
 inline constexpr bool isMeshData = false;
@@ -35,7 +36,8 @@ concept MeshData = isMeshData<Mesh>
     && MeshAccessors<Mesh>
     && MeshSetters<Mesh>
     && MeshTopology<Mesh>
-    && MeshConstructible<Mesh>;
+    && MeshConstructible<Mesh>
+    && MeshMemory<Mesh>;
 
 
 #endif

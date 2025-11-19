@@ -7,6 +7,7 @@
 #include <array>
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
+#include <misc/memory_stat.hpp>
 #include <concepts/mesh_data.hpp>
 #include <concepts/cavity_merging_strategy.hpp>
 #include <concepts/refinement_criterion.hpp>
@@ -57,7 +58,7 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
         std::unordered_map<MeshStat, int> meshStats;
         std::unordered_map<TimeStat, double> timeStats;
-
+        std::unordered_map<MemoryStat, unsigned long long> memoryStats;
         /**
          * Sorts the triangles before computing the cavities using the provided `TriangleComparator` template type
          * 
@@ -113,6 +114,17 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
             timeStats[T_CAVITY_COMPUTATION] = 0.0;
             timeStats[T_CAVITY_INSERTION] = 0.0;
             timeStats[T_CAVITY_MERGING] = 0.0;
+
+            memoryStats[M_TOTAL] = 0;
+            memoryStats[M_MAX_EDGES] = 0;
+            memoryStats[M_SEED_EDGES] = 0;
+            memoryStats[M_CAVITY_ARRAY] = 0;
+            memoryStats[M_VISITED_ARRAY] = 0;
+            memoryStats[M_EDGE_MAP] = 0;
+            memoryStats[M_EDGES_INPUT] = 0;
+            memoryStats[M_EDGES_OUTPUT] = 0;
+            memoryStats[M_VERTICES_INPUT] = 0;
+            memoryStats[M_VERTICES_OUTPUT] = 0;
         }
 
         explicit DelaunayCavityRefiner(bool storeBeforePostProcess = false) requires std::same_as<Criterion, NullRefinementCriterion<MeshType>>
@@ -124,6 +136,9 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         }
         std::unordered_map<TimeStat,double>& getRefinementTimes() override {
             return timeStats;
+        }
+        std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
+            return memoryStats;
         }
 
         std::vector<OutputIndex>& getOutputSeedsBeforePostProcess() override {

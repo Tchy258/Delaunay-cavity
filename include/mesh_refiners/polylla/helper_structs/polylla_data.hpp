@@ -3,6 +3,7 @@
 
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
+#include <misc/memory_stat.hpp>
 #include <unordered_map>
 #include <vector>
 #include <concepts/mesh_data.hpp>
@@ -14,6 +15,7 @@ struct PolyllaData {
 
     std::unordered_map<MeshStat, int> meshStats;
     std::unordered_map<TimeStat, double> timeStats;
+    std::unordered_map<MemoryStat, unsigned long long> memoryStats;
     std::vector<OutputIndex> outputSeeds; //Seeds of the polygon
 
     //std::vector<int> triangles; //True if the edge generated a triangle CHANGE!!!!

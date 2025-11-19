@@ -134,6 +134,15 @@ class HalfEdgeMesh {
         size_t numberOfPolygons() const {
             return nPolygons;
         }
+
+        size_t getVertexMemoryUsage() const {
+            return sizeof(decltype(vertices.back())) * vertices.capacity();
+        }
+
+        size_t getEdgesMemoryUsage() const {
+            return sizeof(decltype(halfEdges.back())) * halfEdges.capacity();
+        }
+        
         void updateVertexCount(size_t newAmount) {
             this->nVertices = newAmount;
         }

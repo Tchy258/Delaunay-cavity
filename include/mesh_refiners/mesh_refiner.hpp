@@ -4,6 +4,7 @@
 #include <concepts/mesh_data.hpp>
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
+#include <misc/memory_stat.hpp>
 #include <cstdint>
 template <MeshData Mesh>
 class MeshRefiner {
@@ -34,7 +35,12 @@ class MeshRefiner {
          * @return A hash map of elapsed time on each step of the refinement process
          */
         virtual std::unordered_map<TimeStat,double>& getRefinementTimes() = 0;
-        
+        /**
+         * @return A hash map of memory usage from a run of the refiner
+         */
+        virtual std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() = 0;
+
+
         virtual ~MeshRefiner() = default;
 };
 
