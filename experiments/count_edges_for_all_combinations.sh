@@ -8,7 +8,7 @@ input_seed=$1
 refiners=("delaunay_cavity_refiner")
 mesh_types=("half_edge_mesh")
 comparators=("null_comparator" "edge_length_comparator" "angle_comparator" "area_comparator" "random_comparator")
-merging_strategies=("exclude_previous_cavities_strategy", "merge_triangles_with_best_convexity", "merge_triangles_into_smallest_neighbor", "merge_triangles_into_biggest_neighbor")
+merging_strategies=("exclude_previous_cavities_strategy" "merge_triangles_with_best_convexity" "merge_triangles_into_smallest_neighbor" "merge_triangles_into_biggest_neighbor")
 criteria=("null_refinement_criterion")
 
 for refiner in "${refiners[@]}"; do
