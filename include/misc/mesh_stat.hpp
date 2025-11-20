@@ -7,12 +7,13 @@ enum MeshStat {
     N_BARRIER_EDGE_TIPS,
     N_POLYGONS_TO_REPAIR,
     N_POLYGONS_ADDED_AFTER_REPAIR,
+    N_POLYGONS_BEFORE_POST_PROCESS,
     N_VERTICES,
     N_EDGES,
     N_BORDER_EDGES
 };
 
-inline constexpr unsigned int meshStatAmount = 8;
+inline constexpr unsigned int meshStatAmount = 9;
 
 inline constexpr const char* MeshStatNames[meshStatAmount] = {
     "n_polygons",
@@ -20,6 +21,7 @@ inline constexpr const char* MeshStatNames[meshStatAmount] = {
     "n_barrier_edge_tips",
     "n_polygons_to_repair",
     "n_polygons_added_after_repair",
+    "n_polygons_before_post_process",
     "n_vertices",
     "n_edges",
     "n_border_edges"
