@@ -135,8 +135,8 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
     read .off, compute counts and convex/concave breakdowns, produce per-mesh stacked plot,
     and return a dict with all per-mesh stats (no JSON writing here).
     """
-    output_dir = Path(working_dir / "../../delaunay-cavity-data/experiments/" + refiner) / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
-    plot_dir = Path(working_dir / "../../delaunay-cavity-data/experiments/plots") / refiner / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
+    output_dir = working_dir / Path("../../delaunay-cavity-data/experiments/" + refiner) / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
+    plot_dir = working_dir / Path("../../delaunay-cavity-data/experiments/plots") / refiner / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(plot_dir, exist_ok=True)
 
