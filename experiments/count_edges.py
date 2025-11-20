@@ -11,6 +11,7 @@ import csv
 #from statistics import median, mean, multimode
 from math import atan2, degrees
 
+global_input_seed = 138
 # -------------------------
 # Utilities
 # -------------------------
@@ -256,7 +257,7 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
 # -------------------------
 def _process_one(args):
     i, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed, sort_key, skip_exec = args
-    name = f"points{i}.1"
+    name = f"points{i}.{global_input_seed}"
     return process_pointset(name=name, refiner=refiner, mesh_type=mesh_type, comparator=comparator, merging_strategy=merging_strategy,
                             refinement_criterion=refinement_criterion, criterion_arg=criterion_arg, ascending_or_seed=ascending_or_seed,
                             sort_key=sort_key, skip_exec=skip_exec)
@@ -447,6 +448,10 @@ if __name__ == "__main__":
 
     skip_exec_flag = False
     if len(sys.argv) > next_index:
-        skip_exec_flag = sys.argv[next_index] == "1"
+        if sys.argv[next_index] != "1":
+            global_input_seed = int(sys.argv[next_index])
+            next_index += 1
+        if len(sys.argv) > next_index:
+            skip_exec_flag = sys.argv[next_index] == "1"
 
     batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, start, end, ascending_or_seed, sort_key, skip_exec=skip_exec_flag)

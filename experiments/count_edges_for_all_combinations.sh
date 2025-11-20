@@ -3,11 +3,13 @@
 SEED=42            # Any positive integer for random_comparator
 CRITERION_ARG=0.5  # Any double for refinement criteria
 
-refiners=("delaunay_cavity_refiner" "polylla_refiner")
+input_seed=$1
+
+refiners=("delaunay_cavity_refiner")
 mesh_types=("half_edge_mesh")
 comparators=("null_comparator" "edge_length_comparator" "angle_comparator" "area_comparator" "random_comparator")
-merging_strategies=("exclude_previous_cavities_strategy")
-criteria=("null_refinement_criterion" "min_angle_criterion_robust" "min_angle_criterion" "min_area_criterion" "min_area2_criterion")
+merging_strategies=("exclude_previous_cavities_strategy", "merge_triangles_with_best_convexity", "merge_triangles_into_smallest_neighbor", "merge_triangles_into_biggest_neighbor")
+criteria=("null_refinement_criterion")
 
 for refiner in "${refiners[@]}"; do
   for mesh in "${mesh_types[@]}"; do
@@ -19,18 +21,18 @@ for refiner in "${refiners[@]}"; do
           if [[ "$comp" == "null_comparator" ]]; then
             # No ascending_or_seed, no sort_key
             if [[ "$crit" == "null_refinement_criterion" ]]; then
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000
+              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 $1
             else
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000 "" "" "$CRITERION_ARG"
+              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "" "" "$CRITERION_ARG" $1
             fi
 
           elif [[ "$comp" == "random_comparator" ]]; then
             # Use SEED, no sort_key
             seed_value=$SEED
             if [[ "$crit" == "null_refinement_criterion" ]]; then
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000 "$seed_value"
+              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" $1
             else
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000 "$seed_value" "" "$CRITERION_ARG"
+              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" "" "$CRITERION_ARG" $1
             fi
 
           else
@@ -46,9 +48,9 @@ for refiner in "${refiners[@]}"; do
 
               for key in "${keys[@]}"; do
                 if [[ "$crit" == "null_refinement_criterion" ]]; then
-                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000 "$order" "$key"
+                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" $1
                 else
-                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 100 10000 "$order" "$key" "$CRITERION_ARG"
+                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" "$CRITERION_ARG" $1
                 fi
               done
             done
