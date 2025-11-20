@@ -21,18 +21,18 @@ for refiner in "${refiners[@]}"; do
           if [[ "$comp" == "null_comparator" ]]; then
             # No ascending_or_seed, no sort_key
             if [[ "$crit" == "null_refinement_criterion" ]]; then
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 $1
+              python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 $1
             else
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "" "" "$CRITERION_ARG" $1
+              python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "" "" "$CRITERION_ARG" $1
             fi
 
           elif [[ "$comp" == "random_comparator" ]]; then
             # Use SEED, no sort_key
             seed_value=$SEED
             if [[ "$crit" == "null_refinement_criterion" ]]; then
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" $1
+              python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" $1
             else
-              python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" "" "$CRITERION_ARG" $1
+              python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$seed_value" "" "$CRITERION_ARG" $1
             fi
 
           else
@@ -48,9 +48,9 @@ for refiner in "${refiners[@]}"; do
 
               for key in "${keys[@]}"; do
                 if [[ "$crit" == "null_refinement_criterion" ]]; then
-                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" $1
+                  python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" $1
                 else
-                  python count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" "$CRITERION_ARG" $1
+                  python3 count_edges.py "$refiner" "$mesh" "$comp" "$merge" "$crit" 10 1000000 "$order" "$key" "$CRITERION_ARG" $1
                 fi
               done
             done
