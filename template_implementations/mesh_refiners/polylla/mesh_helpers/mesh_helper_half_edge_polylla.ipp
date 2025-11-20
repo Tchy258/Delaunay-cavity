@@ -30,7 +30,7 @@ namespace refiners::helpers::polylla {
         for (EdgeIndex edge = 0; edge < mesh->numberOfEdges(); ++edge){
             if(isFrontierEdge(data, mesh, edge)){
                 data.frontierEdges[edge] = true;
-                ++data.meshStats[N_FRONTIER_EDGES];
+                ++data.frontierEdgeAccumulator;
             }
         }
     }
@@ -67,24 +67,26 @@ namespace refiners::helpers::polylla {
         std::vector<OutputIndex> outputSeeds;
         EdgeIndex polygonSeed;
         //Foreach seed edge generate polygon
-        auto t_start = std::chrono::high_resolution_clock::now();
-        double t_repair_total = 0.0;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        double totalRepairTime = 0.0;
         for(EdgeIndex seedCandidate : data.seedCandidates){
             polygonSeed = generatePolygonFromSeed(data,inputMesh, outputMesh,seedCandidate);
             //output_seeds.push_back(polygonSeed);
             if(outputMesh->isPolygonSimple(polygonSeed)){ //If the polygon is a simple polygon then is part of the mesh
                 outputSeeds.push_back(polygonSeed);
             }else{ //Else, the polygon is send to reparation phase
-                auto t_start_repair = std::chrono::high_resolution_clock::now();
+                auto repairStartTime = std::chrono::high_resolution_clock::now();
                 barrierEdgeTipReparation(data, inputMesh, outputMesh, polygonSeed, outputSeeds);
-                auto t_end_repair = std::chrono::high_resolution_clock::now();
-                t_repair_total += std::chrono::duration<double, std::milli>(t_end_repair-t_start_repair).count();
+                auto repairEndTime = std::chrono::high_resolution_clock::now();
+                totalRepairTime += std::chrono::duration<double, std::milli>(repairEndTime-repairStartTime).count();
             }         
-        }    
-        auto t_end = std::chrono::high_resolution_clock::now();
-        data.timeStats[T_REPAIR] = t_repair_total;
-        data.timeStats[T_TRAVERSAL_AND_REPAIR] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-        data.timeStats[T_TRAVERSAL] = data.timeStats[T_TRAVERSAL_AND_REPAIR] - t_repair_total;
+        }
+        data.meshStats[N_POLYGONS_TO_REPAIR] = data.polygonToRepairAccumulator;
+        auto endTime = std::chrono::high_resolution_clock::now();
+        double traversalAndRepair = std::chrono::duration<double, std::milli>(endTime-startTime).count();
+        data.timeStats[T_REPAIR] = totalRepairTime;
+        data.timeStats[T_TRAVERSAL_AND_REPAIR] = traversalAndRepair;
+        data.timeStats[T_TRAVERSAL] = (traversalAndRepair - totalRepairTime);
 
         return outputSeeds;
     }
@@ -118,8 +120,7 @@ namespace refiners::helpers::polylla {
         return nextEdge;
     }
     void MeshHelper<HalfEdgeMesh>::barrierEdgeTipReparation(RefinementData& data, const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex>& currentOutputs) {
-        ++data.meshStats[N_POLYGONS_TO_REPAIR];
-        
+        ++data.polygonToRepairAccumulator;
         std::vector<EdgeIndex> triangleList;
         EdgeIndex t1, t2;
         EdgeIndex middleEdge;
@@ -132,8 +133,8 @@ namespace refiners::helpers::polylla {
             //if the twin of the next halfedge is the current halfedge, then the polygon is not simple
             if(outputMesh->twin(outputMesh->next(currentEdge)) == currentEdge){
                 //std::cout<<"e_curr "<<e_curr<<" e_next "<<mesh_output->next(e_curr)<<" next del next "<<mesh_output->next(mesh_output->next(e_curr))<<" twin curr "<<mesh_output->twin(e_curr)<<" twin next "<<mesh_output->twin(mesh_output->next(e_curr))<<std::endl;
-                ++data.meshStats[N_BARRIER_EDGE_TIPS];
-                data.meshStats[N_FRONTIER_EDGES] += 2;
+                ++data.barrierEdgeTipAccumulator;
+                data.frontierEdgeAccumulator += 2;
 
                 //select edge with barrier edge tip
                 barrierEdgeTipVertex = outputMesh->target(currentEdge);
@@ -164,11 +165,12 @@ namespace refiners::helpers::polylla {
         //two seeds can generate the same polygon
         //so the bit_vector seed_bet_mark is used to label as false the edges that are already used
         EdgeIndex newPolygonSeed;
+        data.triangleListMaxSize = std::max(data.triangleListMaxSize, (sizeof(decltype(triangleList.back())) * triangleList.capacity()));
         while (!triangleList.empty()){
             t_curr = triangleList.back();
             triangleList.pop_back();
             if(data.seedBarrierEdgeTipMark[t_curr]) {
-                ++data.meshStats[N_POLYGONS_ADDED_AFTER_REPAIR];
+                ++data.addedPolygonAfterRepairAccumulator;
                 
                 data.seedBarrierEdgeTipMark[t_curr] = false;
                 newPolygonSeed = generateRepairedPolygon(data, inputMesh, outputMesh, t_curr);
