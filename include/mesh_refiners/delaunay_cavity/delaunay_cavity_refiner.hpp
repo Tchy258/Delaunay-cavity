@@ -8,6 +8,7 @@
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
 #include <misc/memory_stat.hpp>
+#include <mesh_refiners/delaunay_cavity/helper_structs/delaunay_cavity_data.hpp>
 #include <concepts/mesh_data.hpp>
 #include <concepts/cavity_merging_strategy.hpp>
 #include <concepts/refinement_criterion.hpp>
@@ -46,19 +47,16 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         bool storeMeshBeforePostProcess = false;
 
         MeshType* meshBeforePostProcess = nullptr;
-        
+        DelaunayCavityData<MeshType> data;
+
         struct _empty {};
         using maybe_output_vector = std::conditional_t<HasPostInsertionMethod<MergingStrategy,MeshType>, std::vector<OutputIndex>, _empty>;
         [[no_unique_address]] maybe_output_vector outputSeedsBeforePostProcess = maybe_output_vector{};
 
         Criterion refinementCriterion;
-        std::vector<OutputIndex> outputSeeds;
-        std::vector<uint8_t> inCavity;
+
         using _MeshHelper = refiners::helpers::delaunay_cavity::MeshHelper<MeshType>;
         using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
-        std::unordered_map<MeshStat, int> meshStats;
-        std::unordered_map<TimeStat, double> timeStats;
-        std::unordered_map<MemoryStat, unsigned long long> memoryStats;
         /**
          * Sorts the triangles before computing the cavities using the provided `TriangleComparator` template type
          * 
@@ -101,51 +99,29 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
     public:
         MeshType* refineMesh(const MeshType* inputMesh) override;
         std::vector<OutputIndex>& getOutputSeeds() override {
-            return outputSeeds;
+            return data.outputSeeds;
         }
-        explicit DelaunayCavityRefiner(Criterion criterion, bool storeBeforePostProcess = false) : refinementCriterion(std::move(criterion)), storeMeshBeforePostProcess(storeBeforePostProcess) {
-            meshStats[N_POLYGONS] = 0;
-            meshStats[N_VERTICES] = 0;
-            meshStats[N_EDGES] = 0;
-            
-            timeStats[T_TRIANGULATION_GENERATION] = 0.0;
-            timeStats[T_TRIANGLE_SORTING] = 0.0;
-            timeStats[T_CIRCUMCENTER_COMPUTATION] = 0.0;
-            timeStats[T_CAVITY_COMPUTATION] = 0.0;
-            timeStats[T_CAVITY_INSERTION] = 0.0;
-            timeStats[T_CAVITY_MERGING] = 0.0;
-
-            memoryStats[M_TOTAL] = 0;
-            memoryStats[M_MAX_EDGES] = 0;
-            memoryStats[M_SEED_EDGES] = 0;
-            memoryStats[M_CAVITY_ARRAY] = 0;
-            memoryStats[M_VISITED_ARRAY] = 0;
-            memoryStats[M_EDGE_MAP] = 0;
-            memoryStats[M_EDGES_INPUT] = 0;
-            memoryStats[M_EDGES_OUTPUT] = 0;
-            memoryStats[M_VERTICES_INPUT] = 0;
-            memoryStats[M_VERTICES_OUTPUT] = 0;
-        }
+        explicit DelaunayCavityRefiner(Criterion criterion, bool storeBeforePostProcess = false) : refinementCriterion(std::move(criterion)), storeMeshBeforePostProcess(storeBeforePostProcess) {}
 
         explicit DelaunayCavityRefiner(bool storeBeforePostProcess = false) requires std::same_as<Criterion, NullRefinementCriterion<MeshType>>
         : DelaunayCavityRefiner(NullRefinementCriterion<MeshType>(), storeBeforePostProcess) {}
 
 
-        std::unordered_map<MeshStat,int>& getRefinementStats() override {
-            return meshStats;
+        const std::unordered_map<MeshStat,int>& getRefinementStats() override {
+            return data.meshStats;
         }
-        std::unordered_map<TimeStat,double>& getRefinementTimes() override {
-            return timeStats;
+        const std::unordered_map<TimeStat,double>& getRefinementTimes() override {
+            return data.timeStats;
         }
-        std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
-            return memoryStats;
+        const std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
+            return data.memoryStats;
         }
 
         std::vector<OutputIndex>& getOutputSeedsBeforePostProcess() override {
             if constexpr (HasPostInsertionMethod<MergingStrategy,MeshType>) {
                 return outputSeedsBeforePostProcess;
             } else {
-                return outputSeeds;
+                return data.outputSeeds;
             }
         }
         MeshType* getMeshBeforePostProcess() override {

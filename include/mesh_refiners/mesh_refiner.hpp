@@ -30,15 +30,15 @@ class MeshRefiner {
         /**
          * @return A hash map of mesh stats of the resulting mesh
          */
-        virtual std::unordered_map<MeshStat,int>& getRefinementStats() = 0;
+        virtual const std::unordered_map<MeshStat,int>& getRefinementStats() = 0;
         /**
          * @return A hash map of elapsed time on each step of the refinement process
          */
-        virtual std::unordered_map<TimeStat,double>& getRefinementTimes() = 0;
+        virtual const std::unordered_map<TimeStat,double>& getRefinementTimes() = 0;
         /**
          * @return A hash map of memory usage from a run of the refiner
          */
-        virtual std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() = 0;
+        virtual const std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() = 0;
 
 
         virtual ~MeshRefiner() = default;

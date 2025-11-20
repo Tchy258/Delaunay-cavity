@@ -22,35 +22,7 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
         PolyllaData<MeshType> data;
 
     public:
-        PolyllaRefiner() {
-            data.meshStats[N_POLYGONS] = 0;
-            data.meshStats[N_FRONTIER_EDGES] = 0;
-            data.meshStats[N_BARRIER_EDGE_TIPS] = 0;
-            data.meshStats[N_POLYGONS_TO_REPAIR] = 0;
-            data.meshStats[N_POLYGONS_ADDED_AFTER_REPAIR] = 0;
-            data.meshStats[N_VERTICES] = 0;
-            data.meshStats[N_EDGES] = 0;
-            data.meshStats[N_BORDER_EDGES] = 0;
-            
-            data.timeStats[T_TRIANGULATION_GENERATION] = 0.0;
-            data.timeStats[T_LABEL_MAX_EDGES] = 0.0;
-            data.timeStats[T_LABEL_FRONTIER_EDGES] = 0.0;
-            data.timeStats[T_LABEL_SEED_EDGES] = 0.0;
-            data.timeStats[T_TRAVERSAL_AND_REPAIR] = 0.0;
-            data.timeStats[T_TRAVERSAL] = 0.0;
-            data.timeStats[T_REPAIR] = 0.0;
-
-            data.memoryStats[M_TOTAL] = 0;
-            data.memoryStats[M_MAX_EDGES] = 0;
-            data.memoryStats[M_FRONTIER_EDGES] = 0;
-            data.memoryStats[M_SEED_EDGES] = 0;
-            data.memoryStats[M_SEED_BOUNDARY_EDGE_TIP_MARK] = 0;
-            data.memoryStats[M_TRIANGLE_LIST] = 0;
-            data.memoryStats[M_EDGES_INPUT] = 0;
-            data.memoryStats[M_EDGES_OUTPUT] = 0;
-            data.memoryStats[M_VERTICES_INPUT] = 0;
-            data.memoryStats[M_VERTICES_OUTPUT] = 0;
-        }
+        PolyllaRefiner() = default;
         std::vector<OutputIndex>& getOutputSeeds() override {
             return data.outputSeeds;
         }
@@ -61,17 +33,16 @@ class PolyllaRefiner : public MeshRefiner<MeshType> {
             return nullptr;
         }
         MeshType* refineMesh(const MeshType* inputMesh) override;
-        std::unordered_map<MeshStat,int>& getRefinementStats() override {
+        const std::unordered_map<MeshStat,int>& getRefinementStats() override {
             return data.meshStats;
         }
-        std::unordered_map<TimeStat,double>& getRefinementTimes() override {
+        const std::unordered_map<TimeStat,double>& getRefinementTimes() override {
             return data.timeStats;
         }
-        std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
+        const std::unordered_map<MemoryStat, unsigned long long>& getRefinementMemory() override {
             return data.memoryStats;
         }
 };
-
 #include <mesh_refiners/polylla/polylla_refiner.ipp>
 
 #endif
