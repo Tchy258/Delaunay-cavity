@@ -19,6 +19,8 @@ experiments/summaries/*
 !data/plot_triangulation.py
 !data/10000x10000RandomPoints.py
 
+.venv
+
 !data/pikachu*
 !data/points50.1.*
 !data/points50_polylla.1.pdf
