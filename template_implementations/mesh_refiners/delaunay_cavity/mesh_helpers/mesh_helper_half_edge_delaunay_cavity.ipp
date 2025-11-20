@@ -1,6 +1,5 @@
 #ifndef MESH_HELPER_HALF_EDGE_DELAUNAY_CAVITY_HPP
 #include <mesh_refiners/delaunay_cavity/mesh_helpers/mesh_helper_half_edge_delaunay_cavity.hpp>
-#include "mesh_helper_half_edge_delaunay_cavity.hpp"
 #endif 
 
 namespace refiners::helpers::delaunay_cavity {
@@ -84,10 +83,15 @@ namespace refiners::helpers::delaunay_cavity {
     }
     inline HalfEdgeMesh::OutputIndex MeshHelper<HalfEdgeMesh>::changeToValidRepresentative(HalfEdgeMesh *outputMesh, std::unordered_map<EdgeIndex, OutputIndex> &edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentaive) {
         EdgeIndex newRepresentative = currentRepresentaive;
-        std::vector<EdgeIndex> twins(invalidEdges.begin(), invalidEdges.end());
-        for (int i = 0; i < twins.size(); ++i) {
-            twins[i] = outputMesh->twin(twins[i]);
-        }
+        std::vector<EdgeIndex> twins;
+        twins.reserve(invalidEdges.size());
+
+        std::ranges::transform(
+            invalidEdges,
+            std::back_inserter(twins),
+            [&](EdgeIndex e){ return outputMesh->twin(e); }
+        );
+
         bool representativeIsValid = false;
         while (!representativeIsValid) {
             representativeIsValid = true;
@@ -137,8 +141,8 @@ namespace refiners::helpers::delaunay_cavity {
         } while (currentEdge != seedToMerge);
         
         OutputIndex chosenNeighbor = MergingPolicy::mergeBestCandidate(outputMesh, seedToMerge, neighborSeeds, sharedEdges);
-        if (chosenNeighbor != -1) {
-            std::replace(outputSeeds.begin(), outputSeeds.end(), seedToMerge, -1);
+        if (chosenNeighbor != HalfEdgeMesh::invalidIndexValue) {
+            std::replace(outputSeeds.begin(), outputSeeds.end(), seedToMerge, HalfEdgeMesh::invalidIndexValue);
             currentEdge = chosenNeighbor;
             do {
                 edgeToOutputMap[currentEdge] = chosenNeighbor;

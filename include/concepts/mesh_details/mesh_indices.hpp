@@ -17,6 +17,7 @@ concept MeshIndices =
         typename Mesh::EdgeIndex;
         typename Mesh::FaceIndex;
         typename Mesh::OutputIndex;
+        { Mesh::invalidIndexValue } -> std::convertible_to<typename Mesh::OutputIndex>;
     }
     && PrimitiveIntegral<typename Mesh::VertexIndex>
     && PrimitiveIntegral<typename Mesh::EdgeIndex>

@@ -56,7 +56,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
     for (const auto& circumcenterData : circumcenters) {
         const MeshVertex& circumcenter = circumcenterData.first;
         FaceIndex triangleOfCircumcenter = circumcenterData.second;
-        if (inCavity[triangleOfCircumcenter]) continue;
+        if (data.inCavity[triangleOfCircumcenter]) continue;
         std::queue<FaceIndex> bfsNeighborVisitQueue;
         cavities.emplace_back();
 
@@ -69,7 +69,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
         cavity.allTriangles.push_back(triangleOfCircumcenter);
         while(!bfsNeighborVisitQueue.empty()) {
             FaceIndex currentTriangle = bfsNeighborVisitQueue.front();
-            inCavity[currentTriangle] = true;
+            data.inCavity[currentTriangle] = true;
             bfsNeighborVisitQueue.pop();
             const std::vector<FaceIndex>& neighbors = inputMesh->getNeighbors(currentTriangle);
             std::array<EdgeIndex, 3> triangleEdges = inputMesh->getEdgesOfTriangle(currentTriangle);
@@ -90,7 +90,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
                     validNeighbor = MergingStrategy::preAdd(inputMesh,neighbor,cavities);
                 }
                 if constexpr (HasPreAddMethodByPresence<MergingStrategy,MeshType>) {
-                    validNeighbor = MergingStrategy::preAdd(neighbor,inCavity);
+                    validNeighbor = MergingStrategy::preAdd(neighbor,data.inCavity);
                 }
                 Vertex v0, v1, v2;
                 inputMesh->getVerticesOfTriangle(neighbor, v0, v1, v2);
@@ -144,42 +144,52 @@ DELAUNAY_CAVITY_REFINER_TEMPLATE
 MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     MeshType* outputMesh = new MeshType(*inputMesh);
     size_t polygonAmount = outputMesh->numberOfPolygons();
-    inCavity = std::vector<uint8_t>(polygonAmount, 0);
-    auto t_start = std::chrono::high_resolution_clock::now();
+    data.inCavity = std::vector<uint8_t>(polygonAmount, 0);
+    auto startTime = std::chrono::high_resolution_clock::now();
     std::vector<FaceIndex> sortedTriangles = sortTriangles(outputMesh);
-    auto t_end = std::chrono::high_resolution_clock::now();
-    timeStats[T_TRIANGLE_SORTING] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    t_start = std::chrono::high_resolution_clock::now();
+    auto endTime = std::chrono::high_resolution_clock::now();
+    data.timeStats[T_TRIANGLE_SORTING] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
+    startTime = std::chrono::high_resolution_clock::now();
     std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = computeCircumcenters(outputMesh, sortedTriangles);
-    t_end = std::chrono::high_resolution_clock::now();
-    timeStats[T_CIRCUMCENTER_COMPUTATION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    endTime = std::chrono::high_resolution_clock::now();
+
+    data.timeStats[T_CIRCUMCENTER_COMPUTATION] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
     
     // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
     std::vector<uint8_t> visited(polygonAmount, 0);
-    t_start = std::chrono::high_resolution_clock::now();
+    startTime = std::chrono::high_resolution_clock::now();
     std::vector<Cavity> cavities = computeCavities(outputMesh, circumcenters, visited);
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
-    t_end = std::chrono::high_resolution_clock::now();
-    timeStats[T_CAVITY_COMPUTATION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    t_start = std::chrono::high_resolution_clock::now();
-    outputSeeds = _MeshHelper::insertCavity(inputMesh, outputMesh, cavities, inCavity);
-    t_end = std::chrono::high_resolution_clock::now();
-    timeStats[T_CAVITY_INSERTION] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    endTime = std::chrono::high_resolution_clock::now();
+    data.timeStats[T_CAVITY_COMPUTATION] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
+    startTime = std::chrono::high_resolution_clock::now();
+    data.outputSeeds = _MeshHelper::insertCavity(inputMesh, outputMesh, cavities, data.inCavity);
+    endTime = std::chrono::high_resolution_clock::now();
+    data.timeStats[T_CAVITY_INSERTION] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
     if constexpr (HasPostInsertionMethod<MergingStrategy, MeshType>) {
         if (storeMeshBeforePostProcess) {
-            outputSeedsBeforePostProcess = std::vector<OutputIndex>{outputSeeds.begin(), outputSeeds.end()};
+            outputSeedsBeforePostProcess = std::vector<OutputIndex>{data.outputSeeds.begin(), data.outputSeeds.end()};
             meshBeforePostProcess = new MeshType(*outputMesh);
+            data.meshStats[N_POLYGONS_BEFORE_POST_PROCESS] = outputSeedsBeforePostProcess.size();
         }
-        t_start = std::chrono::high_resolution_clock::now();
-        MergingStrategy::postInsertion(inputMesh, outputMesh, outputSeeds, inCavity);
-        t_end = std::chrono::high_resolution_clock::now();
-        timeStats[T_CAVITY_MERGING] = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+        startTime = std::chrono::high_resolution_clock::now();
+        MergingStrategy::postInsertion(inputMesh, outputMesh, data);
+        endTime = std::chrono::high_resolution_clock::now();
+        data.timeStats[T_CAVITY_MERGING] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
     }
-    meshStats[N_POLYGONS] = outputSeeds.size();
-    meshStats[N_VERTICES] = polygonAmount;
-    meshStats[N_EDGES] = outputMesh->numberOfEdges();
+    data.meshStats[N_POLYGONS] = data.outputSeeds.size();
+    data.meshStats[N_VERTICES] = outputMesh->numberOfVertices();
+    data.meshStats[N_EDGES] = outputMesh->numberOfEdges();
+    data.memoryStats[M_CAVITY_ARRAY] = sizeof(decltype(cavities.back())) * cavities.capacity();
+    data.memoryStats[M_VISITED_ARRAY] = sizeof(decltype(visited.back())) * visited.capacity();
+    data.memoryStats[M_VERTICES_INPUT] = inputMesh->getVertexMemoryUsage();
+    data.memoryStats[M_EDGES_INPUT] = inputMesh->getEdgesMemoryUsage();
+    data.memoryStats[M_VERTICES_OUTPUT] = outputMesh->getVertexMemoryUsage();
+    data.memoryStats[M_EDGES_OUTPUT] = outputMesh->getEdgesMemoryUsage();
+    data.computeTotalMemoryUsage();
+    data.computeTotalTime();
     return outputMesh;
 }
 

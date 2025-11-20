@@ -10,6 +10,9 @@
 #include <mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
 #include <unordered_set>
 #include <array>
+#include <vector>
+#include <algorithm>
+#include <ranges>
 namespace refiners::helpers::delaunay_cavity {
 
     template <>

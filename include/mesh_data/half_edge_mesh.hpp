@@ -18,6 +18,7 @@ class HalfEdgeMesh {
         using OutputIndex = EdgeIndex;
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
+        static constexpr OutputIndex invalidIndexValue = -1;
         struct ConnectivityBackup {
             std::array<EdgeIndex,6> edges;
             std::array<EdgeIndex,6> next;
