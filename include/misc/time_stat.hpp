@@ -13,10 +13,11 @@ enum TimeStat {
     T_CIRCUMCENTER_COMPUTATION,
     T_CAVITY_COMPUTATION,
     T_CAVITY_INSERTION,
-    T_CAVITY_MERGING
+    T_CAVITY_MERGING,
+    T_TOTAL
 };
 
-inline constexpr unsigned int timeStatAmount = 12;
+inline constexpr unsigned int timeStatAmount = 13;
 
 inline constexpr const char* TimeStatNames[timeStatAmount] = {
     "t_triangulation_generation",
@@ -30,7 +31,8 @@ inline constexpr const char* TimeStatNames[timeStatAmount] = {
     "t_circumcenter_computation",
     "t_cavity_computation",
     "t_cavity_insertion",
-    "t_cavity_merging"
+    "t_cavity_merging",
+    "t_total"
 };
 
 #endif
