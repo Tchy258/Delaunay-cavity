@@ -10,7 +10,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import csv
 #from statistics import median, mean, multimode
 from math import atan2, degrees
-
+working_dir = os.path.dirname(os.path.realpath(__file__)) 
 global_input_seed = 138
 # -------------------------
 # Utilities
@@ -165,7 +165,7 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
         if refinement_criterion != "null_refinement_criterion":
             cmd_list.append("--threshold")
             cmd_list.append(criterion_arg)
-        subprocess.run(cmd_list, check=True)
+        subprocess.run(cmd_list, check=True, cwd=working_dir)
 
     # ---- Read OFF and compute stats ----
     vertices, faces = read_off(off_file)
