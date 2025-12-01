@@ -14,8 +14,11 @@ concept MeshAccessors =
         { mesh.getEdge(1) } -> std::same_as<typename Mesh::EdgeType&>;
         { mesh.getPolygon(1) } -> std::same_as<typename Mesh::FaceIndex>;
         { cmesh.numberOfVertices()} -> std::convertible_to<size_t>;
+        { cmesh.getVertexVectorSize()} -> std::convertible_to<size_t>;
         { cmesh.numberOfEdges()} -> std::convertible_to<size_t>;
+        { cmesh.getEdgeVectorSize()} -> std::convertible_to<size_t>;
         { cmesh.numberOfPolygons()} -> std::convertible_to<size_t>;
+        { cmesh.getFaceVectorSize()} -> std::convertible_to<size_t>;
         { cmesh.getOutputSeedEdgeCount(out)} -> std::convertible_to<size_t>;
     };
 

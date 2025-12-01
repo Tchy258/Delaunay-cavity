@@ -136,6 +136,18 @@ class HalfEdgeMesh {
             return nPolygons;
         }
 
+        size_t getEdgeVectorSize() const {
+            return halfEdges.size();
+        }
+
+        size_t getVertexVectorSize() const {
+            return vertices.size();
+        }
+
+        size_t getFaceVectorSize() const {
+            return polygons.size();
+        }
+
         size_t getVertexMemoryUsage() const {
             return sizeof(decltype(vertices.back())) * vertices.capacity();
         }
