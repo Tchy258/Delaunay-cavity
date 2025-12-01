@@ -6,36 +6,36 @@ namespace refiners::helpers::delaunay_cavity {
     template <MeshData Mesh>
     class UnionFindCavityMerger {
         private:
-            using FaceIndex = typename Mesh::FaceIndex;
-            std::vector<FaceIndex> parent;
-            std::vector<int> sizeOfSet;
+            using OutputIndex = typename Mesh::OutputIndex;
+            std::vector<OutputIndex> parent;
 
         public:
-            UnionFindCavityMerger(size_t n) : parent(n), sizeOfSet(n, 1) {
-                std::iota(parent.begin(), parent.end(), 0);
+            UnionFindCavityMerger(size_t n) : parent(n, Mesh::invalidIndexValue) {}
+
+            OutputIndex find(OutputIndex outputIdentifier) {
+                OutputIndex representative = outputIdentifier;
+                while (parent[representative] != representative) {
+                    representative = parent[representative];
+                }
+                OutputIndex current = outputIdentifier;
+                while (parent[current] != current) {
+                    OutputIndex next = parent[current];
+                    parent[current] = representative;
+                    current = next;
+                }
+                return representative;
             }
 
-            FaceIndex find(FaceIndex face) {
-                if (parent[face] != face) {
-                    parent[face] = find(parent[face]);
-                }
-                return parent[face];
+            void unite(OutputIndex targetIndex, OutputIndex newRepresentative) {
+                parent[targetIndex] = newRepresentative;
             }
 
-            void unite(FaceIndex first, FaceIndex second) {
-                FaceIndex rootFirst = find(first);
-                FaceIndex rootSecond = find(second);
+            bool isRepresentative(OutputIndex queriedIndex) const noexcept {
+                return parent[queriedIndex] == queriedIndex;
+            }
 
-                if (rootFirst != rootSecond) {
-                        
-                    if (sizeOfSet[rootFirst] >= sizeOfSet[rootSecond]) {
-                        parent[rootSecond] = rootFirst;
-                        sizeOfSet[rootFirst] += sizeOfSet[rootSecond];
-                    } else {
-                        parent[rootFirst] = rootSecond;
-                        sizeOfSet[rootSecond] += sizeOfSet[rootFirst];
-                    }
-                }
+            unsigned long long memoryUsage() const {
+                return sizeof(decltype(parent.back())) * parent.capacity();
             }
     };
 }

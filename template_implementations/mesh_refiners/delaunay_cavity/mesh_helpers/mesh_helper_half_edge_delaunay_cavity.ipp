@@ -69,19 +69,18 @@ namespace refiners::helpers::delaunay_cavity {
         outputMesh->updatePolygonCount(faceCount);
         return outputSeeds;
     }
-    inline std::unordered_map<HalfEdgeMesh::EdgeIndex, HalfEdgeMesh::OutputIndex> MeshHelper<HalfEdgeMesh>::buildEdgeToOutputMap(HalfEdgeMesh *outputMesh, const std::vector<OutputIndex> &outputSeeds) {
-        std::unordered_map<EdgeIndex, OutputIndex> edgeMap;
-        edgeMap.reserve(outputMesh->numberOfEdges());
+    inline UnionFindCavityMerger<HalfEdgeMesh> MeshHelper<HalfEdgeMesh>::buildEdgeToOutputMap(HalfEdgeMesh *outputMesh, const std::vector<OutputIndex> &outputSeeds) {
+        UnionFindCavityMerger<HalfEdgeMesh> edgeMap(outputMesh->getEdgeVectorSize());
         for (OutputIndex seed : outputSeeds) {
             EdgeIndex currentEdge = seed;
             do {
-                edgeMap.insert_or_assign(currentEdge,seed);
+                edgeMap.unite(currentEdge,seed);
                 currentEdge = outputMesh->next(currentEdge);
             } while (currentEdge != seed);
         }
         return edgeMap;
     }
-    inline HalfEdgeMesh::OutputIndex MeshHelper<HalfEdgeMesh>::changeToValidRepresentative(HalfEdgeMesh *outputMesh, std::unordered_map<EdgeIndex, OutputIndex> &edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentaive) {
+    inline HalfEdgeMesh::OutputIndex MeshHelper<HalfEdgeMesh>::changeToValidRepresentative(HalfEdgeMesh *outputMesh, UnionFindCavityMerger<HalfEdgeMesh> &edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentaive) {
         EdgeIndex newRepresentative = currentRepresentaive;
         std::vector<EdgeIndex> twins;
         twins.reserve(invalidEdges.size());
@@ -107,7 +106,7 @@ namespace refiners::helpers::delaunay_cavity {
             EdgeIndex firstEdge = twins[0];
             EdgeIndex currentEdge = firstEdge;
             do {
-                edgeToOutputMap[currentEdge] = newRepresentative;
+                edgeToOutputMap.unite(currentEdge, newRepresentative);
                 currentEdge = outputMesh->next(currentEdge);
             } while (firstEdge != currentEdge);
         }
@@ -115,7 +114,7 @@ namespace refiners::helpers::delaunay_cavity {
     }
 
     template <PolygonMergingPolicy<HalfEdgeMesh> MergingPolicy>
-    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh *inputMesh, HalfEdgeMesh *outputMesh, std::vector<OutputIndex> &outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap)
+    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh *inputMesh, HalfEdgeMesh *outputMesh, std::vector<OutputIndex> &outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<HalfEdgeMesh>& edgeToOutputMap)
     {
         std::vector<OutputIndex> seedEdges;
         std::vector<OutputIndex> neighborSeeds;
@@ -130,8 +129,8 @@ namespace refiners::helpers::delaunay_cavity {
                 seedEdges.push_back(currentEdge);
                 std::vector<EdgeIndex> edgesSharedWithNeighbor = outputMesh->getSharedEdges(currentEdge, outputMesh->twin(currentEdge));
                 sharedEdges.push_back(edgesSharedWithNeighbor);
-                OutputIndex oldRepresentative = edgeToOutputMap[outputMesh->twin(currentEdge)];
-                OutputIndex matchingNeighborSeed = changeToValidRepresentative(outputMesh, edgeToOutputMap, edgesSharedWithNeighbor, edgeToOutputMap[outputMesh->twin(currentEdge)]);
+                OutputIndex oldRepresentative = edgeToOutputMap.find(outputMesh->twin(currentEdge));
+                OutputIndex matchingNeighborSeed = changeToValidRepresentative(outputMesh, edgeToOutputMap, edgesSharedWithNeighbor, oldRepresentative);
                 if (oldRepresentative != matchingNeighborSeed) {
                     std::replace(outputSeeds.begin(), outputSeeds.end(), oldRepresentative, matchingNeighborSeed);
                 }
@@ -145,7 +144,7 @@ namespace refiners::helpers::delaunay_cavity {
             std::replace(outputSeeds.begin(), outputSeeds.end(), seedToMerge, HalfEdgeMesh::invalidIndexValue);
             currentEdge = chosenNeighbor;
             do {
-                edgeToOutputMap[currentEdge] = chosenNeighbor;
+                edgeToOutputMap.unite(currentEdge, chosenNeighbor);
                 currentEdge = outputMesh->next(currentEdge);
             } while (currentEdge != chosenNeighbor);
         }

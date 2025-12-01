@@ -8,7 +8,6 @@
 #include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/polygon_merging_policy/polygon_merging_policies.hpp>
 #include <mesh_data/half_edge_mesh.hpp>
 #include <mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
-#include <unordered_set>
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -63,19 +62,19 @@ namespace refiners::helpers::delaunay_cavity {
         /**
          * Builds a hashmap of edges to their representatives
          */
-        static std::unordered_map<EdgeIndex, OutputIndex> buildEdgeToOutputMap(HalfEdgeMesh* outputMesh, const std::vector<OutputIndex>& outputSeeds);
+        static UnionFindCavityMerger<HalfEdgeMesh> buildEdgeToOutputMap(HalfEdgeMesh* outputMesh, const std::vector<OutputIndex>& outputSeeds);
 
         /**
          * Given a vector of "invalid edges" that will be deleted as a result of merging, the edgeToOutputMap is checked to see if these edges were
          * representatives, and if so, change the polygon's representative to a different, valid edge
          */
-        static OutputIndex changeToValidRepresentative(HalfEdgeMesh* outputMesh, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative);
+        static OutputIndex changeToValidRepresentative(HalfEdgeMesh* outputMesh, UnionFindCavityMerger<HalfEdgeMesh>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative);
 
         /**
          * Merges the given triangle into one of its neighbors according to some merging policy
          */
         template <PolygonMergingPolicy<HalfEdgeMesh> MergingPolicy>
-        static void mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap);
+        static void mergeIntoNeighbor(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<HalfEdgeMesh>& edgeToOutputMap);
     };
 }
 

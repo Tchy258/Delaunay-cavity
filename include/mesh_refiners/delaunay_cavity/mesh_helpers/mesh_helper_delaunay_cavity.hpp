@@ -2,7 +2,7 @@
 #define MESH_HELPER_DELAUNAY_CAVITY_HPP
 #include <concepts/mesh_data.hpp>
 #include <concepts/polygon_merging_policy_concept.hpp>
-#include <map>
+#include <mesh_refiners/delaunay_cavity/helper_structs/union_find_cavity_merger.hpp>
 namespace refiners::helpers::delaunay_cavity {
 
     template <MeshData MeshType>
@@ -69,20 +69,20 @@ namespace refiners::helpers::delaunay_cavity {
         static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
 
         /**
-         * Builds a hashmap of edges to their representatives
+         * Builds a union-find struct of the outputs to their representatives
          */
-        static std::map<EdgeIndex, OutputIndex> buildEdgeToOutputMap(MeshType* outputMesh, const std::vector<OutputIndex>& outputSeeds) = delete;
+        static UnionFindCavityMerger<MeshType> buildEdgeToOutputMap(MeshType* outputMesh, const std::vector<OutputIndex>& outputSeeds) = delete;
 
         /**
          * Given a vector of "invalid edges" that will be deleted as a result of merging, the edgeToOutputMap is checked to see if these edges were
          * representatives, and if so, change the polygon's representative to a different, valid edge
          */
-        static OutputIndex changeToValidRepresentative(MeshType* outputMesh, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) = delete;
+        static OutputIndex changeToValidRepresentative(MeshType* outputMesh, UnionFindCavityMerger<MeshType>& edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) = delete;
         /**
          * Merges the given triangle into one of its neighbors according to some merging policy
          */
         template <PolygonMergingPolicy<MeshType> MergingPolicy>
-        static void mergeIntoNeighbor(const MeshType* inputMesh, MeshType* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, std::unordered_map<EdgeIndex, OutputIndex>& edgeToOutputMap) = delete;
+        static void mergeIntoNeighbor(const MeshType* inputMesh, MeshType* outputMesh, std::vector<OutputIndex>& outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<MeshType>& edgeToOutputMap) = delete;
     };
 
 }

@@ -5,6 +5,7 @@
 #include <concepts/cavity_merging_strategy.hpp>
 #include <mesh_data/half_edge_mesh.hpp>
 #include <mesh_refiners/delaunay_cavity/helper_structs/delaunay_cavity_data.hpp>
+#include <mesh_refiners/delaunay_cavity/helper_structs/union_find_cavity_merger.hpp>
 template <MeshData Mesh, PolygonMergingPolicy<Mesh> MergingPolicy>
 struct MergeTrianglesStrategyBase : ExcludePreviousCavitiesStrategyBase<Mesh, MergingPolicy> {
     using Base = CavityMergingStrategyBase<Mesh,MergingPolicy>;
@@ -15,19 +16,15 @@ struct MergeTrianglesStrategyBase : ExcludePreviousCavitiesStrategyBase<Mesh, Me
     using typename Base::_MeshHelper;
     static void postInsertion(const Mesh* inputMesh, Mesh* outputMesh, DelaunayCavityData<Mesh>& refinerData) {
         size_t seedAmount = refinerData.outputSeeds.size();
-        std::unordered_map<typename Mesh::EdgeIndex, OutputIndex> edgeToOutputMap = _MeshHelper::buildEdgeToOutputMap(outputMesh, refinerData.outputSeeds);
+        refiners::helpers::delaunay_cavity::UnionFindCavityMerger<Mesh> edgeToOutputMap = _MeshHelper::buildEdgeToOutputMap(outputMesh, refinerData.outputSeeds);
         for (size_t i = 0; i < seedAmount; ++i) {
             if (refinerData.isValidSeed(i) && outputMesh->getOutputSeedEdgeCount(refinerData.outputSeeds[i]) == 3) {
                 _MeshHelper::template mergeIntoNeighbor<MergingPolicy>(inputMesh, outputMesh, refinerData.outputSeeds, refinerData.outputSeeds[i], edgeToOutputMap);
             }
         }
         refinerData.removeInvalidSeeds();
-        // Source - https://stackoverflow.com/a/25438497
-        // Posted by Tony Delroy, modified by community. See post 'Timeline' for change history
-        // Retrieved 2025-11-20, License - CC BY-SA 4.0
-        refinerData.memoryStats[M_EDGE_MAP] =  (edgeToOutputMap.size() * (sizeof(OutputIndex) + sizeof(void*)) + // data list
-        edgeToOutputMap.bucket_count() * (sizeof(void*) + sizeof(size_t))) // bucket index
-        * 1.5; // estimated allocation overheads
+
+        refinerData.memoryStats[M_EDGE_MAP] =  edgeToOutputMap.memoryUsage();
 
     }
 };
