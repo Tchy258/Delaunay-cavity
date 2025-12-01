@@ -13,7 +13,7 @@ struct DelaunayCavityData : public MeshRefinerData {
         outputSeeds.erase(std::remove(outputSeeds.begin(), outputSeeds.end(), -1), outputSeeds.end());
     }
 
-    inline bool isValidSeed(OutputIndex seed) {
+    inline bool isValidSeed(OutputIndex seed) const {
         return outputSeeds[seed] != Mesh::invalidIndexValue;
     }
     DelaunayCavityData() {
