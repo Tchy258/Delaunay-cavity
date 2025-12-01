@@ -50,9 +50,9 @@ MeshType* PolyllaRefiner<MeshType>::refineMesh(const MeshType* inputMesh) {
     data.memoryStats[M_SEED_BARRIER_EDGE_TIP_MARK] = sizeof(decltype(data.seedBarrierEdgeTipMark.back())) * data.seedBarrierEdgeTipMark.capacity();
     data.memoryStats[M_TRIANGLE_LIST] = data.triangleListMaxSize;
     data.memoryStats[M_VERTICES_INPUT] = inputMesh->getVertexMemoryUsage();
-    data.memoryStats[M_EDGES_INPUT] = inputMesh->getEdgeMemoryUsage();
+    data.memoryStats[M_EDGES_INPUT] = inputMesh->getEdgesMemoryUsage();
     data.memoryStats[M_VERTICES_OUTPUT] = outputMesh->getVertexMemoryUsage();
-    data.memoryStats[M_EDGES_OUTPUT] = outputMesh->getEdgeMemoryUsage();
+    data.memoryStats[M_EDGES_OUTPUT] = outputMesh->getEdgesMemoryUsage();
     data.computeTotalMemoryUsage();
     data.computeTotalTime();
 
