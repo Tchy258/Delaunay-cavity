@@ -51,7 +51,14 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
 
         struct _empty {};
         using maybe_output_vector = std::conditional_t<HasPostInsertionMethod<MergingStrategy,MeshType>, std::vector<OutputIndex>, _empty>;
-        [[no_unique_address]] maybe_output_vector outputSeedsBeforePostProcess = maybe_output_vector{};
+        #ifdef _MSC_VER
+            #define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+        #else
+            #define NO_UNIQUE_ADDRESS [[no_unique_address]]
+        #endif
+        
+        NO_UNIQUE_ADDRESS maybe_output_vector outputSeedsBeforePostProcess = maybe_output_vector{};
+        #undef NO_UNIQUE_ADDRESS
 
         Criterion refinementCriterion;
 
