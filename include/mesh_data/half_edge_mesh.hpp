@@ -14,7 +14,7 @@ class HalfEdgeMesh {
     public:
         using VertexIndex = int;
         using EdgeIndex = int;
-        using FaceIndex = int;
+        using FaceIndex = EdgeIndex;
         using OutputIndex = EdgeIndex;
         using VertexType = HEVertex;
         using EdgeType = HalfEdge;
@@ -23,8 +23,9 @@ class HalfEdgeMesh {
             std::array<EdgeIndex,6> edges;
             std::array<EdgeIndex,6> next;
             std::array<EdgeIndex,6> prev;
-            ConnectivityBackup(std::array<EdgeIndex,6> edges, std::array<EdgeIndex,6> next, std::array<EdgeIndex,6> prev) 
-            : edges(std::move(edges)), next(std::move(next)), prev(std::move(prev)) {}
+            std::array<FaceIndex,6> faces;
+            ConnectivityBackup(std::array<EdgeIndex,6> edges, std::array<EdgeIndex,6> next, std::array<EdgeIndex,6> prev, std::array<FaceIndex,6> faces) 
+            : edges(std::move(edges)), next(std::move(next)), prev(std::move(prev)), faces(std::move(faces)) {}
         };
         using ConnectivityBackupT = ConnectivityBackup;
     private:
@@ -76,23 +77,9 @@ class HalfEdgeMesh {
         std::pair<FaceIndex,FaceIndex> getFacesAssociatedWithEdge(EdgeIndex e) const {
             return {getFaceOfEdge(e), getFaceOfEdge(twin(e))};
         }
-        /**
-         * Every 3 indices of the polygons vector are a face, so we'll get the half edge that satisfies that
-         * the vertex at polygon + 1 and the vertex at polygon + 2 are its next and prev / prev and next
-         */
+
         EdgeIndex getPolygon(FaceIndex polygon) const {
-            int timesThree = polygon * 3;
-            VertexIndex vertexIdx = polygons.at(timesThree);
-            VertexIndex vertexIdx2 = polygons.at(timesThree + 1);
-            VertexIndex vertexIdx3 = polygons.at(timesThree + 2);
-            const HEVertex& aVertex = vertices.at(vertexIdx);
-            EdgeIndex incidentHE = aVertex.incidentHalfEdge;
-            while ( halfEdges.at(incidentHE).face == -1 || (!(target(incidentHE) == vertexIdx2) && !(target(next(incidentHE)) == vertexIdx3)) ) {
-                // Some edge that goes from the vertex at vertexIdx must satisfy the condition that it is part of an internal triangle
-                // and it's target and target of the next are the other vertices
-                incidentHE = CCWEdgeToVertex(incidentHE);
-            }
-            return incidentHE;
+            return polygons.at(polygon);
         }
 
         /**
@@ -195,16 +182,17 @@ class HalfEdgeMesh {
          * @param polygonIndex The face that needs its starting edge updated
          * @param identifyingEdge The edge that will now identify this face
          */
-        void setFaceToEdge(FaceIndex polygonIndex, EdgeIndex identifyingEdge) {
+        void setEdgeAsFace(FaceIndex polygonIndex, EdgeIndex identifyingEdge) {
             polygons[polygonIndex] = identifyingEdge;
         }
         /**
-         * Updates `edge`'s `.face` attribute to store the value of `newFace`
-         * @param edge An edge whose associated face has to change
-         * @param newFace The new face that `edge` belongs to
+         * Updates the `face` member of `edge` so now its identified by the polygon
+         * of polygonIndex
+         * @param polygonIndex The starting edge of a face
+         * @param edge The edge that now belongs to the polygon
          */
-        void setEdgeToFace(EdgeIndex edge, FaceIndex newFace) {
-            halfEdges.at(edge).face = newFace;
+        void setFaceToEdge(FaceIndex polygonIndex, EdgeIndex edge) {
+            halfEdges.at(edge).face = polygonIndex;
         }
         std::vector<FaceIndex> getNeighbors(FaceIndex polygon) const;
         /**

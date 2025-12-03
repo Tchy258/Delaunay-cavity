@@ -7,7 +7,7 @@ struct HalfEdge {
     int next; //next halfedge of the same face
     int prev; //previous halfedge of the same face
     int face; //face index incident to the halfedge
-    int isBorder; //1 if the halfedge is on the boundary, 0 otherwise
+    bool isBorder; //1 if the halfedge is on the boundary, 0 otherwise
     bool operator==(const HalfEdge& other) const {
         return origin == other.origin && 
         next == other.next && 

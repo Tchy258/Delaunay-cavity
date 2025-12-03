@@ -9,10 +9,11 @@
  */
 template<typename Mesh>
 concept MeshAccessors =
-    requires(Mesh& mesh, const Mesh& cmesh, typename Mesh::OutputIndex out) {
-        { mesh.getVertex(1) } -> std::same_as<typename Mesh::VertexType&>;
-        { mesh.getEdge(1) } -> std::same_as<typename Mesh::EdgeType&>;
-        { mesh.getPolygon(1) } -> std::same_as<typename Mesh::FaceIndex>;
+    requires(Mesh& mesh, const Mesh& cmesh, typename Mesh::OutputIndex out,
+    typename Mesh::VertexIndex vIdx, typename Mesh::EdgeIndex eIdx, typename Mesh::FaceIndex fIdx) {
+        { mesh.getVertex(vIdx) } -> std::same_as<typename Mesh::VertexType&>;
+        { mesh.getEdge(eIdx) } -> std::same_as<typename Mesh::EdgeType&>;
+        { mesh.getPolygon(fIdx) } -> std::same_as<typename Mesh::OutputIndex>;
         { cmesh.numberOfVertices()} -> std::convertible_to<size_t>;
         { cmesh.getVertexVectorSize()} -> std::convertible_to<size_t>;
         { cmesh.numberOfEdges()} -> std::convertible_to<size_t>;

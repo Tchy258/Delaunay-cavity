@@ -202,7 +202,7 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAngleCriterion<Mesh>::operator()(const Mesh* mesh, int polygonIndex) const
+bool MinAngleCriterion<Mesh>::operator()(const Mesh* mesh, FaceIndex polygonIndex) const
 {
     typename Mesh::VertexType v1;
     typename Mesh::VertexType v2;

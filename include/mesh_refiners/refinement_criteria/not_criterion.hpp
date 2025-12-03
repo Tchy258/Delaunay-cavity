@@ -8,9 +8,10 @@
  */
 template<MeshData Mesh, RefinementCriterion<Mesh> Criterion>
 struct NotCriterion {
+    using FaceIndex = typename Mesh::FaceIndex;
     Criterion negatedCriteria;
     NotCriterion(Criterion criterion) : negatedCriteria(criterion) {}
-    bool operator()(const Mesh* mesh, int polygonIndex) {
+    bool operator()(const Mesh* mesh, FaceIndex polygonIndex) {
         return !negatedCriteria(mesh,polygonIndex);
     }
 };

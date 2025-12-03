@@ -3,7 +3,7 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAngleCriterionRobust<Mesh>::operator()(const Mesh* mesh, int polygonIndex) const {
+bool MinAngleCriterionRobust<Mesh>::operator()(const Mesh* mesh, FaceIndex polygonIndex) const {
     typename Mesh::EdgeIndex firstEdge = mesh->getPolygon(polygonIndex);
     typename Mesh::VertexType v1, v2, v3;
 

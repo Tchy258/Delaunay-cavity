@@ -3,7 +3,7 @@
 #endif
 
 template <MeshData Mesh>
-bool MinAreaCriterion<Mesh>::operator()(const Mesh* mesh, typename Mesh::FaceIndex polygonIndex) const {
+bool MinAreaCriterion<Mesh>::operator()(const Mesh* mesh, FaceIndex polygonIndex) const {
     typename Mesh::VertexType v1,v2,v3;
 
     mesh->getVerticesOfTriangle(polygonIndex, v1, v2, v3);

@@ -97,10 +97,10 @@ double HalfEdgeMesh::edgeLength2(HalfEdgeMesh::EdgeIndex edge) const {
 
 HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
                            std::vector<HalfEdgeMesh::EdgeType> edges,
-                           std::vector<HalfEdgeMesh::FaceIndex> faces) : vertices(vertices), halfEdges(edges), polygons(faces) {
+                           std::vector<HalfEdgeMesh::FaceIndex> faces) : vertices(vertices), halfEdges(edges), polygons((faces.size() / 3)) {
     
     this->nPolygons = faces.size() / 3;
-    constructInteriorHalfEdgesFromFaces(this->polygons);
+    constructInteriorHalfEdgesFromFaces(faces);
     constructExteriorHalfEdges();
     this->nHalfEdges = halfEdges.size();
     this->nVertices = vertices.size();
@@ -110,9 +110,9 @@ HalfEdgeMesh::HalfEdgeMesh(std::vector<HalfEdgeMesh::VertexType> vertices,
     std::vector<HalfEdgeMesh::EdgeType> edges,
     std::vector<int> faces,
     std::vector<int> neighbors):
-    vertices(vertices), halfEdges(edges), polygons(faces) {
+    vertices(vertices), halfEdges(edges), polygons((faces.size() / 3)) {
     this->nPolygons = faces.size() / 3;
-    constructInteriorHalfEdgesFromFacesAndNeighs(this->polygons, neighbors);
+    constructInteriorHalfEdgesFromFacesAndNeighs(faces, neighbors);
     constructExteriorHalfEdges();
     this->nHalfEdges = halfEdges.size();
     this->nVertices = vertices.size();
@@ -177,35 +177,51 @@ inline std::vector<HalfEdgeMesh::EdgeIndex> HalfEdgeMesh::getSharedEdges(OutputI
 
 inline std::vector<HalfEdgeMesh::ConnectivityBackupT> HalfEdgeMesh::mergeSeeds(OutputIndex seedIndexToMergeInto, std::pair<OutputIndex,std::vector<EdgeIndex>> seedIndexToMergeFrom) {
     std::vector<ConnectivityBackup> backupInfo;
-    for (EdgeIndex edgeToMergeFrom : seedIndexToMergeFrom.second) {
-        EdgeIndex twinEdge = twin(edgeToMergeFrom);
+    FaceIndex newFaceIndex = halfEdges[seedIndexToMergeInto].face;
 
-        EdgeIndex prevToShared = prev(twinEdge);
-        EdgeIndex nextToShared = next(twinEdge);
+    auto collectEdges = [&](EdgeIndex edgeToMergeFrom) {
+        EdgeIndex twinEdge      = twin(edgeToMergeFrom);
+        EdgeIndex prevToShared  = prev(twinEdge);
+        EdgeIndex nextToShared  = next(twinEdge);
         EdgeIndex prevOfCurrent = prev(edgeToMergeFrom);
         EdgeIndex nextOfCurrent = next(edgeToMergeFrom);
 
-        
-        std::array<EdgeIndex,6> edges = { prevToShared, nextToShared, prevOfCurrent, nextOfCurrent, twinEdge, edgeToMergeFrom };
+        return std::array<EdgeIndex,6>{
+            prevToShared, nextToShared, prevOfCurrent, nextOfCurrent, twinEdge, edgeToMergeFrom
+        };
+    };
+
+    auto connectEdges = [&](EdgeIndex edge1, EdgeIndex edge2) {
+        setNext(edge1, edge2);
+        setPrev(edge2, edge1);
+    };
+
+    auto setFaces = [&](FaceIndex face, std::initializer_list<EdgeIndex> list) {
+        for (EdgeIndex x : list) setFaceToEdge(face, x);
+    };
+
+    for (EdgeIndex edgeToMergeFrom : seedIndexToMergeFrom.second) {
+        std::array<EdgeIndex,6> edges = collectEdges(edgeToMergeFrom);
         std::array<EdgeIndex,6> origNext, origPrev;
+        std::array<FaceIndex,6> originalFaces;
         for (size_t k = 0; k < edges.size(); ++k) {
             origNext[k] = next(edges[k]);
             origPrev[k] = prev(edges[k]);
+            originalFaces[k] = halfEdges[edges[k]].face;
         }
 
-        backupInfo.emplace_back(std::move(edges), std::move(origNext), std::move(origPrev));
+        backupInfo.emplace_back(edges, origNext, origPrev, originalFaces);
     }
     for (EdgeIndex edgeToMergeFrom : seedIndexToMergeFrom.second) {
-        EdgeIndex twinEdge = twin(edgeToMergeFrom);
+        std::array<EdgeIndex,6> edges = collectEdges(edgeToMergeFrom);
         
-        EdgeIndex prevToShared = prev(twinEdge);
-        EdgeIndex nextToShared = next(twinEdge);
-        EdgeIndex prevOfCurrent = prev(edgeToMergeFrom);
-        EdgeIndex nextOfCurrent = next(edgeToMergeFrom);
-        setNext(prevToShared, nextOfCurrent);
-        setPrev(nextOfCurrent, prevToShared);
-        setNext(prevOfCurrent, nextToShared);
-        setPrev(nextToShared, prevOfCurrent);
+        connectEdges(edges[0], edges[3]);
+        connectEdges(edges[2], edges[1]);
+
+        setFaces(newFaceIndex,{
+            edges[0], edges[1], edges[2], edges[3]
+        });
+        setFaces(HalfEdgeMesh::invalidIndexValue, { edges[4], edgeToMergeFrom});
 
         updateEdgeCount(numberOfEdges() - 2);
     }
@@ -218,6 +234,7 @@ inline void HalfEdgeMesh::rollbackMerge(const std::vector<ConnectivityBackupT>& 
         for (size_t k = 0; k < edgeBackupInfo.edges.size(); ++k) {
             setNext(edgeBackupInfo.edges[k], edgeBackupInfo.next[k]);
             setPrev(edgeBackupInfo.edges[k], edgeBackupInfo.prev[k]);
+            setFaceToEdge(edgeBackupInfo.faces[k], edgeBackupInfo.edges[k]);
         }
     }
 }
@@ -247,8 +264,8 @@ inline bool HalfEdgeMesh::isPolygonConvex(EdgeIndex firstEdgeOfPolygon) const {
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<HalfEdgeMesh::FaceIndex> &faces, std::vector<HalfEdgeMesh::FaceIndex> &neighbors) {
     int neigh, origin, target;
-    for(std::size_t i = 0; i < nPolygons; i++){
-        for(std::size_t j = 0; j < 3; j++){
+    for(std::size_t i = 0; i < nPolygons; ++i){
+        for(std::size_t j = 0; j < 3; ++j){
             HalfEdge he;
             neigh = neighbors.at(3*i + ((j+2)%3));
             origin = faces[3*i+j];
@@ -261,7 +278,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
             he.face = i;
             he.isBorder = (neigh == -1);
             if(neigh != -1) {
-                for (std::size_t j = 0; j < 3; j++){
+                for (std::size_t j = 0; j < 3; ++j){
                     if(faces.at(3*neigh + j) == target && faces.at(3*neigh + (j + 1)%3) == origin) {
                         he.twin = 3*neigh + j;
                         break;
@@ -273,6 +290,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
             halfEdges.push_back(he);
             vertices[he.origin].incidentHalfEdge = i*3 + j;
         }
+        polygons[i] = i*3;
     }
 }
 
@@ -285,8 +303,8 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
     };
     std::unordered_map<_edge, EdgeIndex, decltype(hash_for_pair)> map_edges(3* n_faces, hash_for_pair); //set of edges to calculate the boundary and twin edges
     //std::cout << "1. aca "<< std::endl;
-    for(std::size_t i = 0; i < n_faces; i++){
-        for(std::size_t j = 0; j < 3; j++){
+    for(std::size_t i = 0; i < n_faces; ++i){
+        for(std::size_t j = 0; j < 3; ++j){
             HalfEdge he;
             VertexIndex v_origin = faces.at(3*i+j);
             VertexIndex v_target = faces.at(3*i+(j+1)%3);
@@ -300,13 +318,14 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
             map_edges[std::make_pair(v_origin, v_target)] = i*3+j;
             halfEdges.push_back(he);
         }
+        polygons[i] = i*3;
         //std::cout << i << std::endl;
     }
     //std::cout << "2. aca "<< std::endl;	
     
     //Calculate twin halfedge and boundary halfedges from set_edges
     std::unordered_map<_edge,EdgeIndex, decltype(hash_for_pair)>::iterator it;
-    for(std::size_t i = 0; i < halfEdges.size(); i++){
+    for(std::size_t i = 0; i < halfEdges.size(); ++i){
         //if halfedge has no twin
         if(halfEdges.at(i).twin == -1){
             VertexIndex edgeTarget = origin(next(i));

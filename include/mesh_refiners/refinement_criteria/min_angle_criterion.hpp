@@ -14,6 +14,7 @@
  */
 template <MeshData Mesh>
 struct MinAngleCriterion {
+    using FaceIndex = typename Mesh::FaceIndex;
     double angleThreshold;
     /**
      * Checks if the minimum angle of the triangle given by `polygonIndex` in `mesh` 
@@ -21,7 +22,7 @@ struct MinAngleCriterion {
      * @param mesh The input mesh
      * @param polygonIndex The index of the triangle to be checked
      */
-    bool operator()(const Mesh* mesh, int polygonIndex) const;
+    bool operator()(const Mesh* mesh, FaceIndex polygonIndex) const;
     /**
      * @param angle Angle threshold the user wants to check for
      * @param type Whether the angle is given in degrees (default to true) or radians
