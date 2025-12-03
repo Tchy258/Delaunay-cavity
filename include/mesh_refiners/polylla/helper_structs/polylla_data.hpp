@@ -28,7 +28,6 @@ struct PolyllaData : public MeshRefinerData {
     PolyllaData() {
 
         meshStats[N_FRONTIER_EDGES] = 0;
-        meshStats[N_FRONTIER_EDGES] = 0;
         meshStats[N_BARRIER_EDGE_TIPS] = 0;
         meshStats[N_POLYGONS_TO_REPAIR] = 0;
         meshStats[N_POLYGONS_ADDED_AFTER_REPAIR] = 0;
