@@ -1,0 +1,15 @@
+compilation_database_dir: D:\CPP\Delaunay-cavity\build
+output_directory: diagrams
+relative_to: D:\CPP\Delaunay-cavity
+diagrams:
+  delaunay_cavity:
+    type: class
+    glob:
+      - src/*.cpp
+      - main2.cpp
+      - include/**/*.hpp
+      - template_implementations/**/*.tpp
+    exclude:
+      namespaces:
+        - CLI
+        - std

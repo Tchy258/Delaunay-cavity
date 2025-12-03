@@ -1,0 +1,1005 @@
+@startuml
+class "Vertex" as C_0002326256006988294087
+class C_0002326256006988294087 {
++operator*(double scalar) const : Vertex
++operator+(const Vertex & other) const : Vertex
++operator-(const Vertex & other) const : Vertex
++operator==(const Vertex & other) const : bool
+..
++cross2d(Vertex v1, Vertex v2) const : double
++dot(Vertex v) const : double
+{static} +findCircumcenter(const Vertex & vertex0, const Vertex & vertex1, const Vertex & vertex2) : Vertex
+{static} +inCircle(const Vertex & A, const Vertex & B, const Vertex & C, const Vertex & P) : bool
+__
++x : double
++y : double
+}
+class "IsHalfEdgeVertex<VertexType>" as C_0016194608405940675627
+class C_0016194608405940675627 <<concept>> {
+(VertexType v)
+..
+v.incidentHalfEdge
+v.isBorder
+}
+class "HEVertex" as C_0015803807914665326084
+class C_0015803807914665326084 {
+__
++incidentHalfEdge : int
++isBorder : bool
+}
+class "HalfEdge" as C_0000875963857636263817
+class C_0000875963857636263817 {
++operator==(const HalfEdge & other) const : bool
+__
++face : int
++isBorder : bool
++next : int
++origin : int
++prev : int
++twin : int
+}
+class "MeshAccessors<Mesh>" as C_0011555007074877803560
+class C_0011555007074877803560 <<concept>> {
+(Mesh & mesh,const Mesh & cmesh,typename Mesh::OutputIndex out,typename Mesh::VertexIndex vIdx,typename Mesh::EdgeIndex eIdx,typename Mesh::FaceIndex fIdx)
+..
+{mesh.getVertex(vIdx)} -> std::same_as<typename Mesh::VertexType &>
+{mesh.getEdge(eIdx)} -> std::same_as<typename Mesh::EdgeType &>
+{mesh.getPolygon(fIdx)} -> std::same_as<typename Mesh::OutputIndex>
+{cmesh.numberOfVertices()} -> std::convertible_to<size_t>
+{cmesh.getVertexVectorSize()} -> std::convertible_to<size_t>
+{cmesh.numberOfEdges()} -> std::convertible_to<size_t>
+{cmesh.getEdgeVectorSize()} -> std::convertible_to<size_t>
+{cmesh.numberOfPolygons()} -> std::convertible_to<size_t>
+{cmesh.getFaceVectorSize()} -> std::convertible_to<size_t>
+{cmesh.getOutputSeedEdgeCount(out)} -> std::convertible_to<size_t>
+}
+class "MeshConstructible<Mesh>" as C_0006202202479210569097
+class C_0006202202479210569097 <<concept>> {
+(std::vector<typename Mesh::VertexType> v,std::vector<typename Mesh::EdgeType> e,std::vector<typename Mesh::FaceIndex> f,Mesh m)
+..
+Mesh(v, e, f)
+Mesh(m)
+}
+class "MeshEdges<Mesh>" as C_0017796442007395513622
+class C_0017796442007395513622 <<concept>> {
+()
+..
+typename Mesh::EdgeType
+}
+class "PrimitiveIntegral<T>" as C_0011270780619192126942
+class C_0011270780619192126942 <<concept>> {
+}
+class "MeshIndices<Mesh>" as C_0012601627371991911545
+class C_0012601627371991911545 <<concept>> {
+()
+..
+typename Mesh::VertexIndex
+typename Mesh::EdgeIndex
+typename Mesh::FaceIndex
+typename Mesh::OutputIndex
+{Mesh::invalidIndexValue} -> std::convertible_to<typename Mesh::OutputIndex>
+}
+class "MeshSetters<Mesh>" as C_0007719961222445302604
+class C_0007719961222445302604 <<concept>> {
+(Mesh & mesh,typename Mesh::OutputIndex seedIndexToMergeInto,std::pair<typename Mesh::OutputIndex,std::vector<typename Mesh::EdgeIndex>> seedIndexToMergeFrom,const std::vector<typename Mesh::ConnectivityBackupT> & backup)
+..
+{mesh.updatePolygonCount(1)} -> std::same_as<void>
+{mesh.updateVertexCount(1)} -> std::same_as<void>
+{mesh.updateEdgeCount(1)} -> std::same_as<void>
+{mesh.mergeSeeds(seedIndexToMergeInto, seedIndexToMergeFrom)} -> std::same_as<std::vector<typename Mesh::ConnectivityBackupT>>
+{mesh.rollbackMerge(backup)} -> std::same_as<void>
+}
+class "MeshTopology<Mesh>" as C_0004809787003659605969
+class C_0004809787003659605969 <<concept>> {
+(Mesh & mesh,const Mesh & cmesh,typename Mesh::VertexType v,typename Mesh::EdgeIndex e,typename Mesh::FaceIndex f,typename Mesh::OutputIndex out)
+..
+{cmesh.getNeighbors(f)} -> std::same_as<std::vector<typename Mesh::FaceIndex>>
+{cmesh.getVerticesOfTriangle(f, v, v, v)} -> std::same_as<void>
+{cmesh.getEdgesOfTriangle(f)} -> std::same_as<std::array<typename Mesh::EdgeIndex, 3>>
+{cmesh.isBorderEdge(e)} -> std::same_as<bool>
+{cmesh.getTriangleSharedEdge(f, f)} -> std::same_as<typename Mesh::EdgeIndex>
+{cmesh.getSharedEdges(out, out)} -> std::same_as<std::vector<typename Mesh::EdgeIndex>>
+{cmesh.getFacesAssociatedWithEdge(e)} -> std::same_as<std::pair<typename Mesh::FaceIndex, typename Mesh::FaceIndex>>
+{cmesh.edgeLength2(e)} -> std::same_as<double>
+{cmesh.isPolygonConvex(out)} -> std::convertible_to<bool>
+{cmesh.isPolygonSimple(out)} -> std::convertible_to<bool>
+}
+class "MeshVertices<Mesh>" as C_0013779235783595163547
+class C_0013779235783595163547 <<concept>> {
+()
+..
+typename Mesh::VertexType
+}
+class "MeshMemory<Mesh>" as C_0008057981291306597311
+class C_0008057981291306597311 <<concept>> {
+(const Mesh & cmesh)
+..
+{cmesh.getVertexMemoryUsage()} -> std::convertible_to<size_t>
+{cmesh.getEdgesMemoryUsage()} -> std::convertible_to<size_t>
+}
+class "MeshData<Mesh>" as C_0006301220660949190564
+class C_0006301220660949190564 <<concept>> {
+}
+enum "MeshStat" as C_0015682055627821899934
+enum C_0015682055627821899934 {
+N_POLYGONS
+N_FRONTIER_EDGES
+N_BARRIER_EDGE_TIPS
+N_POLYGONS_TO_REPAIR
+N_POLYGONS_ADDED_AFTER_REPAIR
+N_POLYGONS_BEFORE_POST_PROCESS
+N_VERTICES
+N_EDGES
+N_BORDER_EDGES
+}
+enum "TimeStat" as C_0015446975672921283398
+enum C_0015446975672921283398 {
+T_TRIANGULATION_GENERATION
+T_LABEL_MAX_EDGES
+T_LABEL_FRONTIER_EDGES
+T_LABEL_SEED_EDGES
+T_TRAVERSAL_AND_REPAIR
+T_TRAVERSAL
+T_REPAIR
+T_TRIANGLE_SORTING
+T_CIRCUMCENTER_COMPUTATION
+T_CAVITY_COMPUTATION
+T_CAVITY_INSERTION
+T_CAVITY_MERGING
+T_TOTAL
+}
+enum "MemoryStat" as C_0009384749142339378116
+enum C_0009384749142339378116 {
+M_TOTAL
+M_MAX_EDGES
+M_FRONTIER_EDGES
+M_SEED_EDGES
+M_SEED_BARRIER_EDGE_TIP_MARK
+M_TRIANGLE_LIST
+M_CAVITY_ARRAY
+M_VISITED_ARRAY
+M_EDGE_MAP
+M_EDGES_INPUT
+M_EDGES_OUTPUT
+M_VERTICES_INPUT
+M_VERTICES_OUTPUT
+}
+abstract "MeshRefiner<MeshData Mesh>" as C_0017578684577686573879
+abstract C_0017578684577686573879 {
++~MeshRefiner() = default : void
+..
+{abstract} +getMeshBeforePostProcess() = 0 : Mesh *
+{abstract} +getOutputSeeds() = 0 : std::vector<typename Mesh::OutputIndex> &
+{abstract} +getOutputSeedsBeforePostProcess() = 0 : std::vector<typename Mesh::OutputIndex> &
+{abstract} +getRefinementMemory() = 0 : const std::unordered_map<MemoryStat,unsigned long long> &
+{abstract} +getRefinementStats() = 0 : const std::unordered_map<MeshStat,int> &
+{abstract} +getRefinementTimes() = 0 : const std::unordered_map<TimeStat,double> &
+{abstract} +refineMesh(const Mesh * inputMesh) = 0 : Mesh *
+__
+}
+class "HasAdjacencyConstructor<Mesh>" as C_0012401204162003167333
+class C_0012401204162003167333 <<concept>> {
+(std::vector<typename Mesh::VertexType> vertices,std::vector<typename Mesh::EdgeType> edges,std::vector<typename Mesh::FaceIndex> faces,std::vector<typename Mesh::FaceIndex> neighbors)
+..
+Mesh(vertices, edges, faces, neighbors)
+}
+class "HalfEdgeMesh" as C_0017202116829443092448
+class C_0017202116829443092448 {
++HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<FaceIndex> faces) : void
++HalfEdgeMesh(std::vector<VertexType> vertices, std::vector<EdgeType> edges, std::vector<FaceIndex> faces, std::vector<FaceIndex> neighbors) : void
+..
++CCWEdgeToVertex(EdgeIndex e) const : EdgeIndex
++CWEdgeToVertex(EdgeIndex edge) const : EdgeIndex
+-constructExteriorHalfEdges() : void
+-constructInteriorHalfEdgesFromFaces(std::vector<FaceIndex> & faces) : void
+-constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<FaceIndex> & faces, std::vector<FaceIndex> & neighbors) : void
++degree(VertexIndex vertex) const : unsigned int
++edgeLength2(EdgeIndex edge) const : double
++edgeOfVertex(VertexIndex vertex) const : EdgeIndex
++getEdge(EdgeIndex e) : EdgeType &
++getEdgeVectorSize() const : size_t
++getEdges() const : std::vector<HalfEdge>
++getEdgesMemoryUsage() const : size_t
++getEdgesOfTriangle(FaceIndex triangle) const : std::array<EdgeIndex,3>
++getFaceOfEdge(EdgeIndex e) const : FaceIndex
++getFaceVectorSize() const : size_t
++getFacesAssociatedWithEdge(EdgeIndex e) const : std::pair<FaceIndex,FaceIndex>
++getNeighbors(FaceIndex polygon) const : std::vector<FaceIndex>
++getOutputSeedEdgeCount(OutputIndex seedIndex) const : size_t
++getPolygon(FaceIndex polygon) const : EdgeIndex
++getSharedEdges(OutputIndex seed1, OutputIndex seed2) const : std::vector<EdgeIndex>
++getTriangleSharedEdge(FaceIndex triangle1, FaceIndex triangle2) const : EdgeIndex
++getVertex(VertexIndex v) : VertexType &
++getVertexMemoryUsage() const : size_t
++getVertexVectorSize() const : size_t
++getVerticesOfTriangle(FaceIndex polygonIndex, Vertex & v0, Vertex & v1, Vertex & v2) const : void
++isBorderEdge(EdgeIndex edge) const : bool
++isBorderVertex(VertexIndex vertex) const : bool
++isPolygonConvex(FaceIndex firstEdgeOfPolygon) const : bool
++isPolygonSimple(OutputIndex seed) const : bool
++mergeSeeds(OutputIndex seedIndexToMergeInto, std::pair<OutputIndex,std::vector<EdgeIndex>> seedIndexToMergeFrom) : std::vector<ConnectivityBackupT>
++next(EdgeIndex edge) const : EdgeIndex
++numberOfEdges() const : size_t
++numberOfPolygons() const : size_t
++numberOfVertices() const : size_t
++origin(EdgeIndex edge) const : VertexIndex
++prev(VertexIndex edge) const : EdgeIndex
++rollbackMerge(const std::vector<ConnectivityBackupT> & backupInfo) : void
++setEdgeAsFace(FaceIndex polygonIndex, EdgeIndex identifyingEdge) : void
++setEdges(std::vector<HalfEdge> & edges) : void
++setFaceToEdge(FaceIndex polygonIndex, EdgeIndex edge) : void
++setNext(EdgeIndex edge, EdgeIndex nextEdge) : void
++setPrev(EdgeIndex edge, EdgeIndex previousEdge) : void
++setTwin(EdgeIndex edge, EdgeIndex newTwin) : void
++target(EdgeIndex edge) const : VertexIndex
++twin(VertexIndex edge) const : EdgeIndex
++updateEdgeCount(size_t newAmount) : void
++updatePolygonCount(size_t newAmount) : void
++updateVertexCount(size_t newAmount) : void
+__
+-halfEdges : std::vector<EdgeType>
+{static} +invalidIndexValue : const OutputIndex
+-nHalfEdges : size_t
+-nPolygons : size_t
+-nVertices : size_t
+-polygons : std::vector<FaceIndex>
+-vertices : std::vector<VertexType>
+}
+class "HalfEdgeMesh::ConnectivityBackup" as C_0000875756620783725975
+class C_0000875756620783725975 {
++ConnectivityBackup(std::array<EdgeIndex,6> edges, std::array<EdgeIndex,6> next, std::array<EdgeIndex,6> prev, std::array<FaceIndex,6> faces) : void
+__
++edges : std::array<EdgeIndex,6>
++faces : std::array<FaceIndex,6>
++next : std::array<EdgeIndex,6>
++prev : std::array<EdgeIndex,6>
+}
+abstract "MeshReader<MeshData Mesh>" as C_0015268128306033532529
+abstract C_0015268128306033532529 {
++~MeshReader() = default : void
+..
+{static} #isWhitespace(std::string s) : bool
+{abstract} +readMesh(const std::vector<std::filesystem::path> & files) = 0 : Mesh *
+__
+}
+class "NodeEleReader<MeshData Mesh>" as C_0006656309170792936748
+class C_0006656309170792936748 {
+{static} -changeExtension(const std::filesystem::path & filepath, const std::string & targetExtension) : std::filesystem::path
+-parsePaths(const std::vector<std::filesystem::path> & filepaths) : std::vector<std::filesystem::path>
+-readEleFile(const std::filesystem::path & filepaths, std::vector<int> & elements) : unsigned int
++readMesh(const std::vector<std::filesystem::path> & files) : Mesh *
+-readNeighFile(const std::filesystem::path & filepaths, std::vector<int> & neighbors) : unsigned int
+-readNodeFile(const std::filesystem::path & filepaths, std::vector<typename Mesh::VertexType> & vertices) : unsigned int
+__
+}
+abstract "MeshWriter<MeshData Mesh>" as C_0009930178673868554397
+abstract C_0009930178673868554397 {
++~MeshWriter() = default : void
+..
+{abstract} +writeMesh(const std::vector<std::filesystem::path> & files, Mesh & mesh, std::vector<typename Mesh::OutputIndex> outputSeeds = {}) = 0 : void
+__
+}
+class "OffWriter<MeshData Mesh>" as C_0014088457675369851527
+class C_0014088457675369851527 {
+-writeFaces(std::ofstream & file, HalfEdgeMesh & mesh) : void
++writeMesh(const std::vector<std::filesystem::path> & files, Mesh & mesh, std::vector<typename Mesh::OutputIndex> outputSeeds = {}) : void
+-writeOutputSeeds(std::ofstream & file, HalfEdgeMesh & mesh, std::vector<HalfEdgeMesh::OutputIndex> outputSeeds) : void
+__
+}
+class "AleWriter<MeshData Mesh>" as C_0004099831134456003712
+class C_0004099831134456003712 {
++writeMesh(const std::vector<std::filesystem::path> & files, Mesh & mesh, std::vector<typename Mesh::OutputIndex> outputSeeds = {}) : void
+-writeOutputSeeds(std::ofstream & file, HalfEdgeMesh & mesh, std::vector<HalfEdgeMesh::OutputIndex> outputSeeds) : void
+__
+}
+class "MeshRefinerData" as C_0007278027499604832565
+class C_0007278027499604832565 {
++MeshRefinerData() : void
+..
++computeTotalMemoryUsage() : void
++computeTotalTime() : void
+-storeTotal<KeyType,ValueType,Map>(Map & map, KeyType totalKey) : void
+__
++memoryStats : std::unordered_map<MemoryStat,unsigned long long>
++meshStats : std::unordered_map<MeshStat,int>
++timeStats : std::unordered_map<TimeStat,double>
+}
+class "DelaunayCavityData<MeshData Mesh>" as C_0001639379135822352694
+class C_0001639379135822352694 {
++DelaunayCavityData() : void
+..
++isValidSeed(OutputIndex seed) const : bool
++removeInvalidSeeds() : void
+__
++inCavity : std::vector<uint8_t>
++outputSeeds : std::vector<OutputIndex>
+}
+class "refiners::helpers::delaunay_cavity::Cavity<MeshData Mesh>" as C_0001706820001671093550
+class C_0001706820001671093550 {
+__
++allTriangles : std::vector<FaceIndex>
++boundaryEdges : std::vector<EdgeIndex>
++boundaryTriangles : std::vector<FaceIndex>
++interior : std::vector<FaceIndex>
+}
+class "refiners::helpers::delaunay_cavity::UnionFindCavityMerger<MeshData Mesh>" as C_0005805542713488632536
+class C_0005805542713488632536 {
++UnionFindCavityMerger(size_t n) : void
+..
++find(OutputIndex outputIdentifier) : OutputIndex
++isRepresentative(OutputIndex queriedIndex) const noexcept : bool
++memoryUsage() const : unsigned long long
++unite(OutputIndex targetIndex, OutputIndex newRepresentative) : void
+__
+-parent : std::vector<OutputIndex>
+}
+class "refiners::helpers::delaunay_cavity::MeshHelperBase<MeshData MeshType>" as C_0004428475897051661924
+class C_0004428475897051661924 {
+__
+}
+class "refiners::helpers::delaunay_cavity::UnionFindCavityMerger<MeshData MeshType>" as C_0002135248914807612808
+class C_0002135248914807612808 {
+__
+}
+class "refiners::helpers::delaunay_cavity::MeshHelper<MeshData MeshType>" as C_0013820901966883866851
+class C_0013820901966883866851 {
+{static} +buildEdgeToOutputMap(MeshType * outputMesh, const std::vector<OutputIndex> & outputSeeds) = deleted : UnionFindCavityMerger<MeshType>
+{static} +changeToValidRepresentative(MeshType * outputMesh, UnionFindCavityMerger<MeshType> & edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) = deleted : OutputIndex
+{static} +generateInitialOutputSeeds(MeshType * mesh) = deleted : std::vector<OutputIndex>
+{static} +getTriangleEdges(MeshType * mesh, FaceIndex triangle) = deleted : std::array<EdgeIndex,3>
+{static} +insertCavity(const MeshType * inputMesh, MeshType * outputMesh, std::vector<Cavity> & cavities, const std::vector<uint8_t> & inCavity) = deleted : std::vector<OutputIndex>
+{static} +isBorderEdge(const MeshType * mesh, EdgeIndex e) = deleted : bool
+{static} +isSharedTriangleEdge(const MeshType * mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = deleted : bool
+{static} +mergeIntoNeighbor<PolygonMergingPolicy MergingPolicy>(const MeshType * inputMesh, MeshType * outputMesh, std::vector<OutputIndex> & outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<MeshType> & edgeToOutputMap) = deleted : void
+__
+}
+class "refiners::helpers::delaunay_cavity::Cavity<HalfEdgeMesh>" as C_0017738072604868368931
+class C_0017738072604868368931 {
+__
+}
+class "refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh>" as C_0006941769489935284845
+class C_0006941769489935284845 {
+__
+}
+class "refiners::helpers::delaunay_cavity::MeshHelperBase<HalfEdgeMesh>" as C_0009032524404634386513
+class C_0009032524404634386513 {
+__
+}
+class "refiners::helpers::delaunay_cavity::MeshHelper<HalfEdgeMesh>" as C_0011031409684962323704
+class C_0011031409684962323704 {
+{static} +buildEdgeToOutputMap(HalfEdgeMesh * outputMesh, const std::vector<OutputIndex> & outputSeeds) : refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh>
+{static} +changeToValidRepresentative(HalfEdgeMesh * outputMesh, refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh> & edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) : OutputIndex
+{static} +generateInitialOutputSeeds(HalfEdgeMesh * mesh) : std::vector<OutputIndex>
+{static} +getTriangleEdges(HalfEdgeMesh * mesh, FaceIndex triangle) : std::array<EdgeIndex,3>
+{static} +insertCavity(const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, std::vector<Cavity> & cavities, const std::vector<uint8_t> & inCavity) : std::vector<OutputIndex>
+{static} +isBorderEdge(const HalfEdgeMesh * mesh, EdgeIndex e) : bool
+{static} +isSharedTriangleEdge(const HalfEdgeMesh * mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) : bool
+{static} +mergeIntoNeighbor<PolygonMergingPolicy MergingPolicy>(const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, std::vector<OutputIndex> & outputSeeds, OutputIndex seedToMerge, refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh> & edgeToOutputMap) : void
+__
+}
+class "refiners::helpers::delaunay_cavity::Cavity<MeshData MeshType>" as C_0008784289793962566006
+class C_0008784289793962566006 {
+__
+}
+class "refiners::helpers::polylla::MeshHelperBase<MeshData MeshType>" as C_0009683024494620563991
+class C_0009683024494620563991 {
+__
+}
+class "refiners::helpers::polylla::MeshHelper<MeshData MeshType>" as C_0009524678512245601032
+class C_0009524678512245601032 {
+{static} +barrierEdgeTipReparation(RefinementData & data, const MeshType * inputMesh, MeshType * outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex> & currentOutputs) = deleted : void
+{static} +calculateMiddleEdge(RefinementData & data, const MeshType * inputMesh, VertexIndex barrierEdgeTipVertex) = deleted : EdgeIndex
+{static} +findMaxEdge(MeshType * mesh, FaceIndex face) = deleted : EdgeIndex
+{static} +generateOutputSeeds(RefinementData & data, const MeshType * inputMesh, MeshType * outputMesh) = deleted : std::vector<OutputIndex>
+{static} +generatePolygonFromSeed(RefinementData & data, const MeshType * inputMesh, MeshType * outputMesh, OutputIndex seed) = deleted : OutputIndex
+{static} +generateRepairedPolygon(RefinementData & data, const MeshType * inputMesh, MeshType * outputMesh, OutputIndex seedToRepair) = deleted : OutputIndex
+{static} +generateSeedCandidates(RefinementData & data, MeshType * mesh) = deleted : std::vector<OutputIndex>
+{static} +getNextFrontierEdge(const BinaryVector & frontierEdges, const MeshType * mesh, EdgeIndex edge) = deleted : EdgeIndex
+{static} +isFrontierEdge(RefinementData & data, MeshType * mesh, EdgeIndex edge) = deleted : bool
+{static} +isSeedCandidateIndex(RefinementData & data, MeshType * mesh, OutputIndex seedCandidate) = deleted : bool
+{static} +labelFrontierEdges(RefinementData & data, MeshType * mesh) = deleted : void
+{static} +labelMaxEdges(RefinementData & data, MeshType * mesh) = deleted : void
+__
+}
+class "refiners::helpers::polylla::MeshHelperBase<HalfEdgeMesh>" as C_0009168961725500511108
+class C_0009168961725500511108 {
+__
+}
+class "refiners::helpers::polylla::MeshHelper<HalfEdgeMesh>" as C_0005190791872642592493
+class C_0005190791872642592493 {
+{static} +barrierEdgeTipReparation(RefinementData & data, const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, OutputIndex nonSimpleSeed, std::vector<OutputIndex> & currentOutputs) : void
+{static} +calculateMiddleEdge(RefinementData & data, const HalfEdgeMesh * inputMesh, VertexIndex barrierEdgeTipVertex) : EdgeIndex
+{static} +findMaxEdge(HalfEdgeMesh * mesh, FaceIndex face) : EdgeIndex
+{static} +generateOutputSeeds(RefinementData & data, const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh) : std::vector<OutputIndex>
+{static} +generatePolygonFromSeed(RefinementData & data, const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, OutputIndex seed) : OutputIndex
+{static} +generateRepairedPolygon(RefinementData & data, const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, OutputIndex seedToRepair) : OutputIndex
+{static} +generateSeedCandidates(RefinementData & data, HalfEdgeMesh * mesh) : std::vector<OutputIndex>
+{static} +getNextFrontierEdge(RefinementData & data, const HalfEdgeMesh * mesh, EdgeIndex edge) : EdgeIndex
+{static} +isFrontierEdge(RefinementData & data, HalfEdgeMesh * mesh, EdgeIndex edge) : bool
+{static} +isSeedCandidateIndex(RefinementData & data, HalfEdgeMesh * mesh, OutputIndex seedCandidate) : bool
+{static} +labelFrontierEdges(RefinementData & data, HalfEdgeMesh * mesh) : void
+{static} +labelMaxEdges(RefinementData & data, HalfEdgeMesh * mesh) : void
+__
+}
+class "HasPreAddMethodPerCavity<MergingStrategy,Mesh>" as C_0005730687429737434267
+class C_0005730687429737434267 <<concept>> {
+(Mesh * mesh,const std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>> & cavities,typename Mesh::FaceIndex triangle)
+..
+{MergingStrategy::preAdd(mesh, triangle, cavities)} -> std::convertible_to<bool>
+}
+class "HasPreAddMethodByPresence<MergingStrategy,Mesh>" as C_0015580991126473048310
+class C_0015580991126473048310 <<concept>> {
+(Mesh * mesh,const std::vector<uint8_t> & inCavity,typename Mesh::FaceIndex triangle)
+..
+{MergingStrategy::preAdd(triangle, inCavity)} -> std::convertible_to<bool>
+}
+class "HasPostComputeMethod<MergingStrategy,Mesh>" as C_0001215355986147028039
+class C_0001215355986147028039 <<concept>> {
+(Mesh * mesh,std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>> & cavities)
+..
+{MergingStrategy::postCompute(mesh, cavities)} -> std::same_as<void>
+}
+class "HasPostInsertionMethod<MergingStrategy,Mesh>" as C_0014548720200671576931
+class C_0014548720200671576931 <<concept>> {
+(const Mesh * inputMesh,Mesh * outputMesh,DelaunayCavityData<Mesh> & refinerData)
+..
+{MergingStrategy::postInsertion(inputMesh, outputMesh, refinerData)} -> std::same_as<void>
+}
+class "CavityMergingStrategy<MergingStrategy,Mesh>" as C_0008571625291250823147
+class C_0008571625291250823147 <<concept>> {
+}
+class "RefinementCriterionBase<Criterion,Mesh>" as C_0017498058203661341270
+class C_0017498058203661341270 <<concept>> {
+(Criterion criterion,const Mesh * inputMesh,typename Mesh::FaceIndex polygonIndex)
+..
+{criterion(inputMesh, polygonIndex)} -> std::convertible_to<bool>
+}
+class "RefinementCriterion<Criterion,Mesh>" as C_0002155662132111426571
+class C_0002155662132111426571 <<concept>> {
+}
+class "TriangleComparatorBase<Comparator,Mesh>" as C_0003828121342688755700
+class C_0003828121342688755700 <<concept>> {
+(const Mesh * meshptr,const typename Mesh::FaceIndex & t1,const typename Mesh::FaceIndex & t2)
+..
+{Comparator::compare(meshptr, t1, t2)} -> std::same_as<bool>
+}
+class "TriangleComparator<Comparator,Mesh>" as C_0014886071696633625993
+class C_0014886071696633625993 <<concept>> {
+}
+class "PolygonMergingPolicy<MergingPolicy,Mesh>" as C_0003788921081315882462
+class C_0003788921081315882462 <<concept>> {
+(Mesh * mesh,typename Mesh::OutputIndex seedToMerge,std::vector<typename Mesh::OutputIndex> & seedNeighbors,std::vector<std::vector<typename Mesh::EdgeIndex>> & sharedEdges)
+..
+{MergingPolicy::mergeBestCandidate(mesh, seedToMerge, seedNeighbors, sharedEdges)} -> std::convertible_to<typename Mesh::OutputIndex>
+}
+class "NullPolygonMergingPolicy<MeshData Mesh>" as C_0001083348751134226857
+class C_0001083348751134226857 {
+__
+}
+class "MaximizeConvexityMergingPolicy<MeshData Mesh>" as C_0001691576918471394995
+class C_0001691576918471394995 {
+{static} +mergeBestCandidate(Mesh * mesh, OutputIndex seedToMerge, std::vector<OutputIndex> & seedNeighbors, std::vector<std::vector<EdgeIndex>> & sharedEdges) : OutputIndex
+__
+}
+class "SizeBasedNeighborMergingPolicy<MeshData Mesh,Derived>" as C_0011665285200340120293
+class C_0011665285200340120293 {
+{static} -isBetterCandidate(size_t currentCandidateSize, size_t newCandidateSize) : bool
+{static} +mergeBestCandidate(Mesh * mesh, OutputIndex seedToMerge, std::vector<OutputIndex> & seedNeighbors, std::vector<std::vector<EdgeIndex>> & sharedEdges) : OutputIndex
+__
+}
+class "SmallestNeighborMergingPolicy<MeshData Mesh>" as C_0017422108877910152309
+class C_0017422108877910152309 {
+{static} +isBetterCandidateImpl(size_t currentCandidateSize, size_t newCandidateSize) : bool
+__
+}
+class "SizeBasedNeighborMergingPolicy<MeshData Mesh,SmallestNeighborMergingPolicy<MeshData Mesh>>" as C_0004997980287933767482
+class C_0004997980287933767482 {
+__
+}
+class "BiggestNeighborMergingPolicy<MeshData Mesh>" as C_0003361008901210266475
+class C_0003361008901210266475 {
+{static} +isBetterCandidateImpl(size_t currentCandidateSize, size_t newCandidateSize) : bool
+__
+}
+class "SizeBasedNeighborMergingPolicy<MeshData Mesh,BiggestNeighborMergingPolicy<MeshData Mesh>>" as C_0010541411378573732286
+class C_0010541411378573732286 {
+__
+}
+class "EdgeLengthBasedMergingPolicy<MeshData Mesh,Derived>" as C_0002133939137881742923
+class C_0002133939137881742923 {
+{static} -initialValue() : double
+{static} -isBetterCandidate(double currentCandidateLength, double newCandidateLength) : bool
+{static} +mergeBestCandidate(Mesh * mesh, OutputIndex seedToMerge, std::vector<OutputIndex> & seedNeighbors, std::vector<std::vector<EdgeIndex>> & sharedEdges) : OutputIndex
+__
+}
+class "LongestEdgeMergingPolicy<MeshData Mesh>" as C_0012394108202450793599
+class C_0012394108202450793599 {
+{static} +initialValueImpl() : double
+{static} +isBetterCandidateImpl(double currentCandidateLength, double newCandidateLength) : bool
+__
+}
+class "EdgeLengthBasedMergingPolicy<MeshData Mesh,LongestEdgeMergingPolicy<MeshData Mesh>>" as C_0003718563390267416168
+class C_0003718563390267416168 {
+__
+}
+class "ShortestEdgeMergingPolicy<MeshData Mesh>" as C_0007520867619195207809
+class C_0007520867619195207809 {
+{static} +initialValueImpl() : double
+{static} +isBetterCandidateImpl(double currentCandidateLength, double newCandidateLength) : bool
+__
+}
+class "EdgeLengthBasedMergingPolicy<MeshData Mesh,ShortestEdgeMergingPolicy<MeshData Mesh>>" as C_0004341721282156767744
+class C_0004341721282156767744 {
+__
+}
+class "NullRefinementCriterion<MeshData Mesh>" as C_0013448653828012723040
+class C_0013448653828012723040 {
+__
+}
+class "DelaunayCavityData<MeshData MeshType>" as C_0009880666665485460142
+class C_0009880666665485460142 {
+__
+}
+class "MeshRefiner<MeshData MeshType>" as C_0001752782925563060559
+class C_0001752782925563060559 {
+__
+}
+class "DelaunayCavityRefiner<MeshData MeshType,RefinementCriterion Criterion,TriangleComparator Comparator,CavityMergingStrategy MergingStrategy>" as C_0003238586066628687602
+class C_0003238586066628687602 {
++DelaunayCavityRefiner(Criterion criterion, bool storeBeforePostProcess = false) : void
++DelaunayCavityRefiner(bool storeBeforePostProcess = false) : void
++~DelaunayCavityRefiner() : void
+..
+-computeCavities(const MeshType * inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>> & circumcenters, std::vector<uint8_t> & visited) : std::vector<Cavity>
+-computeCircumcenters(MeshType * outputMesh, std::vector<FaceIndex> sortedTriangles) : std::vector<std::pair<MeshVertex,FaceIndex>>
++getMeshBeforePostProcess() : MeshType *
++getOutputSeeds() : std::vector<OutputIndex> &
++getOutputSeedsBeforePostProcess() : std::vector<OutputIndex> &
++getRefinementMemory() : const std::unordered_map<MemoryStat,unsigned long long> &
++getRefinementStats() : const std::unordered_map<MeshStat,int> &
++getRefinementTimes() : const std::unordered_map<TimeStat,double> &
++refineMesh(const MeshType * inputMesh) : MeshType *
+-resetVisited(std::vector<uint8_t> & visited, const Cavity & cavity) : void
+-sortTriangles(MeshType * outputMesh) : std::vector<FaceIndex>
+__
+-data : DelaunayCavityData<MeshType>
+-meshBeforePostProcess : MeshType *
+-outputSeedsBeforePostProcess : maybe_output_vector
+-refinementCriterion : Criterion
+-storeMeshBeforePostProcess : bool
+}
+class "DelaunayCavityRefiner::_empty" as C_0007672470357647610263
+class C_0007672470357647610263 {
+__
+}
+class "PolyllaData<MeshData MeshType>" as C_0011064995256737446682
+class C_0011064995256737446682 {
++PolyllaData() : void
+__
++addedPolygonAfterRepairAccumulator : int
++barrierEdgeTipAccumulator : int
++frontierEdgeAccumulator : int
++frontierEdges : BinaryVector
++maxEdges : BinaryVector
++outputSeeds : std::vector<OutputIndex>
++polygonToRepairAccumulator : int
++seedBarrierEdgeTipMark : BinaryVector
++seedCandidates : std::vector<OutputIndex>
++triangleListMaxSize : size_t
+}
+class "PolyllaData<HalfEdgeMesh>" as C_0003492292191175085263
+class C_0003492292191175085263 {
+__
+}
+class "PolyllaRefiner<MeshData MeshType>" as C_0000864546949190794001
+class C_0000864546949190794001 {
++PolyllaRefiner() = default : void
+..
++getMeshBeforePostProcess() : MeshType *
++getOutputSeeds() : std::vector<OutputIndex> &
++getOutputSeedsBeforePostProcess() : std::vector<OutputIndex> &
++getRefinementMemory() : const std::unordered_map<MemoryStat,unsigned long long> &
++getRefinementStats() : const std::unordered_map<MeshStat,int> &
++getRefinementTimes() : const std::unordered_map<TimeStat,double> &
++refineMesh(const MeshType * inputMesh) : MeshType *
+__
+-data : PolyllaData<MeshType>
+}
+class "AngleComparator<MeshData Mesh,_Bool ByAscendingOrder,_Bool ByMinAngle=true>" as C_0014549807228926947100
+class C_0014549807228926947100 {
+{static} +compare(const Mesh * meshptr, const FaceIndex & t1, const FaceIndex & t2) : bool
+__
+}
+class "AngleComparator<MeshData Mesh,false,true>" as C_0016765665675341969343
+class C_0016765665675341969343 {
+__
+}
+class "AngleComparator<MeshData Mesh,true,true>" as C_0006381407612440846324
+class C_0006381407612440846324 {
+__
+}
+class "AngleComparator<MeshData Mesh,false,false>" as C_0006800976834599005480
+class C_0006800976834599005480 {
+__
+}
+class "AngleComparator<MeshData Mesh,true,false>" as C_0010893143555816996369
+class C_0010893143555816996369 {
+__
+}
+class "AreaComparator<MeshData Mesh,_Bool ByAscendingOrder,_Bool Precise=false>" as C_0005840584884230035202
+class C_0005840584884230035202 {
+{static} +compare(const Mesh * meshptr, const FaceIndex & t1, const FaceIndex & t2) : bool
+__
+}
+class "AreaComparator<MeshData Mesh,true,false>" as C_0006482861130912393421
+class C_0006482861130912393421 {
+__
+}
+class "AreaComparator<MeshData Mesh,true,true>" as C_0009304896392195763592
+class C_0009304896392195763592 {
+__
+}
+class "AreaComparator<MeshData Mesh,false,false>" as C_0013028808404426805964
+class C_0013028808404426805964 {
+__
+}
+class "AreaComparator<MeshData Mesh,false,true>" as C_0000132620115979888331
+class C_0000132620115979888331 {
+__
+}
+class "EdgeLengthComparator<MeshData Mesh,_Bool ByAscendingOrder,_Bool ByMinEdge=true>" as C_0015121451980339423822
+class C_0015121451980339423822 {
+{static} +compare(const Mesh * meshptr, const FaceIndex & t1, const FaceIndex & t2) : bool
+__
+}
+class "EdgeLengthComparator<MeshData Mesh,true,true>" as C_0008583464626475737932
+class C_0008583464626475737932 {
+__
+}
+class "EdgeLengthComparator<MeshData Mesh,false,true>" as C_0013270387181189739575
+class C_0013270387181189739575 {
+__
+}
+class "EdgeLengthComparator<MeshData Mesh,true,false>" as C_0013616896143012614057
+class C_0013616896143012614057 {
+__
+}
+class "EdgeLengthComparator<MeshData Mesh,false,false>" as C_0008266484410275912320
+class C_0008266484410275912320 {
+__
+}
+class "NullComparator<MeshData Mesh>" as C_0018337159594380494664
+class C_0018337159594380494664 {
+__
+}
+class "RandomComparator<MeshData Mesh>" as C_0006112282648293197474
+class C_0006112282648293197474 {
+{static} +setSeed(unsigned int seed) : void
+__
+{static} +generator : std::mt19937
+{static} +rd : std::random_device
+}
+class "CavityMergingStrategyBase<MeshData Mesh,PolygonMergingPolicy MergingPolicy>" as C_0002428066519283728512
+class C_0002428066519283728512 {
+__
+}
+class "ExcludePreviousCavitiesStrategyBase<MeshData Mesh,PolygonMergingPolicy MergingPolicy>" as C_0016754234568099091812
+class C_0016754234568099091812 {
+{static} +preAdd(FaceIndex triangle, const std::vector<uint8_t> & inCavity) : bool
+__
+}
+class "ExcludePreviousCavitiesStrategyBase<MeshData Mesh,NullPolygonMergingPolicy<MeshData Mesh>>" as C_0014478986467366682284
+class C_0014478986467366682284 {
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,PolygonMergingPolicy MergingPolicy>" as C_0017486097132197408854
+class C_0017486097132197408854 {
+{static} +postInsertion(const Mesh * inputMesh, Mesh * outputMesh, DelaunayCavityData<Mesh> & refinerData) : void
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,MaximizeConvexityMergingPolicy<MeshData Mesh>>" as C_0016849742568652989288
+class C_0016849742568652989288 {
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,SmallestNeighborMergingPolicy<MeshData Mesh>>" as C_0016772726064138697120
+class C_0016772726064138697120 {
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,BiggestNeighborMergingPolicy<MeshData Mesh>>" as C_0000485915938599847544
+class C_0000485915938599847544 {
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,LongestEdgeMergingPolicy<MeshData Mesh>>" as C_0005306750599301423564
+class C_0005306750599301423564 {
+__
+}
+class "MergeTrianglesStrategyBase<MeshData Mesh,ShortestEdgeMergingPolicy<MeshData Mesh>>" as C_0010395993111718162924
+class C_0010395993111718162924 {
+__
+}
+class "MinAngleCriterion<MeshData Mesh>" as C_0008821089983830087167
+class C_0008821089983830087167 {
++MinAngleCriterion(double angle, bool type = true) : void
+..
++operator()(const Mesh * mesh, FaceIndex polygonIndex) const : bool
+__
++angleThreshold : double
+}
+class "MinAngleCriterionRobust<MeshData Mesh>" as C_0005768449301405164940
+class C_0005768449301405164940 {
++MinAngleCriterionRobust(double angle, bool type = true) : void
+..
++operator()(const Mesh * mesh, FaceIndex polygonIndex) const : bool
+__
++angleThreshold : double
+}
+class "MinArea2Criterion<MeshData Mesh>" as C_0011596667643794564649
+class C_0011596667643794564649 {
++MinArea2Criterion(double minArea2) : void
+..
++operator()(const Mesh * mesh, FaceIndex polygonIndex) const : bool
+__
++minArea2 : double
+}
+class "MinAreaCriterion<MeshData Mesh>" as C_0010437199775654994347
+class C_0010437199775654994347 {
++MinAreaCriterion(double minArea) : void
+..
++operator()(const Mesh * mesh, FaceIndex polygonIndex) const : bool
+__
++minArea : double
+}
+class "NotCriterion<MeshData Mesh,RefinementCriterion Criterion>" as C_0008851931416205438466
+class C_0008851931416205438466 {
++NotCriterion(Criterion criterion) : void
+..
++operator()(const Mesh * mesh, FaceIndex polygonIndex) : bool
+__
++negatedCriteria : Criterion
+}
+class "AndCriteria<MeshData Mesh,RefinementCriterion Criterion1,RefinementCriterion Criterion2>" as C_0012371721729326372118
+class C_0012371721729326372118 {
++AndCriteria(Criterion1 c1, Criterion2 c2) : void
+..
++operator()(Mesh & mesh, int polygonIndex) const : bool
+__
++criterion1 : Criterion1
++criterion2 : Criterion2
+}
+class "OrCriteria<MeshData Mesh,RefinementCriterion Criterion1,RefinementCriterion Criterion2>" as C_0012525121789033178196
+class C_0012525121789033178196 {
++OrCriteria(Criterion1 c1, Criterion2 c2) : void
+..
++operator()(Mesh & mesh, int polygonIndex) const : bool
+__
++criterion1 : Criterion1
++criterion2 : Criterion2
+}
+class "OffReader<MeshData Mesh>" as C_0005836340874781237351
+class C_0005836340874781237351 {
++readMesh(const std::vector<std::filesystem::path> & files) : Mesh *
+__
+}
+class "PolygonalMesh<MeshData Mesh>" as C_0015235783362802365371
+class C_0015235783362802365371 {
++PolygonalMesh(std::unique_ptr<MeshReader<Mesh>> meshReader) : void
++PolygonalMesh(std::unique_ptr<MeshReader<Mesh>> meshReader, std::unique_ptr<MeshWriter<Mesh>> meshWriter) : void
++~PolygonalMesh() : void
+..
++getOriginalMeshData() const : const Mesh &
++getRefinedMeshData() const : const Mesh &
++getRefinementMemory() const : std::unordered_map<MemoryStat,unsigned long long>
++getRefinementStats() const : std::unordered_map<MeshStat,int>
++getRefinementTimes() const : std::unordered_map<TimeStat,double>
++readMeshFromFiles(const std::vector<std::filesystem::path> & filepaths) : PolygonalMesh<Mesh> &
++refineMesh() : PolygonalMesh<Mesh> &
++setReader(std::unique_ptr<MeshReader<Mesh>> reader) : PolygonalMesh<Mesh> &
++setRefiner(std::unique_ptr<MeshRefiner<Mesh>> refiner) : PolygonalMesh<Mesh> &
++setWriter(std::unique_ptr<MeshWriter<Mesh>> writer) : PolygonalMesh<Mesh> &
++writeMeshBeforePostProcess(const std::vector<std::filesystem::path> & filepaths) : PolygonalMesh<Mesh> &
++writeOutputMesh(const std::vector<std::filesystem::path> & filepaths) : PolygonalMesh<Mesh> &
++writeStatsToJson(const std::filesystem::path & filepath) : void
+__
+-generationTime : double
+-meshData : Mesh *
+-reader : std::unique_ptr<MeshReader<Mesh>>
+-refinedMesh : Mesh *
+-refiner : std::unique_ptr<MeshRefiner<Mesh>>
+-writer : std::unique_ptr<MeshWriter<Mesh>>
+}
+C_0002326256006988294087 <|-- C_0015803807914665326084
+C_0012601627371991911545 ..> C_0011270780619192126942 : typename type-parameter-0-0::VertexIndex
+C_0012601627371991911545 ..> C_0011270780619192126942 : typename type-parameter-0-0::EdgeIndex
+C_0012601627371991911545 ..> C_0011270780619192126942 : typename type-parameter-0-0::FaceIndex
+C_0006301220660949190564 ..> C_0013779235783595163547 : Mesh
+C_0006301220660949190564 ..> C_0017796442007395513622 : Mesh
+C_0006301220660949190564 ..> C_0012601627371991911545 : Mesh
+C_0006301220660949190564 ..> C_0011555007074877803560 : Mesh
+C_0006301220660949190564 ..> C_0007719961222445302604 : Mesh
+C_0006301220660949190564 ..> C_0004809787003659605969 : Mesh
+C_0006301220660949190564 ..> C_0006202202479210569097 : Mesh
+C_0006301220660949190564 ..> C_0008057981291306597311 : Mesh
+C_0017578684577686573879 ..> C_0006301220660949190564 : Mesh
+C_0017578684577686573879 ..> C_0015682055627821899934
+C_0017578684577686573879 ..> C_0015446975672921283398
+C_0017578684577686573879 ..> C_0009384749142339378116
+C_0012401204162003167333 ..> C_0006301220660949190564 : Mesh
+C_0017202116829443092448 ..> C_0015803807914665326084
+C_0017202116829443092448 ..> C_0000875963857636263817
+C_0017202116829443092448 ..> C_0002326256006988294087
+C_0017202116829443092448 ..> C_0000875756620783725975
+C_0000875756620783725975 --+ C_0017202116829443092448
+C_0015268128306033532529 ..> C_0006301220660949190564 : Mesh
+C_0006656309170792936748 ..> C_0006301220660949190564 : Mesh
+C_0015268128306033532529 <|-- C_0006656309170792936748
+C_0009930178673868554397 ..> C_0006301220660949190564 : Mesh
+C_0014088457675369851527 ..> C_0006301220660949190564 : Mesh
+C_0014088457675369851527 ..> C_0017202116829443092448
+C_0009930178673868554397 <|-- C_0014088457675369851527
+C_0004099831134456003712 ..> C_0006301220660949190564 : Mesh
+C_0004099831134456003712 ..> C_0017202116829443092448
+C_0009930178673868554397 <|-- C_0004099831134456003712
+C_0007278027499604832565 o-- C_0015682055627821899934 : +meshStats
+C_0007278027499604832565 o-- C_0015446975672921283398 : +timeStats
+C_0007278027499604832565 o-- C_0009384749142339378116 : +memoryStats
+C_0001639379135822352694 ..> C_0006301220660949190564 : Mesh
+C_0007278027499604832565 <|-- C_0001639379135822352694
+C_0001706820001671093550 ..> C_0006301220660949190564 : Mesh
+C_0005805542713488632536 ..> C_0006301220660949190564 : Mesh
+C_0004428475897051661924 ..> C_0006301220660949190564 : MeshType
+C_0002135248914807612808 ..|> C_0005805542713488632536
+C_0013820901966883866851 ..> C_0006301220660949190564 : MeshType
+C_0013820901966883866851 ..> C_0002135248914807612808
+C_0013820901966883866851 ..> C_0005805542713488632536
+C_0004428475897051661924 <|-- C_0013820901966883866851
+C_0017738072604868368931 ..> C_0017202116829443092448
+C_0017738072604868368931 ..|> C_0001706820001671093550
+C_0006941769489935284845 ..> C_0017202116829443092448
+C_0006941769489935284845 ..|> C_0005805542713488632536
+C_0009032524404634386513 ..> C_0017202116829443092448
+C_0009032524404634386513 ..|> C_0004428475897051661924
+C_0011031409684962323704 ..> C_0017202116829443092448
+C_0011031409684962323704 ..|> C_0013820901966883866851
+C_0011031409684962323704 ..> C_0017738072604868368931
+C_0011031409684962323704 ..> C_0001706820001671093550
+C_0011031409684962323704 ..> C_0006941769489935284845
+C_0011031409684962323704 ..> C_0005805542713488632536
+C_0009032524404634386513 <|-- C_0011031409684962323704
+C_0008784289793962566006 ..|> C_0001706820001671093550
+C_0009683024494620563991 ..> C_0006301220660949190564 : MeshType
+C_0009524678512245601032 ..> C_0006301220660949190564 : MeshType
+C_0009683024494620563991 <|-- C_0009524678512245601032
+C_0009168961725500511108 ..> C_0017202116829443092448
+C_0009168961725500511108 ..|> C_0009683024494620563991
+C_0005190791872642592493 ..> C_0017202116829443092448
+C_0005190791872642592493 ..|> C_0009524678512245601032
+C_0005190791872642592493 ..> C_0003492292191175085263
+C_0005190791872642592493 ..> C_0011064995256737446682
+C_0009168961725500511108 <|-- C_0005190791872642592493
+C_0005730687429737434267 ..> C_0006301220660949190564 : Mesh
+C_0015580991126473048310 ..> C_0006301220660949190564 : Mesh
+C_0001215355986147028039 ..> C_0006301220660949190564 : Mesh
+C_0014548720200671576931 ..> C_0006301220660949190564 : Mesh
+C_0008571625291250823147 ..> C_0005730687429737434267 : MergingStrategy,Mesh
+C_0008571625291250823147 ..> C_0001215355986147028039 : MergingStrategy,Mesh
+C_0008571625291250823147 ..> C_0015580991126473048310 : MergingStrategy,Mesh
+C_0008571625291250823147 ..> C_0014548720200671576931 : MergingStrategy,Mesh
+C_0017498058203661341270 ..> C_0006301220660949190564 : Mesh
+C_0002155662132111426571 ..> C_0017498058203661341270 : Criterion,Mesh
+C_0003828121342688755700 ..> C_0006301220660949190564 : Mesh
+C_0014886071696633625993 ..> C_0003828121342688755700 : Comparator,Mesh
+C_0001083348751134226857 ..> C_0006301220660949190564 : Mesh
+C_0001691576918471394995 ..> C_0006301220660949190564 : Mesh
+C_0011665285200340120293 ..> C_0006301220660949190564 : Mesh
+C_0017422108877910152309 ..|> C_0017422108877910152309
+C_0004997980287933767482 <|-- C_0017422108877910152309
+C_0004997980287933767482 ..> C_0017422108877910152309
+C_0004997980287933767482 ..|> C_0011665285200340120293
+C_0003361008901210266475 ..|> C_0003361008901210266475
+C_0010541411378573732286 <|-- C_0003361008901210266475
+C_0010541411378573732286 ..> C_0003361008901210266475
+C_0010541411378573732286 ..|> C_0011665285200340120293
+C_0002133939137881742923 ..> C_0006301220660949190564 : Mesh
+C_0012394108202450793599 ..|> C_0012394108202450793599
+C_0003718563390267416168 <|-- C_0012394108202450793599
+C_0003718563390267416168 ..> C_0012394108202450793599
+C_0003718563390267416168 ..|> C_0002133939137881742923
+C_0007520867619195207809 ..|> C_0007520867619195207809
+C_0004341721282156767744 <|-- C_0007520867619195207809
+C_0004341721282156767744 ..> C_0007520867619195207809
+C_0004341721282156767744 ..|> C_0002133939137881742923
+C_0013448653828012723040 ..> C_0006301220660949190564 : Mesh
+C_0009880666665485460142 ..|> C_0001639379135822352694
+C_0001752782925563060559 ..|> C_0017578684577686573879
+C_0003238586066628687602 ..> C_0006301220660949190564 : MeshType
+C_0003238586066628687602 ..> C_0002155662132111426571 : Criterion
+C_0003238586066628687602 ..> C_0014886071696633625993 : Comparator
+C_0003238586066628687602 ..> C_0008571625291250823147 : MergingStrategy
+C_0003238586066628687602 ..> C_0008784289793962566006
+C_0003238586066628687602 ..> C_0001706820001671093550
+C_0003238586066628687602 ..> C_0015682055627821899934
+C_0003238586066628687602 ..> C_0015446975672921283398
+C_0003238586066628687602 ..> C_0009384749142339378116
+C_0003238586066628687602 o-- C_0009880666665485460142 : -data
+C_0003238586066628687602 o-- C_0007672470357647610263 : -outputSeedsBeforePostProcess
+C_0001752782925563060559 <|-- C_0003238586066628687602
+C_0007672470357647610263 --+ C_0003238586066628687602
+C_0011064995256737446682 ..> C_0006301220660949190564 : MeshType
+C_0007278027499604832565 <|-- C_0011064995256737446682
+C_0003492292191175085263 ..> C_0017202116829443092448
+C_0003492292191175085263 ..|> C_0011064995256737446682
+C_0000864546949190794001 ..> C_0006301220660949190564 : MeshType
+C_0000864546949190794001 ..> C_0015682055627821899934
+C_0000864546949190794001 ..> C_0015446975672921283398
+C_0000864546949190794001 ..> C_0009384749142339378116
+C_0000864546949190794001 o-- C_0011064995256737446682 : -data
+C_0001752782925563060559 <|-- C_0000864546949190794001
+C_0014549807228926947100 ..> C_0006301220660949190564 : Mesh
+C_0016765665675341969343 ..|> C_0014549807228926947100
+C_0006381407612440846324 ..|> C_0014549807228926947100
+C_0006800976834599005480 ..|> C_0014549807228926947100
+C_0010893143555816996369 ..|> C_0014549807228926947100
+C_0005840584884230035202 ..> C_0006301220660949190564 : Mesh
+C_0006482861130912393421 ..|> C_0005840584884230035202
+C_0009304896392195763592 ..|> C_0005840584884230035202
+C_0013028808404426805964 ..|> C_0005840584884230035202
+C_0000132620115979888331 ..|> C_0005840584884230035202
+C_0015121451980339423822 ..> C_0006301220660949190564 : Mesh
+C_0008583464626475737932 ..|> C_0015121451980339423822
+C_0013270387181189739575 ..|> C_0015121451980339423822
+C_0013616896143012614057 ..|> C_0015121451980339423822
+C_0008266484410275912320 ..|> C_0015121451980339423822
+C_0018337159594380494664 ..> C_0006301220660949190564 : Mesh
+C_0006112282648293197474 ..> C_0006301220660949190564 : Mesh
+C_0002428066519283728512 ..> C_0006301220660949190564 : Mesh
+C_0002428066519283728512 ..> C_0003788921081315882462 : MergingPolicy
+C_0002428066519283728512 ..> C_0003788921081315882462 : Mesh,type-parameter-0-0
+C_0016754234568099091812 ..> C_0006301220660949190564 : Mesh
+C_0016754234568099091812 ..> C_0003788921081315882462 : MergingPolicy
+C_0016754234568099091812 ..> C_0003788921081315882462 : Mesh,type-parameter-0-0
+C_0002428066519283728512 <|-- C_0016754234568099091812
+C_0014478986467366682284 ..> C_0001083348751134226857
+C_0014478986467366682284 ..|> C_0016754234568099091812
+C_0017486097132197408854 ..> C_0006301220660949190564 : Mesh
+C_0017486097132197408854 ..> C_0003788921081315882462 : MergingPolicy
+C_0017486097132197408854 ..> C_0003788921081315882462 : Mesh,type-parameter-0-0
+C_0017486097132197408854 ..> C_0001639379135822352694
+C_0016754234568099091812 <|-- C_0017486097132197408854
+C_0016849742568652989288 ..> C_0001691576918471394995
+C_0016849742568652989288 ..|> C_0017486097132197408854
+C_0016772726064138697120 ..> C_0017422108877910152309
+C_0016772726064138697120 ..|> C_0017486097132197408854
+C_0000485915938599847544 ..> C_0003361008901210266475
+C_0000485915938599847544 ..|> C_0017486097132197408854
+C_0005306750599301423564 ..> C_0012394108202450793599
+C_0005306750599301423564 ..|> C_0017486097132197408854
+C_0010395993111718162924 ..> C_0007520867619195207809
+C_0010395993111718162924 ..|> C_0017486097132197408854
+C_0008821089983830087167 ..> C_0006301220660949190564 : Mesh
+C_0005768449301405164940 ..> C_0006301220660949190564 : Mesh
+C_0011596667643794564649 ..> C_0006301220660949190564 : Mesh
+C_0010437199775654994347 ..> C_0006301220660949190564 : Mesh
+C_0008851931416205438466 ..> C_0006301220660949190564 : Mesh
+C_0008851931416205438466 ..> C_0002155662132111426571 : Criterion
+C_0008851931416205438466 ..> C_0002155662132111426571 : Mesh,type-parameter-0-0
+C_0012371721729326372118 ..> C_0006301220660949190564 : Mesh
+C_0012371721729326372118 ..> C_0002155662132111426571 : Criterion1
+C_0012371721729326372118 ..> C_0002155662132111426571 : Criterion2
+C_0012371721729326372118 ..> C_0002155662132111426571 : Mesh,type-parameter-0-0
+C_0012525121789033178196 ..> C_0006301220660949190564 : Mesh
+C_0012525121789033178196 ..> C_0002155662132111426571 : Criterion1
+C_0012525121789033178196 ..> C_0002155662132111426571 : Criterion2
+C_0012525121789033178196 ..> C_0002155662132111426571 : Mesh,type-parameter-0-0
+C_0005836340874781237351 ..> C_0006301220660949190564 : Mesh
+C_0015268128306033532529 <|-- C_0005836340874781237351
+C_0015235783362802365371 ..> C_0006301220660949190564 : Mesh
+C_0015235783362802365371 ..> C_0015682055627821899934
+C_0015235783362802365371 ..> C_0015446975672921283398
+C_0015235783362802365371 ..> C_0009384749142339378116
+C_0015235783362802365371 o-- C_0015268128306033532529 : -reader
+C_0015235783362802365371 o-- C_0009930178673868554397 : -writer
+C_0015235783362802365371 o-- C_0017578684577686573879 : -refiner
+
+'Generated with clang-uml, version 0.6.2-25-g5e2993e
+'LLVM version clang version 20.1.7 (https://github.com/llvm/llvm-project.git 6146a88f60492b520a36f8f8f3231e15f3cc6082)
+@enduml
