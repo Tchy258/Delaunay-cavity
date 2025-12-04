@@ -1,6 +1,7 @@
 #import matplotlib
 #matplotlib.use('Agg')  # Non-interactive backend
 #import matplotlib.pyplot as plt
+import argparse
 from collections import defaultdict, Counter
 import subprocess
 import os
@@ -11,7 +12,98 @@ import csv
 #from statistics import median, mean, multimode
 from math import atan2, degrees
 working_dir = Path(os.path.dirname(os.path.realpath(__file__)) )
-global_input_seed = 138
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Count polygon edges, convexity breakdown, and angle statistics from generated meshes."
+    )
+
+    # --- Core required arguments ---
+    parser.add_argument("--refiner", required=True, type=str,
+                        help="Mesh refiner implementation name.")
+    parser.add_argument("--mesh", required=True, type=str,
+                        help="Mesh type.")
+    parser.add_argument("--comparator", required=True, type=str,
+                        choices=[
+                            "null_comparator",
+                            "edge_length_comparator",
+                            "angle_comparator",
+                            "area_comparator",
+                            "random_comparator"
+                        ],
+                        help="Comparator used for cavity queue ordering.")
+    parser.add_argument("--merging", required=True, type=str,
+                        help="Merging strategy name.")
+
+    parser.add_argument("--criterion", required=True, type=str,
+                        help="Refinement criterion name.")
+
+    parser.add_argument("--start", required=True, type=int,
+                        help="Start number of points.")
+    parser.add_argument("--end", required=True, type=int,
+                        help="End number of points.")
+
+    # --- Comparator-dependent optional arguments ---
+    parser.add_argument("--order", type=str,
+                        choices=["ascending", "descending"],
+                        help="Order for non-null and non-random comparators.")
+
+    parser.add_argument("--key", type=str,
+                        help="Comparator key (depends on comparator).")
+
+    # --- Criterion-dependent argument ---
+    parser.add_argument("--threshold", type=float,
+                        help="Threshold value for refinement criteria.")
+
+    # --- Random comparator seed ---
+    parser.add_argument("--random-seed", type=int,
+                        help="Seed for random_comparator.")
+
+    # --- Global flags ---
+    parser.add_argument("--seed", required=True, type=int,
+                        help="Input seed identifying which point set files to use.")
+    parser.add_argument("--skip-exec", action="store_true",
+                        help="Skip running the external executable and only process existing OFF files.")
+
+    args = parser.parse_args()
+
+    # --------------------------------------------------------
+    # Validation rules that argparse cannot express alone
+    # --------------------------------------------------------
+
+    # Random comparator requires random-seed and forbids order/key
+    if args.comparator == "random_comparator":
+        if args.random_seed is None:
+            parser.error("--random-seed is required for random_comparator.")
+        if args.order is not None or args.key is not None:
+            parser.error("random_comparator does not use --order or --key.")
+
+    # Null comparator forbids order/key/random-seed
+    if args.comparator == "null_comparator":
+        if args.order or args.key or args.random_seed:
+            parser.error("null_comparator does not take --order, --key, or --random-seed.")
+
+    # Non-null / non-random comparators require both order and key
+    if args.comparator not in ("null_comparator", "random_comparator"):
+        if not args.order:
+            parser.error(f"{args.comparator} requires --order.")
+        if not args.key:
+            parser.error(f"{args.comparator} requires --key.")
+        if args.random_seed is not None:
+            parser.error(f"{args.comparator} does not accept --random-seed.")
+
+    # Null criterion forbids threshold
+    if args.criterion == "null_refinement_criterion" and args.threshold is not None:
+        parser.error("null_refinement_criterion cannot take --threshold.")
+
+    # Non-null criterion requires threshold
+    if args.criterion != "null_refinement_criterion" and args.threshold is None:
+        parser.error(f"{args.criterion} requires --threshold.")
+
+    return args
+
+
 # -------------------------
 # Utilities
 # -------------------------
@@ -127,7 +219,7 @@ def count_polygons_by_edges_and_convexity(vertices, faces):
 # -------------------------
 # Per-mesh processing
 # -------------------------
-def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed="", sort_key="" , skip_exec=False,
+def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed="", sort_key="" , skip_exec=False, input_seed=139,
                      input_dir=working_dir / "../../delaunay-cavity-data/data",
                      exec_dir=working_dir / "../build"):
     """
@@ -165,6 +257,8 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
         if refinement_criterion != "null_refinement_criterion":
             cmd_list.append("--threshold")
             cmd_list.append(criterion_arg)
+        print(f'Executing: {cmd_list}')
+        cmd_list = [str(x) for x in cmd_list]
         subprocess.run(cmd_list, check=True, cwd=working_dir)
 
     # ---- Read OFF and compute stats ----
@@ -256,18 +350,17 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
 # Pool wrapper
 # -------------------------
 def _process_one(args):
-    i, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed, sort_key, skip_exec = args
-    name = f"points{i}.{global_input_seed}"
+    i, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed, sort_key, skip_exec, input_seed = args
+    name = f"points{i}.{input_seed}"
     return process_pointset(name=name, refiner=refiner, mesh_type=mesh_type, comparator=comparator, merging_strategy=merging_strategy,
                             refinement_criterion=refinement_criterion, criterion_arg=criterion_arg, ascending_or_seed=ascending_or_seed,
-                            sort_key=sort_key, skip_exec=skip_exec)
+                            sort_key=sort_key, skip_exec=skip_exec, input_seed=input_seed)
 
 # -------------------------
 # Batch processing (collect results and write wide CSV)
 # -------------------------
-def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, start, end, ascending_or_seed="", sort_key="" , skip_exec=False, max_workers=8):
+def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, start, end, ascending_or_seed="", sort_key="" , skip_exec=False,  input_seed=139, max_workers=8):
     os.makedirs(working_dir / "../../delaunay-cavity-data/experiments/summaries", exist_ok=True)
-
     results = []  # collect per-mesh dicts
     per_edge_total_counts = defaultdict(list)
     per_edge_convex_counts = defaultdict(list)
@@ -286,7 +379,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
                 _process_one,
                 (i, refiner, mesh_type, comparator, merging_strategy,
                 refinement_criterion, criterion_arg, ascending_or_seed,
-                sort_key, skip_exec)
+                sort_key, skip_exec, input_seed)
             ): i for i in indices
         }
 
@@ -351,7 +444,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
     if refinement_criterion != "null_refinement_criterion":
         summary_dir = summary_dir / f"{refinement_criterion}_{criterion_arg}"
     os.makedirs(summary_dir, exist_ok=True)
-    csv_path = summary_dir / f"results_{start}_{end}.csv"
+    csv_path = summary_dir / f"results_{start}_{end}_{input_seed}.csv"
 
     # Build header
     header = ["num_points", "convex_total", "concave_total", "total_polygons"]
@@ -420,38 +513,43 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
 # Main
 # -------------------------
 if __name__ == "__main__":
-    # CLI mapping follows your previous script order
-    refiner = sys.argv[1]
-    mesh_type = sys.argv[2]
-    comparator = sys.argv[3]
-    merging_strategy = sys.argv[4]
-    refinement_criterion = sys.argv[5]
-    start = int(sys.argv[6])
-    end = int(sys.argv[7])
-    ascending_or_seed = ""
-    sort_key = ""
-    criterion_arg = 20.0
-    # parse remaining positional args similar to your previous mapping
-    if comparator != "null_comparator" and comparator != "random_comparator":
-        ascending_or_seed = sys.argv[8]
-        sort_key = sys.argv[9]
-        next_index = 10
-    elif comparator == "random_comparator":
-        ascending_or_seed = sys.argv[8]
-        next_index = 9
+    args = parse_args()
+
+    # Map argparse fields to your existing function params
+    refiner = args.refiner
+    mesh_type = args.mesh
+    comparator = args.comparator
+    merging = args.merging
+    refinement_criterion = args.criterion
+    start = args.start
+    end = args.end
+    input_seed = args.seed  # original meaning preserved
+
+    # comparator-dependent args
+    if comparator == "random_comparator":
+        ascending_or_seed = str(args.random_seed)
+        sort_key = ""
+    elif comparator == "null_comparator":
+        ascending_or_seed = ""
+        sort_key = ""
     else:
-        next_index = 8
+        ascending_or_seed = args.order
+        sort_key = args.key
 
-    if refinement_criterion != "null_refinement_criterion":
-        criterion_arg = sys.argv[next_index]
-        next_index += 1
+    # criterion-dependent arg
+    if refinement_criterion == "null_refinement_criterion":
+        criterion_arg = 20.0  # ignored
+    else:
+        criterion_arg = args.threshold
 
-    skip_exec_flag = False
-    if len(sys.argv) > next_index:
-        if sys.argv[next_index] != "1":
-            global_input_seed = int(sys.argv[next_index])
-            next_index += 1
-        if len(sys.argv) > next_index:
-            skip_exec_flag = sys.argv[next_index] == "1"
+    skip_exec_flag = args.skip_exec
 
-    batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, start, end, ascending_or_seed, sort_key, skip_exec=skip_exec_flag)
+    # Run the batch process with your original logic
+    batch_process(
+        refiner, mesh_type, comparator, merging,
+        refinement_criterion, criterion_arg,
+        start, end,
+        ascending_or_seed, sort_key,
+        skip_exec=skip_exec_flag,
+        input_seed=input_seed
+    )
