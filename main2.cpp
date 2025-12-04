@@ -18,7 +18,6 @@
 
 int main(int argc, char **argv) {
     CLI::App app{std::string{"CLI Tool to refine a triangular mesh of arbitrary polygons using: "} + std::string{TOSTRING((MESH_REFINER))}};
-
     bool readFromOff{false};
     bool writeOff{false};
     bool writeJson{false};
@@ -60,6 +59,8 @@ int main(int argc, char **argv) {
     additionalInputGroup->add_option("--input2", input2, ".ele file")->check(CLI::ExistingFile);
     additionalInputGroup->add_option("--input3", input3, ".neigh file")->check(CLI::ExistingFile);
     CLI::Option* outputOpt = app.add_option("-o,--output",output, "Output base filename/path for outputs if any, defaults to output at same path of input");
+
+    app.allow_extras();
 
     CLI11_PARSE(app,argc,argv);
     #ifdef DELAUNAY_REFINER
@@ -124,86 +125,5 @@ int main(int argc, char **argv) {
         polygonalMesh.writeStatsToJson({output + ".json"});
     }
 
-
-    
-    /*
-    if(argc == 5)
-    {
-        std::string node_file = std::string(argv[1]);
-        std::string ele_file = std::string(argv[2]);
-        std::string neigh_file = std::string(argv[3]);
-        std::string output = std::string(argv[4]);
-
-        if(node_file.substr(node_file.find_last_of(".") + 1) != "node"){
-            std::cout<<"Error: node file must be .node"<<std::endl;
-            return 0;
-        }
-        if(ele_file.substr(ele_file.find_last_of(".") + 1) != "ele"){
-            std::cout<<"Error: ele file must be .ele"<<std::endl;
-            return 0;
-        }
-        if(neigh_file.substr(neigh_file.find_last_of(".") + 1) != "neigh"){
-            std::cout<<"Error: neigh file must be .neigh"<<std::endl;
-            return 0;
-        }
-
-        //Polylla mesh(node_file, ele_file, neigh_file);
-        PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<NodeEleReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
-        //RandomComparator<HalfEdgeMesh>::setSeed(1);
-        polygonalMesh.setRefiner(
-        std::make_unique<
-            DelaunayCavityRefiner<
-                HalfEdgeMesh, 
-                NullRefinementCriterion<HalfEdgeMesh>,
-                AscendingMinAngleComparator<HalfEdgeMesh>, 
-                ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
-            >
-        >())
-        .readMeshFromFiles({node_file, ele_file, neigh_file})
-        .refineMesh()
-        .writeOutputMesh({output + ".off"})
-        .writeStatsToJson({output + ".json"});
-        
-        
-        //mesh.print_stats(output + ".json");
-        //std::cout<<"output json in "<<output<<".json"<<std::endl;
-        //mesh.print_OFF(output+".off");
-        //std::cout<<"output off in "<<output<<".off"<<std::endl;
-        //mesh.print_ALE(output+".ale");
-        //std::cout<<"output ale in "<<output<<".ale"<<std::endl;
-    }else if (argc == 3){
-        std::string off_file = std::string(argv[1]);
-        std::string output = std::string(argv[2]);
-	    //Polylla mesh(off_file);
-        PolygonalMesh<HalfEdgeMesh> polygonalMesh(std::make_unique<OffReader<HalfEdgeMesh>>(), std::make_unique<OffWriter<HalfEdgeMesh>>());
-        //RandomComparator<HalfEdgeMesh>::setSeed(42);
-        polygonalMesh.setRefiner(
-        std::make_unique<
-            DelaunayCavityRefiner<
-                HalfEdgeMesh, 
-                NullRefinementCriterion<HalfEdgeMesh>,
-                DescendingMinEdgeLengthComparator<HalfEdgeMesh>, 
-                ExcludePreviousCavitiesStrategy<HalfEdgeMesh>
-            >
-        >())
-        .readMeshFromFiles({off_file})
-        .refineMesh()
-        .writeOutputMesh({output + ".off"})
-        .writeStatsToJson({output + ".json"});
-        
-        //mesh.print_stats(output + ".json");
-        //std::cout<<"output json in "<<output<<".json"<<std::endl;
-        //mesh.print_OFF(output+".off");
-        //std::cout<<"output off in "<<output<<".off"<<std::endl;
-        //mesh.print_ALE(output+".ale");
-        //std::cout<<"output ale in "<<output<<".ale"<<std::endl;
-    } else{
-        std::cout<<"Usage: "<<argv[0]<<" <off file .off> <output name>"<<std::endl;
-        std::cout<<"Usage: "<<argv[0]<<" <node_file .node> <ele_file .ele> <neigh_file .neigh> <output name>"<<std::endl;
-    }
-    
-
-    
-    */
 	return 0;
 }
