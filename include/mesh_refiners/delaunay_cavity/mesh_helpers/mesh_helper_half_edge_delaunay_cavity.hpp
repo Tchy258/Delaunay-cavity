@@ -57,7 +57,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @param outputMesh A HalfEdgeMesh to insert the cavities into
          * @param cavities A vector of Cavity objects with information to do the cavity insertion
          */
-        static std::vector<OutputIndex> insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity);
+        static std::vector<OutputIndex> insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<_Cavity>& cavities, const std::vector<uint8_t>& inCavity);
 
         /**
          * Builds a hashmap of edges to their representatives

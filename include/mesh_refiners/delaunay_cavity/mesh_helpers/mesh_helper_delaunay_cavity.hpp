@@ -11,7 +11,7 @@ namespace refiners::helpers::delaunay_cavity {
         using FaceIndex = typename MeshType::FaceIndex;
         using VertexIndex = typename MeshType::VertexIndex;
         using OutputIndex = typename MeshType::OutputIndex;
-        using Cavity = Cavity<MeshType>;
+        using _Cavity = Cavity<MeshType>;
     };
     /**
      * Helper class to do mesh specific operations on generic refiner methods.
@@ -26,7 +26,7 @@ namespace refiners::helpers::delaunay_cavity {
         using typename Base::FaceIndex;
         using typename Base::VertexIndex;
         using typename Base::OutputIndex;
-        using typename Base::Cavity;
+        using typename Base::_Cavity;
         /**
          * @param mesh A particular MeshData implementation
          * @returns A vector of output indices that represent what uniquely identifies a particular polygon in
@@ -66,7 +66,7 @@ namespace refiners::helpers::delaunay_cavity {
          * @param cavities A vector of Cavity objects with the necessary information to insert the cavities
          * @return A vector of outputs to write
          */
-        static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
+        static std::vector<OutputIndex> insertCavity(const MeshType* inputMesh, MeshType* outputMesh, std::vector<_Cavity>& cavities, const std::vector<uint8_t>& inCavity) = delete;
 
         /**
          * Builds a union-find struct of the outputs to their representatives

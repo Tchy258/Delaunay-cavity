@@ -31,7 +31,7 @@ namespace refiners::helpers::delaunay_cavity {
         return {edge1, edge2, edge3};
     }
 
-    std::vector<HalfEdgeMesh::OutputIndex> MeshHelper<HalfEdgeMesh>::insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<Cavity>& cavities, const std::vector<uint8_t>& inCavity) {
+    std::vector<HalfEdgeMesh::OutputIndex> MeshHelper<HalfEdgeMesh>::insertCavity(const HalfEdgeMesh* inputMesh, HalfEdgeMesh* outputMesh, std::vector<_Cavity>& cavities, const std::vector<uint8_t>& inCavity) {
         size_t faceCount = outputMesh->numberOfPolygons();
         size_t edgeCount = outputMesh->numberOfEdges();
         std::vector<uint8_t> presentInBoundary(edgeCount);
@@ -44,7 +44,7 @@ namespace refiners::helpers::delaunay_cavity {
                 outputSeeds.push_back(incidentHE);
             }
         }
-        for (const Cavity& cavity : cavities) {
+        for (const _Cavity& cavity : cavities) {
             const std::vector<EdgeIndex>& boundaryEdges = cavity.boundaryEdges;
             std::fill(presentInBoundary.begin(), presentInBoundary.end(), 0);
             for (EdgeIndex boundaryEdge : boundaryEdges) {
