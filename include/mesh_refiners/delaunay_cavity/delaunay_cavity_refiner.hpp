@@ -63,7 +63,7 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
         Criterion refinementCriterion;
 
         using _MeshHelper = refiners::helpers::delaunay_cavity::MeshHelper<MeshType>;
-        using Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
+        using _Cavity = refiners::helpers::delaunay_cavity::Cavity<MeshType>;
         /**
          * Sorts the triangles before computing the cavities using the provided `TriangleComparator` template type
          * 
@@ -90,14 +90,14 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
          * memory aligment and performance reasons
          * @return A vector of `Cavity` objects with the required information to insert a cavity into the mesh.
          */
-        std::vector<Cavity> computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
+        std::vector<_Cavity> computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
 
         /**
          * Resets the BFS `visited` vector to perform a new search starting from another circumcenter
          * @param visited A "boolean" vector of unsigned integers
          * @param cavity A cavity object that was created within a call of `computeCavities`
          */
-        inline void resetVisited(std::vector<uint8_t>& visited, const Cavity& cavity) {
+        inline void resetVisited(std::vector<uint8_t>& visited, const _Cavity& cavity) {
             for (FaceIndex triangle: cavity.allTriangles) {
                 visited[triangle] = 0;
             }

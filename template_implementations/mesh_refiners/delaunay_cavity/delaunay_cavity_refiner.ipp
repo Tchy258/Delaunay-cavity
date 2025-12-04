@@ -51,7 +51,7 @@ std::vector<std::pair<typename MeshType::VertexType, typename MeshType::FaceInde
 
 DELAUNAY_CAVITY_REFINER_TEMPLATE
 std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVITY_CLASS::computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex, FaceIndex>>& circumcenters, std::vector<uint8_t>& visited) {   
-    std::vector<Cavity> cavities;
+    std::vector<_Cavity> cavities;
     cavities.reserve(circumcenters.size());
     for (const auto& circumcenterData : circumcenters) {
         const MeshVertex& circumcenter = circumcenterData.first;
@@ -60,7 +60,7 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
         std::queue<FaceIndex> bfsNeighborVisitQueue;
         cavities.emplace_back();
 
-        Cavity& cavity = cavities.back();
+        _Cavity& cavity = cavities.back();
 
         bfsNeighborVisitQueue.push(triangleOfCircumcenter);
 
@@ -158,7 +158,7 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
     std::vector<uint8_t> visited(polygonAmount, 0);
     startTime = std::chrono::high_resolution_clock::now();
-    std::vector<Cavity> cavities = computeCavities(outputMesh, circumcenters, visited);
+    std::vector<_Cavity> cavities = computeCavities(outputMesh, circumcenters, visited);
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
