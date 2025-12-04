@@ -266,17 +266,17 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
     int neigh, origin, target;
     for(std::size_t i = 0; i < nPolygons; ++i){
         for(std::size_t j = 0; j < 3; ++j){
-            HalfEdge he;
             neigh = neighbors.at(3*i + ((j+2)%3));
             origin = faces[3*i+j];
             target = faces[3*i+((j+1)%3)];
-
-            he.origin = origin;
-            // he.target = target;
-            he.next = 3*i + ((j+1)%3);
-            he.prev = 3*i + ((j+2)%3);
-            he.face = i;
-            he.isBorder = (neigh == -1);
+            HalfEdge he{
+                .origin = origin,
+                .twin = -1,
+                .next = 3*i + ((j+1)%3), 
+                .prev = 3*i + ((j+2)%3),
+                .face = i,
+                .isBorder = (neigh == -1)
+            };
             if(neigh != -1) {
                 for (std::size_t j = 0; j < 3; ++j){
                     if(faces.at(3*neigh + j) == target && faces.at(3*neigh + (j + 1)%3) == origin) {
@@ -284,9 +284,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
                         break;
                     }
                 }
-            } else {
-                he.twin = -1;
-            }
+            } 
             halfEdges.push_back(he);
             vertices[he.origin].incidentHalfEdge = i*3 + j;
         }
@@ -305,15 +303,16 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
     //std::cout << "1. aca "<< std::endl;
     for(std::size_t i = 0; i < n_faces; ++i){
         for(std::size_t j = 0; j < 3; ++j){
-            HalfEdge he;
             VertexIndex v_origin = faces.at(3*i+j);
             VertexIndex v_target = faces.at(3*i+(j+1)%3);
-            he.origin = v_origin;
-            he.next = i*3+(j+1)%3;
-            he.prev = i*3+(j+2)%3;
-            he.isBorder = false;
-            he.twin = -1;
-            he.face = i;
+            HalfEdge he {
+                .origin = v_origin,
+                .twin = -1,
+                .next = i*3+(j+1)%3,
+                .prev = i*3+(j+2)%3,
+                .face = i,
+                .isBorder = false
+            };
             vertices.at(v_origin).incidentHalfEdge = i*3+j;
             map_edges[std::make_pair(v_origin, v_target)] = i*3+j;
             halfEdges.push_back(he);
@@ -354,12 +353,14 @@ void HalfEdgeMesh::constructExteriorHalfEdges() {
         unsigned int n_halfedges = halfEdges.size();
         for(std::size_t i = 0; i < n_halfedges; i++){
             if(halfEdges.at(i).isBorder){
-                HalfEdge he_aux;
-                he_aux.face = -1;
-                he_aux.twin = i;
-                he_aux.origin = origin(next(i));
-                //he_aux.target = HalfEdges.at(i).origin;
-                he_aux.isBorder = true;
+                HalfEdge he_aux{
+                    .origin = origin(next(i)),
+                    .twin = i,
+                    .next = -1,
+                    .prev = -1,
+                    .face = -1,
+                    .isBorder = true
+                };
                 halfEdges.at(i).isBorder = false;
                 
                 halfEdges.push_back(he_aux);
