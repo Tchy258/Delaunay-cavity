@@ -204,7 +204,7 @@ inline std::vector<HalfEdgeMesh::ConnectivityBackupT> HalfEdgeMesh::mergeSeeds(O
         std::array<EdgeIndex,6> edges = collectEdges(edgeToMergeFrom);
         std::array<EdgeIndex,6> origNext, origPrev;
         std::array<FaceIndex,6> originalFaces;
-        for (unsigned int k = 0; k < edges.size(); ++k) {
+        for (int k = 0; k < edges.size(); ++k) {
             origNext[k] = next(edges[k]);
             origPrev[k] = prev(edges[k]);
             originalFaces[k] = halfEdges[edges[k]].face;
@@ -231,7 +231,7 @@ inline std::vector<HalfEdgeMesh::ConnectivityBackupT> HalfEdgeMesh::mergeSeeds(O
 
 inline void HalfEdgeMesh::rollbackMerge(const std::vector<ConnectivityBackupT>& backupInfo) {
     for (ConnectivityBackupT edgeBackupInfo : backupInfo) {
-        for (unsigned int k = 0; k < edgeBackupInfo.edges.size(); ++k) {
+        for (int k = 0; k < edgeBackupInfo.edges.size(); ++k) {
             setNext(edgeBackupInfo.edges[k], edgeBackupInfo.next[k]);
             setPrev(edgeBackupInfo.edges[k], edgeBackupInfo.prev[k]);
             setFaceToEdge(edgeBackupInfo.faces[k], edgeBackupInfo.edges[k]);
@@ -264,8 +264,8 @@ inline bool HalfEdgeMesh::isPolygonConvex(EdgeIndex firstEdgeOfPolygon) const {
 
 void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<HalfEdgeMesh::FaceIndex> &faces, std::vector<HalfEdgeMesh::FaceIndex> &neighbors) {
     int neigh, origin, target;
-    for(unsigned int i = 0; i < nPolygons; ++i){
-        for(unsigned int j = 0; j < 3; ++j){
+    for(int i = 0; i < nPolygons; ++i){
+        for(int j = 0; j < 3; ++j){
             neigh = neighbors.at(3*i + ((j+2)%3));
             origin = faces[3*i+j];
             target = faces[3*i+((j+1)%3)];
@@ -278,7 +278,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFacesAndNeighs(std::vector<Half
                 .isBorder = (neigh == -1)
             };
             if(neigh != -1) {
-                for (unsigned int j = 0; j < 3; ++j){
+                for (int j = 0; j < 3; ++j){
                     if(faces.at(3*neigh + j) == target && faces.at(3*neigh + (j + 1)%3) == origin) {
                         he.twin = 3*neigh + j;
                         break;
@@ -301,8 +301,8 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
     };
     std::unordered_map<_edge, EdgeIndex, decltype(hash_for_pair)> map_edges(3* n_faces, hash_for_pair); //set of edges to calculate the boundary and twin edges
     //std::cout << "1. aca "<< std::endl;
-    for(unsigned int i = 0; i < n_faces; ++i){
-        for(unsigned int j = 0; j < 3; ++j){
+    for(int i = 0; i < n_faces; ++i){
+        for(int j = 0; j < 3; ++j){
             VertexIndex v_origin = faces.at(3*i+j);
             VertexIndex v_target = faces.at(3*i+(j+1)%3);
             HalfEdge he {
@@ -324,7 +324,7 @@ void HalfEdgeMesh::constructInteriorHalfEdgesFromFaces(std::vector<HalfEdgeMesh:
     
     //Calculate twin halfedge and boundary halfedges from set_edges
     std::unordered_map<_edge,EdgeIndex, decltype(hash_for_pair)>::iterator it;
-    for(unsigned int i = 0; i < halfEdges.size(); ++i){
+    for(int i = 0; i < halfEdges.size(); ++i){
         //if halfedge has no twin
         if(halfEdges.at(i).twin == -1){
             VertexIndex edgeTarget = origin(next(i));
@@ -351,7 +351,7 @@ void HalfEdgeMesh::constructExteriorHalfEdges() {
         //with the origin and target inverted and add at the of HalfEdges vector
         //std::cout<<"Size vector: "<<HalfEdges.size()<<std::endl;
         unsigned int n_halfedges = halfEdges.size();
-        for(unsigned int i = 0; i < n_halfedges; i++){
+        for(int i = 0; i < n_halfedges; i++){
             if(halfEdges.at(i).isBorder){
                 HalfEdge he_aux{
                     .origin = origin(next(i)),
@@ -369,7 +369,7 @@ void HalfEdgeMesh::constructExteriorHalfEdges() {
         }
         //traverse the exterior edges and search their next prev halfedge
         EdgeIndex nextCCW, prevCCW;
-        for(unsigned int i = n_halfedges; i < halfEdges.size(); i++){
+        for(int i = n_halfedges; i < halfEdges.size(); i++){
             if(halfEdges.at(i).isBorder){
                 nextCCW = CCWEdgeToVertex(halfEdges.at(i).twin);
                 while (halfEdges.at(nextCCW).isBorder != true) {
