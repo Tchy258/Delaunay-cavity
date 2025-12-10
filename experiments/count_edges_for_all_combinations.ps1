@@ -5,6 +5,7 @@ param(
     [double]$Threshold = 0.5
 )
 
+exit 0
 
 $refiners           = "delaunay_cavity_refiner", "polylla_refiner"
 $mesh_types         = "half_edge_mesh"
@@ -26,8 +27,8 @@ foreach ($refiner in $refiners) {
                         "--comparator", $comp
                         "--merging", $merge
                         "--criterion", $crit
-                        "--start", "100"
-                        "--end", "10000"
+                        "--start", "10"
+                        "--end", "1000000"
                         "--seed", $InputSeed
                     )
 

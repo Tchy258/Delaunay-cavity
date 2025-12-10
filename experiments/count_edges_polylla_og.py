@@ -13,95 +13,27 @@ import csv
 from math import atan2, degrees
 working_dir = Path(os.path.dirname(os.path.realpath(__file__)) )
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Count polygon edges, convexity breakdown, and angle statistics from generated meshes."
     )
-
-    # --- Core required arguments ---
-    parser.add_argument("--refiner", required=True, type=str,
-                        help="Mesh refiner implementation name.")
-    parser.add_argument("--mesh", required=True, type=str,
-                        help="Mesh type.")
-    parser.add_argument("--comparator", required=True, type=str,
-                        choices=[
-                            "null_comparator",
-                            "edge_length_comparator",
-                            "angle_comparator",
-                            "area_comparator",
-                            "random_comparator"
-                        ],
-                        help="Comparator used for cavity queue ordering.")
-    parser.add_argument("--merging", required=True, type=str,
-                        help="Merging strategy name.")
-
-    parser.add_argument("--criterion", required=True, type=str,
-                        help="Refinement criterion name.")
 
     parser.add_argument("--start", required=True, type=int,
                         help="Start number of points.")
     parser.add_argument("--end", required=True, type=int,
                         help="End number of points.")
 
-    # --- Comparator-dependent optional arguments ---
-    parser.add_argument("--order", type=str,
-                        choices=["ascending", "descending"],
-                        help="Order for non-null and non-random comparators.")
-
-    parser.add_argument("--key", type=str,
-                        help="Comparator key (depends on comparator).")
-
-    # --- Criterion-dependent argument ---
-    parser.add_argument("--threshold", type=float,
-                        help="Threshold value for refinement criteria.")
-
-    # --- Random comparator seed ---
-    parser.add_argument("--random-seed", type=int,
-                        help="Seed for random_comparator.")
-
     # --- Global flags ---
     parser.add_argument("--seed", required=True, type=int,
                         help="Input seed identifying which point set files to use.")
-    parser.add_argument("--skip-exec", action="store_true",
-                        help="Skip running the external executable and only process existing OFF files.")
 
     args = parser.parse_args()
 
-    # --------------------------------------------------------
-    # Validation rules that argparse cannot express alone
-    # --------------------------------------------------------
-
-    # Random comparator requires random-seed and forbids order/key
-    if args.comparator == "random_comparator":
-        if args.random_seed is None:
-            parser.error("--random-seed is required for random_comparator.")
-        if args.order is not None or args.key is not None:
-            parser.error("random_comparator does not use --order or --key.")
-
-    # Null comparator forbids order/key/random-seed
-    if args.comparator == "null_comparator":
-        if args.order or args.key or args.random_seed:
-            parser.error("null_comparator does not take --order, --key, or --random-seed.")
-
-    # Non-null / non-random comparators require both order and key
-    if args.comparator not in ("null_comparator", "random_comparator"):
-        if not args.order:
-            parser.error(f"{args.comparator} requires --order.")
-        if not args.key:
-            parser.error(f"{args.comparator} requires --key.")
-        if args.random_seed is not None:
-            parser.error(f"{args.comparator} does not accept --random-seed.")
-
-    # Null criterion forbids threshold
-    if args.criterion == "null_refinement_criterion" and args.threshold is not None:
-        parser.error("null_refinement_criterion cannot take --threshold.")
-
-    # Non-null criterion requires threshold
-    if args.criterion != "null_refinement_criterion" and args.threshold is None:
-        parser.error(f"{args.criterion} requires --threshold.")
 
     return args
+
+
+
 
 
 # -------------------------
@@ -216,50 +148,19 @@ def count_polygons_by_edges_and_convexity(vertices, faces):
                 concave_total += 1
     return dict(total_edge_count), dict(convex_by_edges), dict(concave_by_edges), convex_total, concave_total, min_angle, max_angle
 
-# -------------------------
-# Per-mesh processing
-# -------------------------
-def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed="", sort_key="" , skip_exec=False, input_seed=139,
-                     input_dir=working_dir / "../../delaunay-cavity-data/data",
-                     exec_dir=working_dir / "../build"):
+def process_pointset(name):
     """
     Process a single mesh: optionally run external executable (unless skip_exec),
     read .off, compute counts and convex/concave breakdowns, produce per-mesh stacked plot,
     and return a dict with all per-mesh stats (no JSON writing here).
     """
-    output_dir = working_dir / Path("../../delaunay-cavity-data/experiments/" + refiner) / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
-    plot_dir = working_dir / Path("../../delaunay-cavity-data/experiments/plots") / refiner / mesh_type / comparator / ascending_or_seed / sort_key / merging_strategy / refinement_criterion
+    output_dir = working_dir / Path("../../delaunay-cavity-data/experiments/polylla_og")
+    #plot_dir = working_dir / Path("../../delaunay-cavity-data/experiments/plots") / refiner / mesh_type
     os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(plot_dir, exist_ok=True)
+    #os.makedirs(plot_dir, exist_ok=True)
 
     output_basename = os.path.join(output_dir, name)
     off_file = output_basename + ".off"
-
-    # ---- Run executable if not skipped ----
-    if not skip_exec:
-        exec_name = f'{refiner}-{mesh_type}'
-        if refiner == "delaunay_cavity_refiner":
-            if comparator != "null_comparator" and comparator != "random_comparator":
-                exec_name += f'-{ascending_or_seed}_{sort_key}_{comparator}'
-            else:
-                exec_name += f'-{comparator}'
-            exec_name += f"-{merging_strategy}-{refinement_criterion}"
-        if "win" in sys.platform:
-            exec_name += ".exe"
-        node_file  = os.path.join(input_dir, name + ".node")
-        ele_file   = os.path.join(input_dir, name + ".ele")
-        neigh_file = os.path.join(input_dir, name + ".neigh")
-        exec_path = os.path.join(exec_dir, exec_name)
-        cmd_list = [exec_path, "--input1", node_file, "--input2", ele_file, "--input3", neigh_file, "--off-output", "--json-output", "--ale-output", "--output" , output_basename]
-        if comparator == "random_comparator":
-            cmd_list.append("--seed")
-            cmd_list.append(ascending_or_seed)
-        if refinement_criterion != "null_refinement_criterion":
-            cmd_list.append("--threshold")
-            cmd_list.append(criterion_arg)
-        #print(f'Executing: {cmd_list}')
-        cmd_list = [str(x) for x in cmd_list]
-        subprocess.run(cmd_list, check=True, cwd=working_dir)
 
     # ---- Read OFF and compute stats ----
     vertices, faces = read_off(off_file)
@@ -350,16 +251,14 @@ def process_pointset(name, refiner, mesh_type, comparator, merging_strategy, ref
 # Pool wrapper
 # -------------------------
 def _process_one(args):
-    i, refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, ascending_or_seed, sort_key, skip_exec, input_seed = args
+    i, input_seed = args
     name = f"points{i}.{input_seed}"
-    return process_pointset(name=name, refiner=refiner, mesh_type=mesh_type, comparator=comparator, merging_strategy=merging_strategy,
-                            refinement_criterion=refinement_criterion, criterion_arg=criterion_arg, ascending_or_seed=ascending_or_seed,
-                            sort_key=sort_key, skip_exec=skip_exec, input_seed=input_seed)
+    return process_pointset(name=name)
 
 # -------------------------
 # Batch processing (collect results and write wide CSV)
 # -------------------------
-def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_criterion, criterion_arg, start, end, ascending_or_seed="", sort_key="" , skip_exec=False,  input_seed=139, max_workers=3):
+def batch_process(start, end, input_seed=139, max_workers=3):
     os.makedirs(working_dir / "../../delaunay-cavity-data/experiments/summaries", exist_ok=True)
     results = []  # collect per-mesh dicts
     per_edge_total_counts = defaultdict(list)
@@ -377,9 +276,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
         futures = {
             executor.submit(
                 _process_one,
-                (i, refiner, mesh_type, comparator, merging_strategy,
-                refinement_criterion, criterion_arg, ascending_or_seed,
-                sort_key, skip_exec, input_seed)
+                (i, input_seed)
             ): i for i in indices
         }
 
@@ -434,15 +331,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
 
     # --- Write wide CSV ---
     # CSV columns: mesh, convex_total, concave_total, total_polygons, then eN, convex_eN, concave_eN, convex_pct_eN, concave_pct_eN for each edge
-    summary_dir = Path(working_dir / "../../delaunay-cavity-data/experiments/summaries") / refiner / mesh_type
-    if refiner == "delaunay_cavity_refiner":
-        summary_dir = summary_dir / comparator / merging_strategy
-        if comparator != "null_comparator":
-            summary_dir = summary_dir / ascending_or_seed
-            if comparator != "random_comparator":
-                summary_dir = summary_dir / sort_key
-    if refinement_criterion != "null_refinement_criterion":
-        summary_dir = summary_dir / f"{refinement_criterion}_{criterion_arg}"
+    summary_dir = Path(working_dir / "../../delaunay-cavity-data/experiments/summaries/polylla_og")
     os.makedirs(summary_dir, exist_ok=True)
     csv_path = summary_dir / f"results_{start}_{end}_{input_seed}.csv"
 
@@ -509,6 +398,7 @@ def batch_process(refiner, mesh_type, comparator, merging_strategy, refinement_c
     print(f"Wrote CSV summary to: {csv_path}")
     # print(f"Wrote combined plot to: {combined_plot_path}")
 
+
 # -------------------------
 # Main
 # -------------------------
@@ -516,40 +406,13 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Map argparse fields to your existing function params
-    refiner = args.refiner
-    mesh_type = args.mesh
-    comparator = args.comparator
-    merging = args.merging
-    refinement_criterion = args.criterion
     start = args.start
     end = args.end
     input_seed = args.seed  # original meaning preserved
 
-    # comparator-dependent args
-    if comparator == "random_comparator":
-        ascending_or_seed = str(args.random_seed)
-        sort_key = ""
-    elif comparator == "null_comparator":
-        ascending_or_seed = ""
-        sort_key = ""
-    else:
-        ascending_or_seed = args.order
-        sort_key = args.key
-
-    # criterion-dependent arg
-    if refinement_criterion == "null_refinement_criterion":
-        criterion_arg = 20.0  # ignored
-    else:
-        criterion_arg = args.threshold
-
-    skip_exec_flag = args.skip_exec
 
     # Run the batch process with your original logic
     batch_process(
-        refiner, mesh_type, comparator, merging,
-        refinement_criterion, criterion_arg,
         start, end,
-        ascending_or_seed, sort_key,
-        skip_exec=skip_exec_flag,
         input_seed=input_seed
     )
