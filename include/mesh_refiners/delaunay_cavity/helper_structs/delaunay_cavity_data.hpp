@@ -18,7 +18,6 @@ struct DelaunayCavityData : public MeshRefinerData {
     }
     DelaunayCavityData() {
         timeStats[T_TRIANGLE_SORTING] = 0.0;
-        timeStats[T_CIRCUMCENTER_COMPUTATION] = 0.0;
         timeStats[T_CAVITY_COMPUTATION] = 0.0;
         timeStats[T_CAVITY_INSERTION] = 0.0;
         timeStats[T_CAVITY_MERGING] = 0.0;

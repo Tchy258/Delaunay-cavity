@@ -36,27 +36,16 @@ std::vector<typename MeshType::FaceIndex> DELAUNAY_CAVITY_CLASS::sortTriangles(M
 }
 
 DELAUNAY_CAVITY_REFINER_TEMPLATE
-std::vector<std::pair<typename MeshType::VertexType, typename MeshType::FaceIndex>> DELAUNAY_CAVITY_CLASS::computeCircumcenters(MeshType *outputMesh, std::vector<FaceIndex> sortedTriangles) {
-    std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters;
-    circumcenters.reserve(sortedTriangles.size());
-
-    for (FaceIndex triangle : sortedTriangles) {
-        Vertex v0,v1,v2;
-        outputMesh->getVerticesOfTriangle(triangle, v0, v1, v2);
-        circumcenters.push_back(std::pair<MeshVertex,int>(Vertex::findCircumcenter(v0,v1,v2),triangle));
-        
-    }
-    return circumcenters;
-}
-
-DELAUNAY_CAVITY_REFINER_TEMPLATE
-std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVITY_CLASS::computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex, FaceIndex>>& circumcenters, std::vector<uint8_t>& visited) {   
+std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVITY_CLASS::computeCavities(const MeshType* inputMesh, const std::vector<FaceIndex>& sortedTriangles) {   
     std::vector<_Cavity> cavities;
-    cavities.reserve(circumcenters.size());
-    for (const auto& circumcenterData : circumcenters) {
-        const MeshVertex& circumcenter = circumcenterData.first;
-        FaceIndex triangleOfCircumcenter = circumcenterData.second;
+    // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
+    std::vector<uint8_t> visited(inputMesh->numberOfPolygons(), 0);
+    cavities.reserve(sortedTriangles.size());
+    for (const FaceIndex triangleOfCircumcenter : sortedTriangles) {
         if (data.inCavity[triangleOfCircumcenter]) continue;
+        Vertex seedV1,seedV2,seedV3;
+        inputMesh->getVerticesOfTriangle(triangleOfCircumcenter,seedV1,seedV2,seedV3);
+        Vertex circumcenter = Vertex::findCircumcenter(seedV1,seedV2,seedV3);
         std::queue<FaceIndex> bfsNeighborVisitQueue;
         cavities.emplace_back();
 
@@ -120,23 +109,9 @@ std::vector<refiners::helpers::delaunay_cavity::Cavity<MeshType>> DELAUNAY_CAVIT
             }
         }
 
-
-        std::sort(cavity.boundaryEdges.begin(), cavity.boundaryEdges.end());
-        cavity.boundaryEdges.erase(
-            std::unique(cavity.boundaryEdges.begin(), cavity.boundaryEdges.end()),
-            cavity.boundaryEdges.end()
-        );
-
-        auto dedupSort = [](auto& vec) {
-            std::sort(vec.begin(), vec.end());
-            vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
-        };
-        dedupSort(cavity.allTriangles);
-        dedupSort(cavity.boundaryTriangles);
-        dedupSort(cavity.interior);
-
         resetVisited(visited, cavity);
     }
+    data.memoryStats[M_VISITED_ARRAY] = sizeof(decltype(visited.back())) * visited.capacity();
     return cavities;
 }
 
@@ -150,15 +125,7 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     auto endTime = std::chrono::high_resolution_clock::now();
     data.timeStats[T_TRIANGLE_SORTING] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
     startTime = std::chrono::high_resolution_clock::now();
-    std::vector<std::pair<MeshVertex,FaceIndex>> circumcenters = computeCircumcenters(outputMesh, sortedTriangles);
-    endTime = std::chrono::high_resolution_clock::now();
-
-    data.timeStats[T_CIRCUMCENTER_COMPUTATION] = std::chrono::duration<double, std::milli>(endTime-startTime).count();
-    
-    // Here we use a vector of uint8_t instead of a vector of bool for better performance at the cost of memory
-    std::vector<uint8_t> visited(polygonAmount, 0);
-    startTime = std::chrono::high_resolution_clock::now();
-    std::vector<_Cavity> cavities = computeCavities(outputMesh, circumcenters, visited);
+    std::vector<_Cavity> cavities = computeCavities(outputMesh, sortedTriangles);
     if constexpr (HasPostComputeMethod<MergingStrategy,MeshType>) {
         MergingStrategy::postCompute(outputMesh,cavities);
     }
@@ -183,7 +150,6 @@ MeshType* DELAUNAY_CAVITY_CLASS::refineMesh(const MeshType* inputMesh) {
     data.meshStats[N_VERTICES] = outputMesh->numberOfVertices();
     data.meshStats[N_EDGES] = outputMesh->numberOfEdges();
     data.memoryStats[M_CAVITY_ARRAY] = sizeof(decltype(cavities.back())) * cavities.capacity();
-    data.memoryStats[M_VISITED_ARRAY] = sizeof(decltype(visited.back())) * visited.capacity();
     data.memoryStats[M_VERTICES_INPUT] = inputMesh->getVertexMemoryUsage();
     data.memoryStats[M_EDGES_INPUT] = inputMesh->getEdgesMemoryUsage();
     data.memoryStats[M_VERTICES_OUTPUT] = outputMesh->getVertexMemoryUsage();

@@ -73,28 +73,20 @@ class DelaunayCavityRefiner : public MeshRefiner<MeshType> {
          */
         std::vector<FaceIndex> sortTriangles(MeshType* outputMesh);
         /**
-         * Computes the circumcenter of all of the mesh's triangles with their corresponding `FaceIndex`
-         * @param outputMesh The mesh whose triangles will have their circumcenters computed
-         * @param sortedTriangles A vector of triangle indices in `outputMesh` resulting from a @ref `sortTriangles` call
-         * @return A vector with <Circumcenter,TriangleIndex> pairs
-         */
-        std::vector<std::pair<MeshVertex,FaceIndex>> computeCircumcenters(MeshType* outputMesh, std::vector<FaceIndex> sortedTriangles);
-        /**
          * Computes the cavities for the mesh given a vector of circumcenter,triangle pairs and a vector to check if a triangle has been visited or not
          * 
          * To compute the cavities, a BFS search is done starting from a circumcenter, the visited vector is created once and reused accross searches
          * 
          * @param inputMesh The mesh for which to compute the cavities
-         * @param circumcenters A vector of Circumcenter,FaceIndex pairs with the coordinates of the circumcenter for each triangle
-         * @param visited A vector of 8-bit unsigned integers used as a yes or no check. 8-bit integers are preferred over a vector of booleans for
-         * memory aligment and performance reasons
+         * @param sortedTriangles A vector of `FaceIndex` with the indices of the triangles sorted according to the `TriangleComparator`
          * @return A vector of `Cavity` objects with the required information to insert a cavity into the mesh.
          */
-        std::vector<_Cavity> computeCavities(const MeshType* inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>>& circumcenters, std::vector<uint8_t>& visited);
+        std::vector<_Cavity> computeCavities(const MeshType* inputMesh, const std::vector<FaceIndex>& sortedTriangles);
 
         /**
          * Resets the BFS `visited` vector to perform a new search starting from another circumcenter
-         * @param visited A "boolean" vector of unsigned integers
+         * @param visited A vector of 8-bit unsigned integers used as a yes or no check. 8-bit integers are preferred over a vector of booleans for
+         * memory aligment and performance reasons
          * @param cavity A cavity object that was created within a call of `computeCavities`
          */
         inline void resetVisited(std::vector<uint8_t>& visited, const _Cavity& cavity) {

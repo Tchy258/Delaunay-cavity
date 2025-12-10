@@ -35,7 +35,6 @@ namespace refiners::helpers::delaunay_cavity {
         size_t faceCount = outputMesh->numberOfPolygons();
         size_t edgeCount = outputMesh->numberOfEdges();
         std::vector<uint8_t> presentInBoundary(edgeCount);
-        std::vector<uint8_t> alreadyUsed(edgeCount,0);
         std::vector<OutputIndex> outputSeeds;
         outputSeeds.reserve(faceCount);
         for (FaceIndex face = 0; face < faceCount; ++face) {
@@ -45,6 +44,7 @@ namespace refiners::helpers::delaunay_cavity {
             }
         }
         for (const _Cavity& cavity : cavities) {
+            if (cavity.allTriangles.size() == 1) continue;
             const std::vector<EdgeIndex>& boundaryEdges = cavity.boundaryEdges;
             std::fill(presentInBoundary.begin(), presentInBoundary.end(), 0);
             for (EdgeIndex boundaryEdge : boundaryEdges) {
@@ -114,19 +114,17 @@ namespace refiners::helpers::delaunay_cavity {
     }
 
     template <PolygonMergingPolicy<HalfEdgeMesh> MergingPolicy>
-    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh *inputMesh, HalfEdgeMesh *outputMesh, std::vector<OutputIndex> &outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<HalfEdgeMesh>& edgeToOutputMap)
-    {
-        std::vector<OutputIndex> seedEdges;
+    void MeshHelper<HalfEdgeMesh>::mergeIntoNeighbor(const HalfEdgeMesh *inputMesh, HalfEdgeMesh *outputMesh, std::vector<OutputIndex> &outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<HalfEdgeMesh>& edgeToOutputMap) {
+
         std::vector<OutputIndex> neighborSeeds;
         std::vector<std::vector<EdgeIndex>> sharedEdges;
         size_t edgeCount = outputMesh->getOutputSeedEdgeCount(seedToMerge);
-        seedEdges.reserve(edgeCount);
+
         neighborSeeds.reserve(edgeCount);
         sharedEdges.reserve(edgeCount);
         EdgeIndex currentEdge = seedToMerge;
         do {
             if (!outputMesh->isBorderEdge(outputMesh->twin(currentEdge))) {
-                seedEdges.push_back(currentEdge);
                 std::vector<EdgeIndex> edgesSharedWithNeighbor = outputMesh->getSharedEdges(currentEdge, outputMesh->twin(currentEdge));
                 sharedEdges.push_back(edgesSharedWithNeighbor);
                 OutputIndex oldRepresentative = edgeToOutputMap.find(outputMesh->twin(currentEdge));
