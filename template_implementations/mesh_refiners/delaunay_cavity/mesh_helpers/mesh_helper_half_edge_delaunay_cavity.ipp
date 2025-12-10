@@ -44,16 +44,18 @@ namespace refiners::helpers::delaunay_cavity {
             }
         }
         for (const _Cavity& cavity : cavities) {
-            if (cavity.allTriangles.size() == 1) continue;
             const std::vector<EdgeIndex>& boundaryEdges = cavity.boundaryEdges;
+            EdgeIndex firstEdge = boundaryEdges.front();
+            outputSeeds.push_back(firstEdge);
+            if (cavity.allTriangles.size() == 1) { 
+                continue;
+            }
+            faceCount -= (cavity.allTriangles.size() - 1);
+            edgeCount -= (cavity.allTriangles.size() * 3) - boundaryEdges.size();
             std::fill(presentInBoundary.begin(), presentInBoundary.end(), 0);
             for (EdgeIndex boundaryEdge : boundaryEdges) {
                 presentInBoundary[boundaryEdge] = 1;
             }
-            faceCount -= (cavity.allTriangles.size() - 1);
-            edgeCount -= (cavity.allTriangles.size() * 3) - boundaryEdges.size();
-            EdgeIndex firstEdge = boundaryEdges.front();
-            outputSeeds.push_back(firstEdge);
             EdgeIndex currentEdge = firstEdge;
             do {
                 EdgeIndex nextEdge = inputMesh->next(currentEdge);
