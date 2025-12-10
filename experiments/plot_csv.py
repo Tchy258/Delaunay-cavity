@@ -4,7 +4,7 @@ import numpy as np
 import math
 import re
 from matplotlib import patches as mpatches
-
+import sys
 # ============================================================
 #                     USER CONFIGURATION
 # ============================================================
@@ -14,7 +14,7 @@ CSV_PATHS = [
     "summary_cavity.csv"
 ]
 
-NUM_POINTS_LIST = [1000000]                # num_points to plot
+NUM_POINTS_LIST = [int(sys.argv[1])]                # num_points to plot
 COLOR_OFFSET = int(2*(math.log10(NUM_POINTS_LIST[0])))
 DECIMAL_COMMA = True
 
