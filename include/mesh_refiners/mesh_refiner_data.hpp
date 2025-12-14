@@ -4,13 +4,19 @@
 #include <misc/time_stat.hpp>
 #include <misc/memory_stat.hpp>
 #include <unordered_map>
+#include <type_traits>
 
 struct MeshRefinerData {
     private:
         template<typename KeyType, typename ValueType, typename Map>
         void storeTotal(Map& map, KeyType totalKey) {
             ValueType total = static_cast<ValueType>(0);
-            for (const auto& [_, value] : map) {
+            for (const auto& [key, value] : map) {
+                if constexpr (std::is_same_v<KeyType, TimeStat>) {
+                    if (key == T_TRAVERSAL_AND_REPAIR) {
+                        continue;
+                    }
+                }
                 total += value;
             }
             map[totalKey] = total;
