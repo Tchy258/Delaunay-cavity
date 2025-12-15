@@ -347,7 +347,7 @@ class C_0013820901966883866851 {
 {static} +changeToValidRepresentative(MeshType * outputMesh, UnionFindCavityMerger<MeshType> & edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) = deleted : OutputIndex
 {static} +generateInitialOutputSeeds(MeshType * mesh) = deleted : std::vector<OutputIndex>
 {static} +getTriangleEdges(MeshType * mesh, FaceIndex triangle) = deleted : std::array<EdgeIndex,3>
-{static} +insertCavity(const MeshType * inputMesh, MeshType * outputMesh, std::vector<Cavity> & cavities, const std::vector<uint8_t> & inCavity) = deleted : std::vector<OutputIndex>
+{static} +insertCavity(const MeshType * inputMesh, MeshType * outputMesh, std::vector<_Cavity> & cavities, const std::vector<uint8_t> & inCavity) = deleted : std::vector<OutputIndex>
 {static} +isBorderEdge(const MeshType * mesh, EdgeIndex e) = deleted : bool
 {static} +isSharedTriangleEdge(const MeshType * mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) = deleted : bool
 {static} +mergeIntoNeighbor<PolygonMergingPolicy MergingPolicy>(const MeshType * inputMesh, MeshType * outputMesh, std::vector<OutputIndex> & outputSeeds, OutputIndex seedToMerge, UnionFindCavityMerger<MeshType> & edgeToOutputMap) = deleted : void
@@ -371,7 +371,7 @@ class C_0011031409684962323704 {
 {static} +changeToValidRepresentative(HalfEdgeMesh * outputMesh, refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh> & edgeToOutputMap, std::vector<EdgeIndex> invalidEdges, OutputIndex currentRepresentative) : OutputIndex
 {static} +generateInitialOutputSeeds(HalfEdgeMesh * mesh) : std::vector<OutputIndex>
 {static} +getTriangleEdges(HalfEdgeMesh * mesh, FaceIndex triangle) : std::array<EdgeIndex,3>
-{static} +insertCavity(const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, std::vector<Cavity> & cavities, const std::vector<uint8_t> & inCavity) : std::vector<OutputIndex>
+{static} +insertCavity(const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, std::vector<_Cavity> & cavities, const std::vector<uint8_t> & inCavity) : std::vector<OutputIndex>
 {static} +isBorderEdge(const HalfEdgeMesh * mesh, EdgeIndex e) : bool
 {static} +isSharedTriangleEdge(const HalfEdgeMesh * mesh, EdgeIndex edge, FaceIndex triangle1, FaceIndex triangle2) : bool
 {static} +mergeIntoNeighbor<PolygonMergingPolicy MergingPolicy>(const HalfEdgeMesh * inputMesh, HalfEdgeMesh * outputMesh, std::vector<OutputIndex> & outputSeeds, OutputIndex seedToMerge, refiners::helpers::delaunay_cavity::UnionFindCavityMerger<HalfEdgeMesh> & edgeToOutputMap) : void
@@ -550,8 +550,7 @@ class C_0003238586066628687602 {
 +DelaunayCavityRefiner(bool storeBeforePostProcess = false) : void
 +~DelaunayCavityRefiner() : void
 ..
--computeCavities(const MeshType * inputMesh, const std::vector<std::pair<MeshVertex,FaceIndex>> & circumcenters, std::vector<uint8_t> & visited) : std::vector<Cavity>
--computeCircumcenters(MeshType * outputMesh, std::vector<FaceIndex> sortedTriangles) : std::vector<std::pair<MeshVertex,FaceIndex>>
+-computeCavities(const MeshType * inputMesh, const std::vector<FaceIndex> & sortedTriangles) : std::vector<_Cavity>
 +getMeshBeforePostProcess() : MeshType *
 +getOutputSeeds() : std::vector<OutputIndex> &
 +getOutputSeedsBeforePostProcess() : std::vector<OutputIndex> &
@@ -559,7 +558,7 @@ class C_0003238586066628687602 {
 +getRefinementStats() : const std::unordered_map<MeshStat,int> &
 +getRefinementTimes() : const std::unordered_map<TimeStat,double> &
 +refineMesh(const MeshType * inputMesh) : MeshType *
--resetVisited(std::vector<uint8_t> & visited, const Cavity & cavity) : void
+-resetVisited(std::vector<uint8_t> & visited, const _Cavity & cavity) : void
 -sortTriangles(MeshType * outputMesh) : std::vector<FaceIndex>
 __
 -data : DelaunayCavityData<MeshType>
