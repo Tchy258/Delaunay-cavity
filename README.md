@@ -66,7 +66,7 @@ The algorithm needs a initial triangulation as input, any triangulations will wo
 </p>
 
 <p align="center">
- <img src="images/pikachu PLSG.ng" width="30%">
+ <img src="images/pikachu PLSG.png" width="30%">
  <img src="images/pikachutriangulization.png" width="30%">
  <img src="images/pikachuPolylla.png" width="30%">
 </p>
