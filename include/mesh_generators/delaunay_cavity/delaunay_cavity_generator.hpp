@@ -1,0 +1,143 @@
+#ifndef DELAUNAY_CAVITY_GENERATOR_HPP
+#define DELAUNAY_CAVITY_GENERATOR_HPP
+#include <unordered_map>
+#include <unordered_set>
+#include <cstdint>
+#include <queue>
+#include <array>
+#include <misc/mesh_stat.hpp>
+#include <misc/time_stat.hpp>
+#include <misc/memory_stat.hpp>
+#include <mesh_generators/delaunay_cavity/helper_structs/delaunay_cavity_data.hpp>
+#include <concepts/mesh_data.hpp>
+#include <concepts/cavity_merging_strategy.hpp>
+#include <concepts/selection_criterion.hpp>
+#include <concepts/triangle_comparator.hpp>
+#include <concepts/is_half_edge_vertex.hpp>
+#include <mesh_data/structures/vertex.hpp>
+#include <mesh_data/half_edge_mesh.hpp>
+#include <mesh_generators/mesh_generator.hpp>
+#include <mesh_generators/delaunay_cavity/mesh_helpers/mesh_helper_delaunay_cavity.hpp>
+#include <mesh_generators/delaunay_cavity/helper_structs/cavity.hpp>
+#include <mesh_generators/selection_criteria/null_selection_criterion.hpp>
+#include <numeric>
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <cmath>
+
+#define DELAUNAY_CAVITY_GENERATOR_TEMPLATE \
+template < \
+    MeshData MeshType, \
+    SelectionCriterion<MeshType> Criterion, \
+    TriangleComparator<MeshType> Comparator, \
+    CavityMergingStrategy<MeshType> MergingStrategy \
+>
+
+DELAUNAY_CAVITY_GENERATOR_TEMPLATE
+class DelaunayCavityGenerator : public MeshGenerator<MeshType> {
+    public:
+        using MeshVertex = typename MeshType::VertexType;
+        using MeshEdge = typename MeshType::EdgeType;
+        using VertexIndex = typename MeshType::VertexIndex;
+        using EdgeIndex = typename MeshType::EdgeIndex;
+        using FaceIndex = typename MeshType::FaceIndex;
+        using OutputIndex = typename MeshType::OutputIndex;
+    private:
+        bool storeMeshBeforePostProcess = false;
+
+        MeshType* meshBeforePostProcess = nullptr;
+        DelaunayCavityData<MeshType> data;
+
+        struct _empty {};
+        using maybe_output_vector = std::conditional_t<HasPostInsertionMethod<MergingStrategy,MeshType>, std::vector<OutputIndex>, _empty>;
+        #ifdef _MSC_VER
+            #define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+        #else
+            #define NO_UNIQUE_ADDRESS [[no_unique_address]]
+        #endif
+        
+        NO_UNIQUE_ADDRESS maybe_output_vector outputSeedsBeforePostProcess = maybe_output_vector{};
+        #undef NO_UNIQUE_ADDRESS
+
+        Criterion selectionCriterion;
+
+        using _MeshHelper = generators::helpers::delaunay_cavity::MeshHelper<MeshType>;
+        using _Cavity = generators::helpers::delaunay_cavity::Cavity<MeshType>;
+        /**
+         * Sorts the triangles before computing the cavities using the provided `TriangleComparator` template type
+         * 
+         * Note that this method could also shuffle the triangles or do a noop depending on the comparator
+         * @param outputMesh The mesh whose triangles will be sorted
+         * @return A vector of `FaceIndex` with the indices of the triangles sorted according to the `TriangleComparator`
+         */
+        std::vector<FaceIndex> sortTriangles(MeshType* outputMesh);
+        /**
+         * Computes the cavities for the mesh given a vector of circumcenter,triangle pairs and a vector to check if a triangle has been visited or not
+         * 
+         * To compute the cavities, a BFS search is done starting from a circumcenter, the visited vector is created once and reused accross searches
+         * 
+         * @param inputMesh The mesh for which to compute the cavities
+         * @param sortedTriangles A vector of `FaceIndex` with the indices of the triangles sorted according to the `TriangleComparator`
+         * @return A vector of `Cavity` objects with the required information to insert a cavity into the mesh.
+         */
+        std::vector<_Cavity> computeCavities(const MeshType* inputMesh, const std::vector<FaceIndex>& sortedTriangles);
+
+        /**
+         * Resets the BFS `visited` vector to perform a new search starting from another circumcenter
+         * @param visited A vector of 8-bit unsigned integers used as a yes or no check. 8-bit integers are preferred over a vector of booleans for
+         * memory aligment and performance reasons
+         * @param cavity A cavity object that was created within a call of `computeCavities`
+         */
+        inline void resetVisited(std::vector<uint8_t>& visited, const _Cavity& cavity) {
+            for (FaceIndex triangle: cavity.allTriangles) {
+                visited[triangle] = 0;
+            }
+        }
+        
+    public:
+        MeshType* generateMesh(const MeshType* inputMesh) override;
+        std::vector<OutputIndex>& getOutputSeeds() override {
+            return data.outputSeeds;
+        }
+        explicit DelaunayCavityGenerator(Criterion criterion, bool storeBeforePostProcess = false) : selectionCriterion(std::move(criterion)), storeMeshBeforePostProcess(storeBeforePostProcess) {}
+
+        explicit DelaunayCavityGenerator(bool storeBeforePostProcess = false) requires std::same_as<Criterion, NullSelectionCriterion<MeshType>>
+        : DelaunayCavityGenerator(NullSelectionCriterion<MeshType>(), storeBeforePostProcess) {}
+
+
+        const std::unordered_map<MeshStat,int>& getGenerationStats() override {
+            return data.meshStats;
+        }
+        const std::unordered_map<TimeStat,double>& getGenerationTimes() override {
+            return data.timeStats;
+        }
+        const std::unordered_map<MemoryStat, unsigned long long>& getGenerationMemory() override {
+            return data.memoryStats;
+        }
+
+        std::vector<OutputIndex>& getOutputSeedsBeforePostProcess() override {
+            if constexpr (HasPostInsertionMethod<MergingStrategy,MeshType>) {
+                return outputSeedsBeforePostProcess;
+            } else {
+                return data.outputSeeds;
+            }
+        }
+        MeshType* getMeshBeforePostProcess() override {
+            if constexpr (HasPostInsertionMethod<MergingStrategy,MeshType>) {
+                return meshBeforePostProcess;
+            } else {
+                return nullptr;
+            }
+        }
+
+        ~DelaunayCavityGenerator() {
+            delete meshBeforePostProcess;
+        }
+};
+
+#include<mesh_generators/delaunay_cavity/delaunay_cavity_generator.ipp>
+
+
+#undef DELAUNAY_CAVITY_GENERATOR_TEMPLATE
+#endif

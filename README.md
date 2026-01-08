@@ -25,8 +25,8 @@ Once a particular target is compiled, you can invoke the executable with the `--
 OPTIONS:
   -h,     --help              Print this help message and exit
           --off-input         Read input from an off file
-          --threshold FLOAT   Threshold to use for refinement criterion
-          --config [delaunay_cavity_refiner.toml]
+          --threshold FLOAT   Threshold to use for selection criterion
+          --config [delaunay_cavity_generator.toml]
                               Read inputs from a .toml file
           --off-output        Write to off file
           --ale-output        Write to ale file

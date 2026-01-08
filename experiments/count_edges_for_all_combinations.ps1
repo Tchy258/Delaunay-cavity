@@ -7,14 +7,14 @@ param(
 
 exit 0
 
-$refiners           = "delaunay_cavity_refiner", "polylla_refiner"
+$generators         = "delaunay_cavity_generator", "polylla_generator"
 $mesh_types         = "half_edge_mesh"
 $comparators        = "null_comparator", "edge_length_comparator", "angle_comparator", "area_comparator", "random_comparator"
 $merging_strategies = "exclude_previous_cavities_strategy", "merge_triangles_with_best_convexity_strategy", "merge_triangles_into_smallest_neighbor", "merge_triangles_into_biggest_neighbor"
-$criteria           = "null_refinement_criterion", "min_angle_criterion_robust", "min_angle_criterion", "min_area_criterion", "min_area2_criterion"
+$criteria           = "null_selection_criterion", "min_angle_criterion_robust", "min_angle_criterion", "min_area_criterion", "min_area2_criterion"
 
 
-foreach ($refiner in $refiners) {
+foreach ($generator in $generators) {
     foreach ($mesh in $mesh_types) {
         foreach ($comp in $comparators) {
             foreach ($merge in $merging_strategies) {
@@ -22,7 +22,7 @@ foreach ($refiner in $refiners) {
 
                     # Base args common to all cases
                     $args = @(
-                        "--refiner", $refiner
+                        "--generator", $generator
                         "--mesh", $mesh
                         "--comparator", $comp
                         "--merging", $merge
@@ -41,7 +41,7 @@ foreach ($refiner in $refiners) {
                     #
                     if ($comp -eq "null_comparator") {
 
-                        if ($crit -ne "null_refinement_criterion") {
+                        if ($crit -ne "null_selection_criterion") {
                             $args += @("--threshold", $Threshold)
                         }
 
@@ -57,7 +57,7 @@ foreach ($refiner in $refiners) {
 
                         $args += @("--random-seed", $RandomSeed)
 
-                        if ($crit -ne "null_refinement_criterion") {
+                        if ($crit -ne "null_selection_criterion") {
                             $args += @("--threshold", $Threshold)
                         }
 
@@ -80,7 +80,7 @@ foreach ($refiner in $refiners) {
 
                             $localArgs = $args + @("--order", $order, "--key", $key)
 
-                            if ($crit -ne "null_refinement_criterion") {
+                            if ($crit -ne "null_selection_criterion") {
                                 $localArgs += @("--threshold", $Threshold)
                             }
 

@@ -50,15 +50,15 @@ fi
 
 
 # ---- Option sets ----
-refiners=("delaunay_cavity_refiner" "polylla_refiner")
+generators=("delaunay_cavity_generator" "polylla_generator")
 mesh_types=("half_edge_mesh")
 comparators=("null_comparator" "edge_length_comparator" "angle_comparator" "area_comparator" "random_comparator")
 merging_strategies=("exclude_previous_cavities_strategy" "merge_triangles_with_best_convexity_strategy" "merge_triangles_into_smallest_neighbor" "merge_triangles_into_biggest_neighbor")
-criteria=("null_refinement_criterion" "min_angle_criterion_robust" "min_angle_criterion" "min_area_criterion" "min_area2_criterion")
+criteria=("null_selection_criterion" "min_angle_criterion_robust" "min_angle_criterion" "min_area_criterion" "min_area2_criterion")
 
 
 # ---- Main loops ----
-for refiner in "${refiners[@]}"; do
+for generator in "${generators[@]}"; do
     for mesh in "${mesh_types[@]}"; do
         for comp in "${comparators[@]}"; do
             for merge in "${merging_strategies[@]}"; do
@@ -71,9 +71,9 @@ for refiner in "${refiners[@]}"; do
                     #
                     if [[ "$comp" == "null_comparator" ]]; then
 
-                        if [[ "$crit" == "null_refinement_criterion" ]]; then
+                        if [[ "$crit" == "null_selection_criterion" ]]; then
                             python3 count_edges.py \
-                                --refiner "$refiner" \
+                                --generator "$generator" \
                                 --mesh "$mesh" \
                                 --comparator "$comp" \
                                 --merging "$merge" \
@@ -83,7 +83,7 @@ for refiner in "${refiners[@]}"; do
                                 $SKIP_EXEC_FLAG
                         else
                             python3 count_edges.py \
-                                --refiner "$refiner" \
+                                --generator "$generator" \
                                 --mesh "$mesh" \
                                 --comparator "$comp" \
                                 --merging "$merge" \
@@ -104,9 +104,9 @@ for refiner in "${refiners[@]}"; do
                     #
                     if [[ "$comp" == "random_comparator" ]]; then
 
-                        if [[ "$crit" == "null_refinement_criterion" ]]; then
+                        if [[ "$crit" == "null_selection_criterion" ]]; then
                             python3 count_edges.py \
-                                --refiner "$refiner" \
+                                --generator "$generator" \
                                 --mesh "$mesh" \
                                 --comparator "$comp" \
                                 --merging "$merge" \
@@ -117,7 +117,7 @@ for refiner in "${refiners[@]}"; do
                                 $SKIP_EXEC_FLAG
                         else
                             python3 count_edges.py \
-                                --refiner "$refiner" \
+                                --generator "$generator" \
                                 --mesh "$mesh" \
                                 --comparator "$comp" \
                                 --merging "$merge" \
@@ -152,9 +152,9 @@ for refiner in "${refiners[@]}"; do
                     for order in "ascending" "descending"; do
                         for key in "${keys[@]}"; do
 
-                            if [[ "$crit" == "null_refinement_criterion" ]]; then
+                            if [[ "$crit" == "null_selection_criterion" ]]; then
                                 python3 count_edges.py \
-                                    --refiner "$refiner" \
+                                    --generator "$generator" \
                                     --mesh "$mesh" \
                                     --comparator "$comp" \
                                     --merging "$merge" \
@@ -166,7 +166,7 @@ for refiner in "${refiners[@]}"; do
                                     $SKIP_EXEC_FLAG
                             else
                                 python3 count_edges.py \
-                                    --refiner "$refiner" \
+                                    --generator "$generator" \
                                     --mesh "$mesh" \
                                     --comparator "$comp" \
                                     --merging "$merge" \

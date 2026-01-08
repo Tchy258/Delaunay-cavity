@@ -1,0 +1,7 @@
+#ifndef CAVITY_MERGING_STRATEGY_HPP
+#define CAVITY_MERGING_STRATEGY_HPP
+
+#include <mesh_generators/delaunay_cavity/cavity_merger_strategy/exclude_previous_cavities_strategy.hpp>
+#include <mesh_generators/delaunay_cavity/cavity_merger_strategy/merge_triangles_strategy.hpp>
+
+#endif // CAVITY_MERGING_STRATEGY_HPP

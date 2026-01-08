@@ -31,17 +31,17 @@ target_link_libraries(hemesh INTERFACE hevertex concepts halfedge)
 add_library(mesh_io INTERFACE ${INCLUDE_DIR}/mesh_io ${TEMPLATE_IMPL_DIR}/mesh_io)
 target_link_libraries(mesh_io INTERFACE hemesh)
 add_library(criteria INTERFACE
-    ${INCLUDE_DIR}/mesh_refiners/refinement_criteria
-    ${INCLUDE_DIR}/mesh_refiners/refinement_criteria/composers
-    ${TEMPLATE_IMPL_DIR}/mesh_refiners/refinement_criteria
+    ${INCLUDE_DIR}/mesh_generators/selection_criteria
+    ${INCLUDE_DIR}/mesh_generators/selection_criteria/composers
+    ${TEMPLATE_IMPL_DIR}/mesh_generators/selection_criteria
 )
-add_library(refiners INTERFACE
-    ${INCLUDE_DIR}/mesh_refiners
-    ${INCLUDE_DIR}/mesh_refiners/delaunay_cavity
-    ${INCLUDE_DIR}/mesh_refiners/polylla
-    ${TEMPLATE_IMPL_DIR}/mesh_refiners
-    ${TEMPLATE_IMPL_DIR}/mesh_refiners/delaunay_cavity
-    ${TEMPLATE_IMPL_DIR}/mesh_refiners/polylla
+add_library(generators INTERFACE
+    ${INCLUDE_DIR}/mesh_generators
+    ${INCLUDE_DIR}/mesh_generators/delaunay_cavity
+    ${INCLUDE_DIR}/mesh_generators/polylla
+    ${TEMPLATE_IMPL_DIR}/mesh_generators
+    ${TEMPLATE_IMPL_DIR}/mesh_generators/delaunay_cavity
+    ${TEMPLATE_IMPL_DIR}/mesh_generators/polylla
 )
 
 add_subdirectory(extern/CLI11)
@@ -50,12 +50,12 @@ add_subdirectory(extern/CLI11)
 # Macro options
 # ---------------------------
 set(MESH_TYPE_OPTIONS HalfEdgeMesh)
-set(MESH_REFINER_OPTIONS DelaunayCavityRefiner PolyllaRefiner)
+set(MESH_GENERATOR_OPTIONS DelaunayCavityGenerator PolyllaGenerator)
 set(TRIANGLE_COMPARATOR_BASE_T_OPTIONS NullComparator EdgeLengthComparator AngleComparator AreaComparator RandomComparator)
 set(TRIANGLE_COMPARATOR_SORT_ASCENDING_OPTIONS true false)
 set(TRIANGLE_COMPARATOR_SORT_KEY_OPTIONS true false)
 set(MERGING_STRATEGY_T_OPTIONS ExcludePreviousCavitiesStrategy MergeTrianglesWithBestConvexityStrategy MergeTrianglesIntoSmallestNeighbor MergeTrianglesIntoBiggestNeighbor MergeTrianglesThroughLongestEdge MergeTrianglesThroughShortestEdge)
-set(REFINEMENT_CRITERION_T_OPTIONS NullRefinementCriterion MinAngleCriterionRobust MinAngleCriterion MinAreaCriterion MinArea2Criterion)
+set(SELECTION_CRITERION_T_OPTIONS NullSelectionCriterion MinAngleCriterionRobust MinAngleCriterion MinAreaCriterion MinArea2Criterion)
 # ---------------------------
 # Map MESH_TYPE to header
 # ---------------------------
@@ -84,13 +84,13 @@ endfunction()
 # ---------------------------
 # Function to create target with macro combo
 # ---------------------------
-function(add_configured_executable main_file refiner mesh tri_base merge is_ascending alt_sort_key refinement_criterion)
+function(add_configured_executable main_file generator mesh tri_base merge is_ascending alt_sort_key selection_criterion)
     # Convert all parts to snake_case
     camel_to_snake(mesh mesh_snake)
     camel_to_snake(tri_base tri_snake)
     camel_to_snake(merge merge_snake)
-    camel_to_snake(refinement_criterion refinement_criterion_snake)
-    camel_to_snake(refiner refiner_snake)
+    camel_to_snake(selection_criterion selection_criterion_snake)
+    camel_to_snake(generator generator_snake)
     if(NOT tri_base STREQUAL "NullComparator" AND NOT tri_base STREQUAL "RandomComparator" AND NOT tri_base STREQUAL "")
         if (alt_sort_key)
             set(sort_key "${SORT_KEY_true_${tri_base}}")
@@ -102,27 +102,27 @@ function(add_configured_executable main_file refiner mesh tri_base merge is_asce
         else()
             set(sort_order "descending")
         endif()
-        set(target_name "${refiner_snake}-${mesh_snake}-${sort_order}_${sort_key}_${tri_snake}-${merge_snake}-${refinement_criterion_snake}")
+        set(target_name "${generator_snake}-${mesh_snake}-${sort_order}_${sort_key}_${tri_snake}-${merge_snake}-${selection_criterion_snake}")
     else()
-        if(refiner STREQUAL "DelaunayCavityRefiner")
-            set(target_name "${refiner_snake}-${mesh_snake}-${tri_snake}-${merge_snake}-${refinement_criterion_snake}")
+        if(generator STREQUAL "DelaunayCavityGenerator")
+            set(target_name "${generator_snake}-${mesh_snake}-${tri_snake}-${merge_snake}-${selection_criterion_snake}")
         else()
-            set(target_name "${refiner_snake}-${mesh_snake}")
+            set(target_name "${generator_snake}-${mesh_snake}")
         endif()
     endif()
     add_executable(${target_name} ${main_file})
-    target_link_libraries(${target_name} PUBLIC meshfiles hemesh mesh_io criteria refiners CLI11::CLI11)
+    target_link_libraries(${target_name} PUBLIC meshfiles hemesh mesh_io criteria generators CLI11::CLI11)
 
     # Map mesh type to header
     set(mesh_header "${MESH_TYPE_HEADER_${mesh}}")
 
     target_compile_definitions(${target_name} PUBLIC
-        REFINER_T=${refiner}
+        GENERATOR_T=${generator}
         MESH_TYPE=${mesh}
         MESH_TYPE_HEADER=${mesh_header}
         TRIANGLE_COMPARATOR_BASE_T=${tri_base}
         MERGING_STRATEGY_T=${merge}
-        REFINEMENT_CRITERION_T=${refinement_criterion}
+        SELECTION_CRITERION_T=${selection_criterion}
     )
     if(NOT tri_base STREQUAL "NullComparator" AND NOT tri_base STREQUAL "RandomComparator" AND NOT tri_base STREQUAL "")
         target_compile_definitions(${target_name} PUBLIC
@@ -131,14 +131,14 @@ function(add_configured_executable main_file refiner mesh tri_base merge is_asce
             TRIANGLE_COMPARATOR_WITH_ARGS=1
         )
     endif()
-    if(NOT refinement_criterion STREQUAL "NullRefinementCriterion" AND NOT refinement_criterion STREQUAL "")
+    if(NOT selection_criterion STREQUAL "NullSelectionCriterion" AND NOT selection_criterion STREQUAL "")
         target_compile_definitions(${target_name} PUBLIC
-            REFINEMENT_CRITERION_WITH_ARG=1
+            SELECTION_CRITERION_WITH_ARG=1
         )
     endif()
-    if(refiner STREQUAL "DelaunayCavityRefiner")
+    if(generator STREQUAL "DelaunayCavityGenerator")
         target_compile_definitions(${target_name} PUBLIC
-            DELAUNAY_REFINER=1
+            DELAUNAY_GENERATOR=1
         )
     endif()
 endfunction()
@@ -148,21 +148,21 @@ endfunction()
 # ---------------------------
 
 if(BUILD_MACRO_COMBO)
-    foreach(refiner IN LISTS MESH_REFINER_OPTIONS)
+    foreach(generator IN LISTS MESH_GENERATOR_OPTIONS)
         foreach(mesh IN LISTS MESH_TYPE_OPTIONS)
-            if(refiner STREQUAL "PolyllaRefiner")
-                add_configured_executable("main2.cpp" ${refiner} ${mesh} "" "" true true "")
+            if(generator STREQUAL "PolyllaGenerator")
+                add_configured_executable("main2.cpp" ${generator} ${mesh} "" "" true true "")
             else()
                 foreach(tri_base IN LISTS TRIANGLE_COMPARATOR_BASE_T_OPTIONS)
                     foreach(merge IN LISTS MERGING_STRATEGY_T_OPTIONS)
-                        foreach(refine IN LISTS REFINEMENT_CRITERION_T_OPTIONS)
+                        foreach(refine IN LISTS SELECTION_CRITERION_T_OPTIONS)
                             if(NOT tri_base STREQUAL "NullComparator" AND NOT tri_base STREQUAL "RandomComparator")
-                                add_configured_executable("main2.cpp" ${refiner} ${mesh} ${tri_base} ${merge} true true ${refine})
-                                add_configured_executable("main2.cpp" ${refiner} ${mesh} ${tri_base} ${merge} true false ${refine})
-                                add_configured_executable("main2.cpp" ${refiner} ${mesh} ${tri_base} ${merge} false true ${refine})
-                                add_configured_executable("main2.cpp" ${refiner} ${mesh} ${tri_base} ${merge} false false ${refine})
+                                add_configured_executable("main2.cpp" ${generator} ${mesh} ${tri_base} ${merge} true true ${refine})
+                                add_configured_executable("main2.cpp" ${generator} ${mesh} ${tri_base} ${merge} true false ${refine})
+                                add_configured_executable("main2.cpp" ${generator} ${mesh} ${tri_base} ${merge} false true ${refine})
+                                add_configured_executable("main2.cpp" ${generator} ${mesh} ${tri_base} ${merge} false false ${refine})
                             else()
-                                add_configured_executable("main2.cpp" ${refiner} ${mesh} ${tri_base} ${merge} true true ${refine})
+                                add_configured_executable("main2.cpp" ${generator} ${mesh} ${tri_base} ${merge} true true ${refine})
                             endif()
                         endforeach()
                     endforeach()

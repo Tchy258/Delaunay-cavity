@@ -3,13 +3,13 @@
 #include<concepts>
 #include<concepts/mesh_data.hpp>
 #include<vector>
-#include<mesh_refiners/delaunay_cavity/helper_structs/cavity.hpp>
-#include<mesh_refiners/delaunay_cavity/helper_structs/delaunay_cavity_data.hpp>
+#include<mesh_generators/delaunay_cavity/helper_structs/cavity.hpp>
+#include<mesh_generators/delaunay_cavity/helper_structs/delaunay_cavity_data.hpp>
 
 
 template <typename MergingStrategy, typename Mesh>
 concept HasPreAddMethodPerCavity = requires(Mesh* mesh, 
-    const std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>>& cavities,
+    const std::vector<generators::helpers::delaunay_cavity::Cavity<Mesh>>& cavities,
     typename Mesh::FaceIndex triangle) {
         { MergingStrategy::preAdd(mesh, triangle, cavities)} -> std::convertible_to<bool>;
 } && MeshData<Mesh>;
@@ -23,15 +23,15 @@ concept HasPreAddMethodByPresence = requires(Mesh* mesh,
 
 template <typename MergingStrategy, typename Mesh>
 concept HasPostComputeMethod = requires(Mesh* mesh,
-    std::vector<refiners::helpers::delaunay_cavity::Cavity<Mesh>>& cavities) {
+    std::vector<generators::helpers::delaunay_cavity::Cavity<Mesh>>& cavities) {
         { MergingStrategy::postCompute(mesh, cavities)} -> std::same_as<void>;
 } && MeshData<Mesh>;
 
 template <typename MergingStrategy, typename Mesh>
 concept HasPostInsertionMethod = 
     requires(const Mesh* inputMesh, Mesh* outputMesh,
-    DelaunayCavityData<Mesh>& refinerData) {
-        { MergingStrategy::postInsertion(inputMesh, outputMesh, refinerData)} -> std::same_as<void>;
+    DelaunayCavityData<Mesh>& generatorData) {
+        { MergingStrategy::postInsertion(inputMesh, outputMesh, generatorData)} -> std::same_as<void>;
 } && MeshData<Mesh>;
 
 /**

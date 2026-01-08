@@ -6,7 +6,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
-#include <mesh_refiners/mesh_refiner.hpp>
+#include <mesh_generators/mesh_generator.hpp>
 #include <concepts/mesh_data.hpp>
 #include <concepts/has_adjacency_constructor.hpp>
 

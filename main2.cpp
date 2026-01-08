@@ -8,16 +8,16 @@
 #include <mesh_io/node_ele_reader.hpp>
 #include <mesh_io/off_writer.hpp>
 #include <mesh_io/ale_writer.hpp>
-#include <mesh_refiners/mesh_refiner_header.hpp>
-#include <mesh_refiners/delaunay_cavity/triangle_comparators/triangle_comparators.hpp>
-#include <mesh_refiners/delaunay_cavity/cavity_merger_strategy/cavity_merging_strategy.hpp>
-#include <mesh_refiners/refinement_criteria/refinement_criteria.hpp>
+#include <mesh_generators/mesh_generator_header.hpp>
+#include <mesh_generators/delaunay_cavity/triangle_comparators/triangle_comparators.hpp>
+#include <mesh_generators/delaunay_cavity/cavity_merger_strategy/cavity_merging_strategy.hpp>
+#include <mesh_generators/selection_criteria/selection_criteria.hpp>
 #include <CLI/CLI.hpp>
 #include <mesh_io/off_reader.hpp>
 #include <polygonal_mesh.hpp>
 
 int main(int argc, char **argv) {
-    CLI::App app{std::string{"CLI Tool to refine a triangular mesh of arbitrary polygons using: "} + std::string{TOSTRING((MESH_REFINER))}};
+    CLI::App app{std::string{"CLI Tool to refine a triangular mesh of arbitrary polygons using: "} + std::string{TOSTRING((MESH_GENERATOR))}};
     bool readFromOff{false};
     bool writeOff{false};
     bool writeJson{false};
@@ -26,11 +26,11 @@ int main(int argc, char **argv) {
     std::string input1, input2, input3, output;
     
     CLI::Option* offOpt = app.add_flag("--off-input",readFromOff, "Read input from an off file");
-    #ifdef DELAUNAY_REFINER
+    #ifdef DELAUNAY_GENERATOR
         unsigned int randomSeed{0};
-        double refinementCriterionThreshold{20.0};
-        if constexpr (!isNullRefinementCriterion<REFINEMENT_CRITERION , MESH_TYPE>) {
-            CLI::Option* refinementArgOpt = app.add_option("--threshold", refinementCriterionThreshold, "Threshold to use for refinement criterion");
+        double selectionCriterionThreshold{20.0};
+        if constexpr (!isNullSelectionCriterion<SELECTION_CRITERION , MESH_TYPE>) {
+            CLI::Option* selectionArgOpt = app.add_option("--threshold", selectionCriterionThreshold, "Threshold to use for selection criterion");
         }
         if constexpr (isRandomComparator<TRIANGLE_COMPARATOR , MESH_TYPE>) {
             CLI::Option* seedOpt = app.add_option("--seed", randomSeed, "Seed to use to sort triangles");
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
             CLI::Option* writeBeforePostOpt = app.add_flag("--write-intermediate", writeBeforePost, "Write the mesh before any post processing is done");
         }
     #endif
-    std::string configFilenameBase = std::string{TOSTRING(REFINER_T)};
+    std::string configFilenameBase = std::string{TOSTRING(GENERATOR_T)};
     std::stringstream configFilenameSS{};
     configFilenameSS << (char) (std::tolower(configFilenameBase[0]));
     for (int i = 1; i < configFilenameBase.length(); ++i) {
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     app.allow_extras();
 
     CLI11_PARSE(app,argc,argv);
-    #ifdef DELAUNAY_REFINER
+    #ifdef DELAUNAY_GENERATOR
     if constexpr (isRandomComparator<TRIANGLE_COMPARATOR , MESH_TYPE>) {
         if (randomSeed != 0) {
             RandomComparator<MESH_TYPE>::setSeed(randomSeed);
@@ -90,18 +90,18 @@ int main(int argc, char **argv) {
     std::vector<std::filesystem::path> inputPaths{input1,input2,input3};
     
     PolygonalMesh<MESH_TYPE> polygonalMesh(std::move(reader));
-    #ifdef REFINEMENT_CRITERION_WITH_ARG
-        polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>(REFINEMENT_CRITERION_CONSTRUCTOR(refinementCriterionThreshold), writeBeforePost));
+    #ifdef SELECTION_CRITERION_WITH_ARG
+        polygonalMesh.setGenerator(std::make_unique<MESH_GENERATOR>(SELECTION_CRITERION_CONSTRUCTOR(selectionCriterionThreshold), writeBeforePost));
     #else
-        #ifdef DELAUNAY_REFINER
-            polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>(writeBeforePost));
+        #ifdef DELAUNAY_GENERATOR
+            polygonalMesh.setGenerator(std::make_unique<MESH_GENERATOR>(writeBeforePost));
         #else
-            polygonalMesh.setRefiner(std::make_unique<MESH_REFINER>());
+            polygonalMesh.setGenerator(std::make_unique<MESH_GENERATOR>());
         #endif
     #endif
     
     polygonalMesh.readMeshFromFiles({input1, input2, input3})
-        .refineMesh();
+        .generateMesh();
     
     if (writeOff || writeAle) {
         auto writeMesh = [&](auto writerCreator, const std::string& ext) {

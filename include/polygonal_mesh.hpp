@@ -51,7 +51,7 @@ TODO:
 #include <concepts/mesh_data.hpp>
 #include <mesh_io/mesh_reader.hpp>
 #include <mesh_io/mesh_writer.hpp>
-#include <mesh_refiners/mesh_refiner.hpp>
+#include <mesh_generators/mesh_generator.hpp>
 #include <misc/mesh_stat.hpp>
 #include <misc/time_stat.hpp>
 #include <misc/memory_stat.hpp>
@@ -66,7 +66,7 @@ private:
     Mesh* refinedMesh = nullptr;
     std::unique_ptr<MeshReader<Mesh>> reader;
     std::unique_ptr<MeshWriter<Mesh>> writer;
-    std::unique_ptr<MeshRefiner<Mesh>> refiner;
+    std::unique_ptr<MeshGenerator<Mesh>> generator;
 public:
     
     PolygonalMesh(std::unique_ptr<MeshReader<Mesh>> meshReader) : reader(std::move(meshReader)) {}
@@ -79,8 +79,8 @@ public:
         this->writer = std::move(writer);
         return *this;
     }
-    PolygonalMesh& setRefiner(std::unique_ptr<MeshRefiner<Mesh>> refiner) {
-        this->refiner = std::move(refiner);
+    PolygonalMesh& setGenerator(std::unique_ptr<MeshGenerator<Mesh>> generator) {
+        this->generator = std::move(generator);
         return *this;
     }
     PolygonalMesh& readMeshFromFiles(const std::vector<std::filesystem::path>& filepaths) {
@@ -90,33 +90,33 @@ public:
         generationTime = std::chrono::duration<double, std::milli>(end - start).count();
         return *this;
     }
-    PolygonalMesh& refineMesh() {
-        if (refiner == nullptr) {
-            throw std::runtime_error("Refiner must be set before attempting to refine mesh");
+    PolygonalMesh& generateMesh() {
+        if (generator == nullptr) {
+            throw std::runtime_error("Generator must be set before attempting to refine mesh");
         }
-        refinedMesh = refiner->refineMesh(meshData);
+        refinedMesh = generator->generateMesh(meshData);
         return *this;
     }
     PolygonalMesh& writeMeshBeforePostProcess(const std::vector<std::filesystem::path>& filepaths) {
         std::vector<typename Mesh::OutputIndex> output = {};
-        if (refiner != nullptr) {
-            output = refiner->getOutputSeedsBeforePostProcess();
+        if (generator != nullptr) {
+            output = generator->getOutputSeedsBeforePostProcess();
         }
-        writer->writeMesh(filepaths, *(refiner->getMeshBeforePostProcess()), output);
+        writer->writeMesh(filepaths, *(generator->getMeshBeforePostProcess()), output);
         return *this;
     }
     PolygonalMesh& writeOutputMesh(const std::vector<std::filesystem::path>& filepaths) {
         std::vector<typename Mesh::OutputIndex> output = {};
-        if (refiner != nullptr) {
-            output = refiner->getOutputSeeds();
+        if (generator != nullptr) {
+            output = generator->getOutputSeeds();
         }
         writer->writeMesh(filepaths, *refinedMesh, output);
         return *this;
     }
     void writeStatsToJson(const std::filesystem::path& filepath) {
-        std::unordered_map<MeshStat,int> meshStats = getRefinementStats();
-        std::unordered_map<TimeStat,double> timeStats = getRefinementTimes();
-        std::unordered_map<MemoryStat, unsigned long long> memoryStats = getRefinementMemory();
+        std::unordered_map<MeshStat,int> meshStats = getGenerationStats();
+        std::unordered_map<TimeStat,double> timeStats = getGenerationTimes();
+        std::unordered_map<MemoryStat, unsigned long long> memoryStats = getGenerationMemory();
         std::ofstream json(filepath);
 
         auto writeBlock = [&]<typename StatType, typename StatValue>(std::unordered_map<StatType,StatValue> map, const unsigned int& totalValues, const char* const* names, bool appendFinalComma) {
@@ -149,17 +149,17 @@ public:
     const Mesh& getRefinedMeshData() const {
         return refinedMesh;
     }
-    std::unordered_map<MeshStat,int> getRefinementStats() const {
-        if (refiner != nullptr) {
-            std::unordered_map<MeshStat,int> stats = refiner->getRefinementStats();
+    std::unordered_map<MeshStat,int> getGenerationStats() const {
+        if (generator != nullptr) {
+            std::unordered_map<MeshStat,int> stats = generator->getGenerationStats();
             return stats;
         } else {
             return std::unordered_map<MeshStat,int>{};
         }
     }
-    std::unordered_map<TimeStat,double> getRefinementTimes() const {
-        if (refiner != nullptr) {
-            std::unordered_map<TimeStat,double> stats = refiner->getRefinementTimes();
+    std::unordered_map<TimeStat,double> getGenerationTimes() const {
+        if (generator != nullptr) {
+            std::unordered_map<TimeStat,double> stats = generator->getGenerationTimes();
             stats[T_TRIANGULATION_GENERATION] = generationTime;
             return stats;
         } else {
@@ -167,9 +167,9 @@ public:
         }
     }
 
-    std::unordered_map<MemoryStat,unsigned long long> getRefinementMemory() const {
-        if (refiner != nullptr) {
-            std::unordered_map<MemoryStat,unsigned long long> stats = refiner->getRefinementMemory();
+    std::unordered_map<MemoryStat,unsigned long long> getGenerationMemory() const {
+        if (generator != nullptr) {
+            std::unordered_map<MemoryStat,unsigned long long> stats = generator->getGenerationMemory();
             return stats;
         } else {
             return std::unordered_map<MemoryStat,unsigned long long>{};

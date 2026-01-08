@@ -155,7 +155,7 @@ def process_pointset(name):
     and return a dict with all per-mesh stats (no JSON writing here).
     """
     output_dir = working_dir / Path("../../delaunay-cavity-data/experiments/polylla_og")
-    #plot_dir = working_dir / Path("../../delaunay-cavity-data/experiments/plots") / refiner / mesh_type
+    #plot_dir = working_dir / Path("../../delaunay-cavity-data/experiments/plots") / generator / mesh_type
     os.makedirs(output_dir, exist_ok=True)
     #os.makedirs(plot_dir, exist_ok=True)
 
