@@ -1,0 +1,124 @@
+@startuml
+class "vertex" as C_0010254948448905657575
+class C_0010254948448905657575 {
+__
++incident_halfedge : int
++is_border : bool
++x : double
++y : double
+}
+class "halfEdge" as C_0012587826410550795881
+class C_0012587826410550795881 {
+__
++is_border : int
++next : int
++origin : int
++prev : int
++twin : int
+}
+class "Triangulation" as C_0001247905348796509944
+class C_0001247905348796509944 {
++Triangulation() : void
++Triangulation(std::string node_file, std::string ele_file, std::string neigh_file) : void
++Triangulation(std::string OFF_file) : void
++Triangulation(const Triangulation & t) : void
++Triangulation(int size) : void
++~Triangulation() : void
+..
++CCW_edge_to_vertex(int e) : int
++CW_edge_to_vertex(int e) : int
+-construct_exterior_halfEdges() : void
+-construct_interior_halfEdges_from_faces(std::vector<int> & faces) : void
+-construct_interior_halfEdges_from_faces_and_neighs(std::vector<int> & faces, std::vector<int> & neighs) : void
++degree(int v) : int
++distance(int e) : double
++edge_of_vertex(int v) : int
++faces() : int
++get_PointX(int i) : double
++get_PointY(int i) : double
++get_Triangles() : std::vector<int>
++get_size_vertex_half_edge() : long long
++get_size_vertex_struct() : long long
++get_triangulation_generation_time() : double
++halfEdges() : int
++incident_face(int e) : _triangle
++incident_halfedge(int f) : int
++is_border_face(int e) : bool
++is_border_vertex(int v) : bool
++is_counterclockwise(_triangle tr) : bool
++is_interior_face(int e) : bool
++next(int e) : int
++origin(int e) : int
++prev(int e) : int
+-read_OFFfile(std::string name) : std::vector<int>
+-read_neigh_from_file(std::string name) : std::vector<int>
+-read_nodes_from_file(std::string name) : void
+-read_triangles_from_file(std::string name) : std::vector<int>
++set_next(int e, int nxt) : void
++set_prev(int e, int prv) : void
++target(int e) : int
++twin(int e) : int
++vertices() : int
+__
+-HalfEdges : std::vector<halfEdge>
+-Vertices : std::vector<vertex>
+-n_border_edges : int
+-n_faces : int
+-n_halfedges : int
+-n_vertices : int
+-t_triangulation_generation : double
+-triangle_list : std::vector<int>
+}
+class "Polylla" as C_0002932479644109573042
+class C_0002932479644109573042 {
++Polylla() : void
++Polylla(Triangulation * input_mesh) : void
++Polylla(std::string off_file) : void
++Polylla(std::string node_file, std::string ele_file, std::string neigh_file) : void
++Polylla(int size) : void
++~Polylla() : void
+..
+-Equality(double a, double b, double epsilon) : int
+-GreaterEqualthan(double a, double b, double epsilon) : int
+-barrieredge_tip_reparation(const int e) : void
+-calculate_middle_edge(const int v) : int
++construct_Polylla() : void
+-generate_repaired_polygon(const int e, bit_vector & seed_list) : int
+-has_BarrierEdgeTip(int e_init) : bool
+-is_frontier_edge(const int e) : bool
+-is_seed_edge(int e) : bool
+-label_max_edge(const int e) : int
++print_ALE(std::string filename) : void
++print_OFF(std::string filename) : void
++print_stats(std::string filename) : void
+-search_frontier_edge(const int e) : int
+-travel_triangles(const int e) : int
+__
+-frontier_edges : bit_vector
+-m_polygons : int
+-max_edges : bit_vector
+-mesh_input : Triangulation *
+-mesh_output : Triangulation *
+-n_barrier_edge_tips : int
+-n_frontier_edges : int
+-n_polygons_added_after_repair : int
+-n_polygons_to_repair : int
+-output_seeds : std::vector<int>
+-seed_bet_mark : bit_vector
+-seed_edges : std::vector<int>
+-t_label_frontier_edges : double
+-t_label_max_edges : double
+-t_label_seed_edges : double
+-t_repair : double
+-t_traversal : double
+-t_traversal_and_repair : double
+-triangle_list : std::vector<int>
+}
+C_0001247905348796509944 o-- C_0010254948448905657575 : -Vertices
+C_0001247905348796509944 o-- C_0012587826410550795881 : -HalfEdges
+C_0002932479644109573042 --> C_0001247905348796509944 : -mesh_input
+C_0002932479644109573042 --> C_0001247905348796509944 : -mesh_output
+
+'Generated with clang-uml, version 0.6.2-25-g5e2993e
+'LLVM version clang version 20.1.7 (https://github.com/llvm/llvm-project.git 6146a88f60492b520a36f8f8f3231e15f3cc6082)
+@enduml

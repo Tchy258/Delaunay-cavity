@@ -1,7 +1,16 @@
-compilation_database_dir: D:\CPP\Delaunay-cavity\build
+compilation_database_dir: E:\Delaunay-cavity\build
 output_directory: diagrams
-relative_to: D:\CPP\Delaunay-cavity
+relative_to: E:\Delaunay-cavity
 diagrams:
+  polylla:
+    type: class
+    glob:
+      - src/*.cpp
+      - main.cpp
+    exclude:
+      namespaces:
+        - CLI
+        - std
   delaunay_cavity:
     type: class
     glob:
